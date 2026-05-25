@@ -44,8 +44,8 @@ temporal:
 circle:
   api:
     base-url: https://api.circle.com
-    api-key: ${CIRCLE_API_KEY:}
-    wallet-set-id: ${CIRCLE_WALLET_SET_ID:}
+    api-key: ${CIRCLE_API_KEY}
+    wallet-set-id: ${CIRCLE_WALLET_SET_ID}
     blockchain: ARC-TESTNET
     timeout:
       connect: 5000
@@ -53,11 +53,11 @@ circle:
 
 arcpay:
   contract:
-    agent-registry-address: ${AGENT_REGISTRY_ADDRESS:}
+    agent-registry-address: ${AGENT_REGISTRY_ADDRESS}
   blockchain:
-    rpc-url: ${ARC_TESTNET_RPC_URL:}
+    rpc-url: ${ARC_TESTNET_RPC_URL}
     chain-id: 5042002
-    platform-wallet-private-key: ${PLATFORM_WALLET_PRIVATE_KEY:}
+    platform-wallet-private-key: ${PLATFORM_WALLET_PRIVATE_KEY}
 
 management:
   endpoints:
