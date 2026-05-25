@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -16,45 +18,46 @@ import java.util.UUID;
 @RequiredArgsConstructor
 class AgentRepositoryAdapter implements AgentRepository {
 
-    private final AgentJpaRepository agentJpaRepository;
-    private final AgentEntityMapper agentEntityMapper;
+    private final AgentJpaRepository jpaRepository;
+    private final AgentEntityMapper mapper;
 
     @Override
     public Agent save(Agent agent) {
-        var entity = agentEntityMapper.mapToEntity(agent);
-        var saved = agentJpaRepository.save(entity);
-        return agentEntityMapper.mapToDomain(saved);
+        var entity = mapper.mapToEntity(agent);
+        var saved = jpaRepository.save(entity);
+        return mapper.mapToDomain(saved);
     }
 
     @Override
     public Optional<Agent> findById(UUID agentId) {
-        return agentJpaRepository.findById(agentId).map(agentEntityMapper::mapToDomain);
+        return jpaRepository.findById(agentId).map(mapper::mapToDomain);
     }
 
     @Override
+    @Transactional(propagation = Propagation.MANDATORY)
     public Optional<Agent> findByIdForUpdate(UUID agentId) {
-        return agentJpaRepository.findByIdForUpdate(agentId).map(agentEntityMapper::mapToDomain);
+        return jpaRepository.findByIdForUpdate(agentId).map(mapper::mapToDomain);
     }
 
     @Override
     public Page<Agent> findByOwnerIdAndStatus(UUID ownerId, AgentStatus status, Pageable pageable) {
-        return agentJpaRepository.findByOwnerIdAndStatus(ownerId, status, pageable)
-                .map(agentEntityMapper::mapToDomain);
+        return jpaRepository.findByOwnerIdAndStatus(ownerId, status, pageable)
+                .map(mapper::mapToDomain);
     }
 
     @Override
     public Page<Agent> findByOwnerId(UUID ownerId, Pageable pageable) {
-        return agentJpaRepository.findByOwnerId(ownerId, pageable)
-                .map(agentEntityMapper::mapToDomain);
+        return jpaRepository.findByOwnerId(ownerId, pageable)
+                .map(mapper::mapToDomain);
     }
 
     @Override
     public boolean existsByOwnerIdAndNameIgnoreCase(UUID ownerId, String name) {
-        return agentJpaRepository.existsByOwnerIdAndNameIgnoreCase(ownerId, name);
+        return jpaRepository.existsByOwnerIdAndNameIgnoreCase(ownerId, name);
     }
 
     @Override
     public boolean existsByOwnerIdAndNameIgnoreCaseAndAgentIdNot(UUID ownerId, String name, UUID agentId) {
-        return agentJpaRepository.existsByOwnerIdAndNameIgnoreCaseAndAgentIdNot(ownerId, name, agentId);
+        return jpaRepository.existsByOwnerIdAndNameIgnoreCaseAndAgentIdNot(ownerId, name, agentId);
     }
 }

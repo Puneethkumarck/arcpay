@@ -4,14 +4,12 @@ import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import com.arcpay.identity.agentidentity.fixtures.OwnerFixtures;
 import com.arcpay.identity.agentidentity.infrastructure.db.owner.OwnerJpaRepository;
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -21,6 +19,7 @@ import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@Transactional
 class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
 
     @Autowired
@@ -29,35 +28,20 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
     @Autowired
     private OwnerJpaRepository ownerJpaRepository;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private TransactionTemplate transactionTemplate;
-
     @BeforeEach
-    void setUp() {
-        jdbcTemplate.update("DELETE FROM agents");
-        jdbcTemplate.update("DELETE FROM owners");
-        ownerJpaRepository.save(OwnerFixtures.SOME_OWNER_ENTITY.toBuilder().build());
-        ownerJpaRepository.save(OwnerFixtures.OTHER_OWNER_ENTITY.toBuilder().build());
-    }
-
-    @AfterEach
-    void tearDown() {
-        jdbcTemplate.update("DELETE FROM agents");
-        jdbcTemplate.update("DELETE FROM owners");
+    void seedOwners() {
+        ownerJpaRepository.save(OwnerFixtures.someOwnerEntity());
+        ownerJpaRepository.save(OwnerFixtures.otherOwnerEntity());
     }
 
     @Test
-    void shouldFindByIdForUpdateWithPessimisticLock() {
+    void shouldFindByIdForUpdateReturnEntityWhenInTransaction() {
         // given
         var entity = newAgentEntity(SOME_OWNER_ID, "lock-agent", AgentStatus.ACTIVE);
         agentJpaRepository.save(entity);
 
         // when
-        var result = transactionTemplate.execute(status ->
-                agentJpaRepository.findByIdForUpdate(entity.getAgentId()).orElseThrow());
+        var result = agentJpaRepository.findByIdForUpdate(entity.getAgentId()).orElseThrow();
 
         // then
         assertThat(result).usingRecursiveComparison()

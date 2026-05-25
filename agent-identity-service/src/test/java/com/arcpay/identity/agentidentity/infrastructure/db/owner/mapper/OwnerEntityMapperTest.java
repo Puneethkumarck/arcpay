@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER;
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ENTITY;
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.someOwnerEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class OwnerEntityMapperTest {
@@ -22,13 +22,13 @@ class OwnerEntityMapperTest {
         // then
         assertThat(result)
                 .usingRecursiveComparison()
-                .isEqualTo(SOME_OWNER_ENTITY);
+                .isEqualTo(someOwnerEntity());
     }
 
     @Test
     void shouldMapEntityToDomainOwner() {
         // given
-        var entity = SOME_OWNER_ENTITY;
+        var entity = someOwnerEntity();
 
         // when
         var result = mapper.mapToDomain(entity);

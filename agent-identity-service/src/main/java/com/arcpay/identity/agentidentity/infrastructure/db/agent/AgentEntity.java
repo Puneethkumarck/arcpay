@@ -64,7 +64,7 @@ public class AgentEntity {
     @Column(name = "failure_reason", columnDefinition = "TEXT")
     private String failureReason;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)

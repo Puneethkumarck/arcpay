@@ -5,13 +5,13 @@ import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.fixtures.OwnerFixtures;
 import com.arcpay.identity.agentidentity.infrastructure.db.owner.OwnerJpaRepository;
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.IllegalTransactionStateException;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -21,7 +21,9 @@ import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGEN
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_SUSPENDED;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@Transactional
 class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
 
     @Autowired
@@ -30,23 +32,9 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
     @Autowired
     private OwnerJpaRepository ownerJpaRepository;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private TransactionTemplate transactionTemplate;
-
     @BeforeEach
-    void setUp() {
-        jdbcTemplate.update("DELETE FROM agents");
-        jdbcTemplate.update("DELETE FROM owners");
-        ownerJpaRepository.save(OwnerFixtures.SOME_OWNER_ENTITY.toBuilder().build());
-    }
-
-    @AfterEach
-    void tearDown() {
-        jdbcTemplate.update("DELETE FROM agents");
-        jdbcTemplate.update("DELETE FROM owners");
+    void seedOwner() {
+        ownerJpaRepository.save(OwnerFixtures.someOwnerEntity());
     }
 
     @Test
@@ -102,14 +90,13 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
     }
 
     @Test
-    void shouldFindByIdForUpdateReturningDomainModel() {
+    void shouldFindByIdForUpdateReturnEntityWhenInTransaction() {
         // given
         var agent = SOME_AGENT_ACTIVE;
         agentRepository.save(agent);
 
         // when
-        var loaded = transactionTemplate.execute(status ->
-                agentRepository.findByIdForUpdate(agent.agentId()).orElseThrow());
+        var loaded = agentRepository.findByIdForUpdate(agent.agentId()).orElseThrow();
 
         // then
         assertThat(loaded).usingRecursiveComparison().isEqualTo(agent);
@@ -182,5 +169,17 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
                 .usingRecursiveComparison()
                 .ignoringFields("updatedAt")
                 .isEqualTo(transitioned);
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NEVER)
+    void shouldRejectFindByIdForUpdateWhenCalledOutsideTransaction() {
+        // given
+        var randomId = UUID.randomUUID();
+
+        // when / then
+        assertThatThrownBy(() -> agentRepository.findByIdForUpdate(randomId))
+                .isInstanceOf(IllegalTransactionStateException.class)
+                .hasMessageContaining("mandatory");
     }
 }
