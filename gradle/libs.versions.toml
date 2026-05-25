@@ -1,0 +1,46 @@
+[versions]
+spring-boot = "4.0.3"
+spring-dependency-management = "1.1.6"
+spring-cloud = "2025.0.0"
+mapstruct = "1.6.3"
+lombok = "1.18.46"
+wiremock = "3.10.0"
+archunit = "1.3.0"
+assertj = "3.27.0"
+temporal = "1.35.0"
+namastack = "1.1.0"
+web3j = "4.12.3"
+uuid-creator = "6.0.0"
+testcontainers = "1.20.4"
+
+[libraries]
+spring-cloud-bom = { module = "org.springframework.cloud:spring-cloud-dependencies", version.ref = "spring-cloud" }
+
+spring-cloud-stream = { module = "org.springframework.cloud:spring-cloud-stream" }
+spring-cloud-stream-binder-kafka = { module = "org.springframework.cloud:spring-cloud-stream-binder-kafka" }
+spring-cloud-stream-test-binder = { module = "org.springframework.cloud:spring-cloud-stream-test-binder" }
+
+mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
+
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+
+namastack-outbox = { module = "io.namastack:namastack-outbox-starter-jdbc", version.ref = "namastack" }
+
+temporal = { module = "io.temporal:temporal-spring-boot-starter", version.ref = "temporal" }
+
+web3j = { module = "org.web3j:core", version.ref = "web3j" }
+
+uuid-creator = { module = "com.github.f4b6a3:uuid-creator", version.ref = "uuid-creator" }
+
+wiremock = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
+archunit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql" }
+testcontainers-kafka = { module = "org.testcontainers:kafka" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
