@@ -14,6 +14,11 @@ public final class OwnerFixtures {
     public static final String SOME_CHECKSUMMED_WALLET = "0x1234567890AbCdEf1234567890aBcDeF12345678";
     public static final String SOME_API_KEY_HASH = "a".repeat(64);
 
+    public static final UUID OTHER_OWNER_ID = UUID.fromString("019718a0-9999-7def-8000-abcdef999999");
+    public static final String OTHER_EMAIL = "bob@example.com";
+    public static final String OTHER_WALLET_ADDRESS = "0xfedcba9876543210fedcba9876543210fedcba98";
+    public static final String OTHER_API_KEY_HASH = "b".repeat(64);
+
     public static final Owner SOME_OWNER = Owner.builder()
             .ownerId(SOME_OWNER_ID)
             .email(SOME_EMAIL)
@@ -28,6 +33,16 @@ public final class OwnerFixtures {
             .walletAddress(SOME_WALLET_ADDRESS)
             .apiKeyHash(SOME_API_KEY_HASH)
             .status(OwnerStatus.ACTIVE)
+            .build();
+
+    public static final OwnerEntity OTHER_OWNER_ENTITY = OwnerEntity.builder()
+            .ownerId(OTHER_OWNER_ID)
+            .email(OTHER_EMAIL)
+            .walletAddress(OTHER_WALLET_ADDRESS)
+            .apiKeyHash(OTHER_API_KEY_HASH)
+            .status(OwnerStatus.ACTIVE)
+            .createdAt(SOME_CREATED_AT)
+            .updatedAt(SOME_UPDATED_AT)
             .build();
 
     private OwnerFixtures() {
