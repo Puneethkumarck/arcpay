@@ -6,11 +6,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_CHECKSUMMED_WALLET;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_EMAIL;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_WALLET_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
@@ -32,7 +34,7 @@ class OwnerRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
                 .isPresent()
                 .get()
                 .usingRecursiveComparison()
-                .ignoringFields("createdAt", "updatedAt")
+                .ignoringFieldsOfTypes(Instant.class)
                 .isEqualTo(SOME_OWNER);
     }
 
@@ -49,7 +51,7 @@ class OwnerRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
                 .isPresent()
                 .get()
                 .usingRecursiveComparison()
-                .ignoringFields("createdAt", "updatedAt")
+                .ignoringFieldsOfTypes(Instant.class)
                 .isEqualTo(SOME_OWNER);
     }
 
@@ -66,14 +68,15 @@ class OwnerRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
     }
 
     @Test
-    void shouldReturnTrueWhenWalletAddressExistsCaseInsensitive() {
+    void shouldReturnTrueWhenWalletAddressExistsForChecksummedInput() {
         // given
         ownerRepository.save(SOME_OWNER);
 
         // when
-        var result = ownerRepository.existsByWalletAddressIgnoreCase(SOME_WALLET_ADDRESS.toUpperCase());
+        var result = ownerRepository.existsByWalletAddressIgnoreCase(SOME_CHECKSUMMED_WALLET);
 
         // then
         assertThat(result).isTrue();
     }
+
 }

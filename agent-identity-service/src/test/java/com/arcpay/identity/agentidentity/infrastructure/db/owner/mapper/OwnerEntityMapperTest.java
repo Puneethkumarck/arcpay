@@ -1,15 +1,12 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.owner.mapper;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class OwnerEntityMapperTest {
 
     private final OwnerEntityMapper mapper = Mappers.getMapper(OwnerEntityMapper.class);

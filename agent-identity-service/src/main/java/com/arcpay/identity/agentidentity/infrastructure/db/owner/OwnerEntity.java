@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -32,22 +34,24 @@ public class OwnerEntity {
     @ToString.Include
     private UUID ownerId;
 
-    @Column(name = "email", nullable = false, length = 255)
+    @Column(name = "email", nullable = false, updatable = false, length = 255)
     private String email;
 
-    @Column(name = "wallet_address", nullable = false, length = 42)
+    @Column(name = "wallet_address", nullable = false, updatable = false, length = 42)
     private String walletAddress;
 
-    @Column(name = "api_key_hash", nullable = false, length = 64)
+    @Column(name = "api_key_hash", nullable = false, updatable = false, length = 64)
     private String apiKeyHash;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private OwnerStatus status;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }

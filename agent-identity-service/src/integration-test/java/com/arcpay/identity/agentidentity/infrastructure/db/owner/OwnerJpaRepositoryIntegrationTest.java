@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
@@ -34,6 +35,7 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
                 .isPresent()
                 .get()
                 .usingRecursiveComparison()
+                .ignoringFieldsOfTypes(Instant.class)
                 .isEqualTo(SOME_OWNER_ENTITY);
     }
 
@@ -74,6 +76,24 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
 
         // when / then
         assertThatThrownBy(() -> jpaRepository.saveAndFlush(duplicate))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("idx_owners_email");
+    }
+
+    @Test
+    void shouldRejectDuplicateWalletAddress() {
+        // given
+        jpaRepository.saveAndFlush(SOME_OWNER_ENTITY);
+        var duplicate = SOME_OWNER_ENTITY.toBuilder()
+                .ownerId(UUID.randomUUID())
+                .email("bob@example.com")
+                .walletAddress(SOME_WALLET_ADDRESS.toUpperCase())
+                .apiKeyHash("c".repeat(64))
+                .build();
+
+        // when / then
+        assertThatThrownBy(() -> jpaRepository.saveAndFlush(duplicate))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("idx_owners_wallet");
     }
 }
