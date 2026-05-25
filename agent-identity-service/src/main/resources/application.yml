@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: agent-identity-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/arcpay_identity
+    username: ${DB_USERNAME:arcpay}
+    password: ${DB_PASSWORD:arcpay}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  temporal:
+    service-address: ${TEMPORAL_ADDRESS:localhost:7233}
+    namespace: arcpay
+    workers-auto-discovery:
+      packages: com.arcpay.identity.agentidentity
+
+namastack:
+  outbox:
+    poll-interval: 2000
+    batch-size: 20
+    jdbc:
+      table-prefix: "agentidentity_"
+      schema-initialization:
+        enabled: false
+    retry:
+      policy: exponential
+      max-retries: 5
+      exponential:
+        initial-delay: 1000
+        max-delay: 60000
+        multiplier: 2.0
+
+temporal:
+  task-queue: AgentIdentityTaskQueue
+  workflow:
+    provisioning:
+      execution-timeout: 300s
+
+circle:
+  api:
+    base-url: https://api.circle.com
+    api-key: ${CIRCLE_API_KEY}
+    wallet-set-id: ${CIRCLE_WALLET_SET_ID}
+    blockchain: ARC-TESTNET
+    timeout:
+      connect: 5000
+      read: 15000
+
+arcpay:
+  contract:
+    agent-registry-address: ${AGENT_REGISTRY_ADDRESS}
+  blockchain:
+    rpc-url: ${ARC_TESTNET_RPC_URL}
+    chain-id: 5042002
+    platform-wallet-private-key: ${PLATFORM_WALLET_PRIVATE_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
