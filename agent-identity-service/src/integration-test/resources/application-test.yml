@@ -1,14 +1,32 @@
 spring:
-  datasource:
-    url: jdbc:tc:postgresql:16:///arcpay_identity_test
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
   flyway:
-    enabled: false
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    enabled: true
+  autoconfigure:
+    exclude:
+      - org.springframework.cloud.stream.config.BindingServiceConfiguration
+      - org.springframework.cloud.stream.function.FunctionConfiguration
+      - org.springframework.cloud.stream.config.BindersHealthIndicatorAutoConfiguration
+      - org.springframework.cloud.stream.config.BindingsEndpointAutoConfiguration
+      - org.springframework.cloud.stream.config.ChannelsEndpointAutoConfiguration
   temporal:
     test-server:
       enabled: true
+
+namastack:
+  outbox:
+    enabled: true
+
+circle:
+  api:
+    api-key: test-api-key
+    wallet-set-id: test-wallet-set-id
+
+arcpay:
+  contract:
+    agent-registry-address: "0x0000000000000000000000000000000000000000"
+  blockchain:
+    rpc-url: http://localhost:8545
+    platform-wallet-private-key: "0x0000000000000000000000000000000000000000000000000000000000000001"
