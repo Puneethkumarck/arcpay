@@ -31,6 +31,7 @@ dependencies {
     implementation(libs.mapstruct)
     annotationProcessor(libs.mapstruct.processor)
 
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
@@ -42,14 +43,21 @@ dependencies {
 
     testFixturesImplementation("org.assertj:assertj-core")
     testFixturesImplementation("org.mockito:mockito-core")
+    testFixturesImplementation("org.springframework.boot:spring-boot-starter-test")
+    testFixturesImplementation(libs.testcontainers.junit.jupiter)
+    testFixturesImplementation(libs.testcontainers.postgresql)
 }
 
 sourceSets {
     create("integrationTest") {
+        java.srcDir("src/integration-test/java")
+        resources.srcDir("src/integration-test/resources")
         compileClasspath += sourceSets.main.get().output + sourceSets.testFixtures.get().output
         runtimeClasspath += sourceSets.main.get().output + sourceSets.testFixtures.get().output
     }
     create("businessTest") {
+        java.srcDir("src/business-test/java")
+        resources.srcDir("src/business-test/resources")
         compileClasspath += sourceSets.main.get().output + sourceSets.testFixtures.get().output
         runtimeClasspath += sourceSets.main.get().output + sourceSets.testFixtures.get().output
     }

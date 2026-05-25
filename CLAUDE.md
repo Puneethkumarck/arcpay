@@ -133,6 +133,15 @@ Authoritative references in `docs/standards/` (reading order):
 - Commit messages: concise, describe the "why"
 - `docs/` is in `.gitignore` — internal planning docs are not committed
 
+## Worktree Agents
+
+The `docs/` directory is gitignored and won't exist in git worktrees. Worktree agents (e.g., Superset) must read docs from the main working tree using absolute paths:
+
+- **Main working tree:** `/Users/puneethkumarck/Documents/AI/github/arcpay`
+- **Standards:** `/Users/puneethkumarck/Documents/AI/github/arcpay/docs/standards/`
+- **Spec:** `/Users/puneethkumarck/Documents/AI/github/arcpay/docs/specs/agent-identity-service-spec.md`
+- **Issues:** `/Users/puneethkumarck/Documents/AI/github/arcpay/docs/issues/agent-identity-service-issues.md`
+
 ## Design Decisions (Quick Ref)
 
 These are explicit choices made during planning — do not change without discussion:
