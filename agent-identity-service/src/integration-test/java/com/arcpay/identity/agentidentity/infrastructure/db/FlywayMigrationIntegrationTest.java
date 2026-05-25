@@ -51,18 +51,15 @@ class FlywayMigrationIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldCreateOwnersUniqueIndexes() {
         // given / when
-        var indexes = jdbcTemplate.queryForList(
-                "SELECT indexname FROM pg_indexes WHERE tablename = 'owners' ORDER BY indexname",
+        var indexDefs = jdbcTemplate.queryForList(
+                "SELECT indexdef FROM pg_indexes WHERE tablename = 'owners' ORDER BY indexname",
                 String.class
         );
 
         // then
-        assertThat(indexes).contains(
-                "idx_owners_email",
-                "idx_owners_wallet",
-                "idx_owners_api_key_hash",
-                "owners_pkey"
-        );
+        assertThat(indexDefs).anySatisfy(def -> assertThat(def).containsIgnoringCase("UNIQUE").containsIgnoringCase("lower").containsIgnoringCase("email"));
+        assertThat(indexDefs).anySatisfy(def -> assertThat(def).containsIgnoringCase("UNIQUE").containsIgnoringCase("lower").containsIgnoringCase("wallet_address"));
+        assertThat(indexDefs).anySatisfy(def -> assertThat(def).contains("api_key_hash"));
     }
 
     @Test
@@ -85,31 +82,32 @@ class FlywayMigrationIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldCreateAgentsUniqueIndexOnOwnerAndName() {
         // given / when
-        var indexes = jdbcTemplate.queryForList(
-                "SELECT indexname FROM pg_indexes WHERE tablename = 'agents' ORDER BY indexname",
+        var indexDefs = jdbcTemplate.queryForList(
+                "SELECT indexdef FROM pg_indexes WHERE tablename = 'agents' ORDER BY indexname",
                 String.class
         );
 
         // then
-        assertThat(indexes).contains(
-                "idx_agents_owner_name",
-                "idx_agents_owner_id",
-                "idx_agents_status",
-                "agents_pkey"
-        );
+        assertThat(indexDefs).anySatisfy(def -> assertThat(def).containsIgnoringCase("UNIQUE").contains("owner_id").containsIgnoringCase("lower").containsIgnoringCase("name"));
+        assertThat(indexDefs).anySatisfy(def -> assertThat(def).contains("owner_id").doesNotContainIgnoringCase("UNIQUE"));
+        assertThat(indexDefs).anySatisfy(def -> assertThat(def).contains("status"));
     }
 
     @Test
     void shouldCreateAgentsForeignKeyToOwners() {
         // given / when
-        var fks = jdbcTemplate.queryForList(
-                "SELECT constraint_name FROM information_schema.table_constraints " +
-                        "WHERE table_name = 'agents' AND constraint_type = 'FOREIGN KEY'",
-                String.class
+        var fkDetails = jdbcTemplate.queryForMap(
+                "SELECT kcu.column_name, ccu.table_name AS referenced_table, ccu.column_name AS referenced_column " +
+                        "FROM information_schema.table_constraints tc " +
+                        "JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name " +
+                        "JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name " +
+                        "WHERE tc.table_name = 'agents' AND tc.constraint_type = 'FOREIGN KEY' AND tc.constraint_name = 'agents_owner_fk'"
         );
 
         // then
-        assertThat(fks).contains("agents_owner_fk");
+        assertThat(fkDetails.get("column_name")).isEqualTo("owner_id");
+        assertThat(fkDetails.get("referenced_table")).isEqualTo("owners");
+        assertThat(fkDetails.get("referenced_column")).isEqualTo("owner_id");
     }
 
     @Test
@@ -129,15 +127,32 @@ class FlywayMigrationIntegrationTest extends FullContextIntegrationTest {
     }
 
     @Test
+    void shouldCreateIdempotencyKeysForeignKeyToOwners() {
+        // given / when
+        var fkDetails = jdbcTemplate.queryForMap(
+                "SELECT kcu.column_name, ccu.table_name AS referenced_table, ccu.column_name AS referenced_column " +
+                        "FROM information_schema.table_constraints tc " +
+                        "JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name " +
+                        "JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name " +
+                        "WHERE tc.table_name = 'idempotency_keys' AND tc.constraint_type = 'FOREIGN KEY' AND tc.constraint_name = 'idempotency_keys_owner_fk'"
+        );
+
+        // then
+        assertThat(fkDetails.get("column_name")).isEqualTo("owner_id");
+        assertThat(fkDetails.get("referenced_table")).isEqualTo("owners");
+        assertThat(fkDetails.get("referenced_column")).isEqualTo("owner_id");
+    }
+
+    @Test
     void shouldCreateIdempotencyKeysExpiresIndex() {
         // given / when
-        var indexes = jdbcTemplate.queryForList(
-                "SELECT indexname FROM pg_indexes WHERE tablename = 'idempotency_keys' AND indexname = 'idx_idempotency_expires'",
+        var indexDef = jdbcTemplate.queryForObject(
+                "SELECT indexdef FROM pg_indexes WHERE tablename = 'idempotency_keys' AND indexname = 'idx_idempotency_expires'",
                 String.class
         );
 
         // then
-        assertThat(indexes).containsExactly("idx_idempotency_expires");
+        assertThat(indexDef).contains("expires_at");
     }
 
     @Test
@@ -160,14 +175,18 @@ class FlywayMigrationIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldCreateGasUsageTableWithForeignKey() {
         // given / when
-        var fks = jdbcTemplate.queryForList(
-                "SELECT constraint_name FROM information_schema.table_constraints " +
-                        "WHERE table_name = 'gas_usage' AND constraint_type = 'FOREIGN KEY'",
-                String.class
+        var fkDetails = jdbcTemplate.queryForMap(
+                "SELECT kcu.column_name, ccu.table_name AS referenced_table, ccu.column_name AS referenced_column " +
+                        "FROM information_schema.table_constraints tc " +
+                        "JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name " +
+                        "JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name " +
+                        "WHERE tc.table_name = 'gas_usage' AND tc.constraint_type = 'FOREIGN KEY' AND tc.constraint_name = 'gas_usage_owner_fk'"
         );
 
         // then
-        assertThat(fks).contains("gas_usage_owner_fk");
+        assertThat(fkDetails.get("column_name")).isEqualTo("owner_id");
+        assertThat(fkDetails.get("referenced_table")).isEqualTo("owners");
+        assertThat(fkDetails.get("referenced_column")).isEqualTo("owner_id");
     }
 
     @Test
