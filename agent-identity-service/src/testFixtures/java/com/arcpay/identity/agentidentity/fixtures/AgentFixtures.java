@@ -35,6 +35,22 @@ public final class AgentFixtures {
             .updatedAt(SOME_UPDATED_AT)
             .build();
 
+    public static final Agent SOME_AGENT_WALLET_READY = Agent.builder()
+            .agentId(UUID.fromString("019718a0-dddd-7def-8000-dddddddddddd"))
+            .ownerId(SOME_OWNER_ID)
+            .name("wallet-ready-agent-01")
+            .purpose("Agent with wallet created")
+            .status(AgentStatus.WALLET_READY)
+            .walletId(SOME_WALLET_ID)
+            .walletAddress(SOME_WALLET_ADDRESS)
+            .onChainTxHash(null)
+            .policyHash(SOME_POLICY_HASH)
+            .metadataHash(SOME_METADATA_HASH)
+            .failureReason(null)
+            .createdAt(SOME_CREATED_AT)
+            .updatedAt(SOME_UPDATED_AT)
+            .build();
+
     public static final Agent SOME_AGENT_ACTIVE = Agent.builder()
             .agentId(UUID.fromString("019718a0-aaaa-7def-8000-aaaaaaaaaaaa"))
             .ownerId(SOME_OWNER_ID)

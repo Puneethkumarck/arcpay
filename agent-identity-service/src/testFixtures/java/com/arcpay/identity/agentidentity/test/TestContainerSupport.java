@@ -2,6 +2,7 @@ package com.arcpay.identity.agentidentity.test;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.lifecycle.Startable;
 
 public final class TestContainerSupport {
@@ -14,6 +15,11 @@ public final class TestContainerSupport {
                 .withDatabaseName(databaseName)
                 .withUsername("test")
                 .withPassword("test");
+    }
+
+    @SuppressWarnings("resource")
+    public static KafkaContainer kafka() {
+        return new KafkaContainer("apache/kafka:3.8.1");
     }
 
     public static void startAll(Startable... containers) {
@@ -51,5 +57,10 @@ public final class TestContainerSupport {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+    }
+
+    public static void registerKafkaProperties(DynamicPropertyRegistry registry,
+                                                KafkaContainer kafka) {
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
     }
 }
