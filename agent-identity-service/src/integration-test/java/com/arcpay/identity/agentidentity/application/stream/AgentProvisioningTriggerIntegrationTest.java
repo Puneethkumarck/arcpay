@@ -8,6 +8,7 @@ import com.arcpay.identity.agentidentity.domain.port.BlockchainService.Registrat
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService.WalletCreationResult;
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,12 +47,23 @@ class AgentProvisioningTriggerIntegrationTest extends FullContextIntegrationTest
 
     @BeforeEach
     void seedData() {
+        cleanDatabase();
         jdbcTemplate.update("""
                 INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
                 VALUES (?, ?, ?, ?, 'ACTIVE')
                 ON CONFLICT DO NOTHING""",
                 SOME_OWNER_ID, "test@example.com", "0xwallet", "hash");
         agentRepository.save(SOME_AGENT_PROVISIONING);
+    }
+
+    @AfterEach
+    void cleanUp() {
+        cleanDatabase();
+    }
+
+    private void cleanDatabase() {
+        jdbcTemplate.update("DELETE FROM agents");
+        jdbcTemplate.update("DELETE FROM owners");
     }
 
     @SuppressWarnings("BusyWait")
