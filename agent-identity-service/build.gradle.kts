@@ -93,6 +93,10 @@ dependencies {
     "businessTestImplementation"(libs.testcontainers.kafka)
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 tasks.register<Test>("integrationTest") {
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
     classpath = sourceSets["integrationTest"].runtimeClasspath
