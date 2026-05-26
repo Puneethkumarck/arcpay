@@ -52,6 +52,8 @@ circle:
       read: 15000
 
 arcpay:
+  security:
+    service-token: ${SERVICE_AUTH_TOKEN:}
   contract:
     agent-registry-address: ${AGENT_REGISTRY_ADDRESS}
   blockchain:
