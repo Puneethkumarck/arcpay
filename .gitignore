@@ -1,6 +1,9 @@
 # Documentation (internal planning, specs, issues)
 docs/
 
+# Superstack
+.superstack/
+
 # IDE
 .idea/
 *.iml

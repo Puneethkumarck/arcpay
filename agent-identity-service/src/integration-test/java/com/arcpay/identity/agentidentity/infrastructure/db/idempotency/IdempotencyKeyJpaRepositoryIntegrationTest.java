@@ -31,6 +31,7 @@ class IdempotencyKeyJpaRepositoryIntegrationTest extends FullContextIntegrationT
     @BeforeEach
     void setUp() {
         jdbcTemplate.update("DELETE FROM idempotency_keys");
+        jdbcTemplate.update("DELETE FROM agents");
         jdbcTemplate.update("DELETE FROM owners");
         insertOwner(SOME_OWNER_ID, "alice@example.com", "0x1111111111111111111111111111111111111111");
         insertOwner(OTHER_OWNER_ID, "bob@example.com", "0x2222222222222222222222222222222222222222");
@@ -39,6 +40,7 @@ class IdempotencyKeyJpaRepositoryIntegrationTest extends FullContextIntegrationT
     @AfterEach
     void tearDown() {
         jdbcTemplate.update("DELETE FROM idempotency_keys");
+        jdbcTemplate.update("DELETE FROM agents");
         jdbcTemplate.update("DELETE FROM owners");
     }
 

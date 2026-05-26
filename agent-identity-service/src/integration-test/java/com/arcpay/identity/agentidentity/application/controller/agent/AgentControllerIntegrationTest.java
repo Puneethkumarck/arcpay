@@ -1,5 +1,11 @@
 package com.arcpay.identity.agentidentity.application.controller.agent;
 
+import com.arcpay.identity.agentidentity.api.model.AgentResponse;
+import com.arcpay.identity.agentidentity.api.model.AgentStatusEnum;
+import com.arcpay.identity.agentidentity.api.model.ApiError;
+import com.arcpay.identity.agentidentity.api.model.ProvisioningStatusResponse;
+import com.arcpay.identity.agentidentity.api.model.ProvisioningStepResponse;
+import com.arcpay.identity.agentidentity.api.model.StepStatusEnum;
 import com.arcpay.identity.agentidentity.application.controller.agent.handler.IdempotencyHandler;
 import com.arcpay.identity.agentidentity.application.controller.agent.mapper.AgentResponseMapper;
 import com.arcpay.identity.agentidentity.application.security.OwnerPrincipal;
@@ -7,13 +13,15 @@ import com.arcpay.identity.agentidentity.application.security.Roles;
 import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
 import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
 import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
+import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
 import com.arcpay.identity.agentidentity.domain.model.ProvisioningStatus;
 import com.arcpay.identity.agentidentity.domain.model.StepStatus;
-import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
 import com.arcpay.identity.agentidentity.domain.owner.OwnerCommandHandler;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.test.RestControllerAbstractTest;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,12 +31,12 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class AgentControllerIntegrationTest extends RestControllerAbstractTest {
@@ -50,6 +58,9 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
     @MockitoBean
     private IdempotencyHandler idempotencyHandler;
 
+    @Autowired
+    private JsonMapper jsonMapper;
+
     private static UsernamePasswordAuthenticationToken ownerAuth() {
         var principal = new OwnerPrincipal(OWNER_ID, "test@example.com");
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + Roles.OWNER));
@@ -62,13 +73,28 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
         var agent = SOME_AGENT_ACTIVE;
         given(agentQueryHandler.getAgent(agent.agentId(), OWNER_ID)).willReturn(agent);
 
-        // when / then
-        mockMvc.perform(get("/api/v1/agents/{agentId}", agent.agentId())
+        // when
+        var response = mockMvc.perform(get("/api/v1/agents/{agentId}", agent.agentId())
                         .with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.agentId").value(agent.agentId().toString()))
-                .andExpect(jsonPath("$.name").value(agent.name()))
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        var actual = jsonMapper.readValue(response, AgentResponse.class);
+        var expected = AgentResponse.builder()
+                .agentId(agent.agentId())
+                .ownerId(agent.ownerId())
+                .name(agent.name())
+                .purpose(agent.purpose())
+                .status(AgentStatusEnum.ACTIVE)
+                .walletAddress(agent.walletAddress())
+                .onChainTxHash(agent.onChainTxHash())
+                .policyHash(agent.policyHash())
+                .metadataHash(agent.metadataHash())
+                .createdAt(agent.createdAt())
+                .updatedAt(agent.updatedAt())
+                .build();
+        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
     }
 
     @Test
@@ -78,11 +104,15 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
         given(agentQueryHandler.getAgent(agentId, OWNER_ID))
                 .willThrow(new AgentNotFoundException(agentId));
 
-        // when / then
-        mockMvc.perform(get("/api/v1/agents/{agentId}", agentId)
+        // when
+        var response = mockMvc.perform(get("/api/v1/agents/{agentId}", agentId)
                         .with(authentication(ownerAuth())))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("ARCPAY-IDENTITY-0002"));
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        var actual = jsonMapper.readValue(response, ApiError.class);
+        assertThat(actual.code()).isEqualTo("ARCPAY-IDENTITY-0002");
     }
 
     @Test
@@ -92,11 +122,15 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
         given(agentQueryHandler.getAgent(agentId, OWNER_ID))
                 .willThrow(new ForbiddenException("agent", OWNER_ID));
 
-        // when / then
-        mockMvc.perform(get("/api/v1/agents/{agentId}", agentId)
+        // when
+        var response = mockMvc.perform(get("/api/v1/agents/{agentId}", agentId)
                         .with(authentication(ownerAuth())))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("ARCPAY-IDENTITY-0003"));
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        var actual = jsonMapper.readValue(response, ApiError.class);
+        assertThat(actual.code()).isEqualTo("ARCPAY-IDENTITY-0003");
     }
 
     @Test
@@ -106,11 +140,28 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
         var deactivated = agent.deactivate();
         given(agentCommandHandler.deactivate(agent.agentId(), OWNER_ID)).willReturn(deactivated);
 
-        // when / then
-        mockMvc.perform(post("/api/v1/agents/{agentId}/deactivate", agent.agentId())
+        // when
+        var response = mockMvc.perform(post("/api/v1/agents/{agentId}/deactivate", agent.agentId())
                         .with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("SUSPENDED"));
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        var actual = jsonMapper.readValue(response, AgentResponse.class);
+        var expected = AgentResponse.builder()
+                .agentId(agent.agentId())
+                .ownerId(agent.ownerId())
+                .name(agent.name())
+                .purpose(agent.purpose())
+                .status(AgentStatusEnum.SUSPENDED)
+                .walletAddress(agent.walletAddress())
+                .onChainTxHash(agent.onChainTxHash())
+                .policyHash(agent.policyHash())
+                .metadataHash(agent.metadataHash())
+                .createdAt(deactivated.createdAt())
+                .updatedAt(deactivated.updatedAt())
+                .build();
+        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
     }
 
     @Test
@@ -120,11 +171,28 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
         var reactivated = agent.reactivate();
         given(agentCommandHandler.reactivate(agent.agentId(), OWNER_ID)).willReturn(reactivated);
 
-        // when / then
-        mockMvc.perform(post("/api/v1/agents/{agentId}/reactivate", agent.agentId())
+        // when
+        var response = mockMvc.perform(post("/api/v1/agents/{agentId}/reactivate", agent.agentId())
                         .with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        var actual = jsonMapper.readValue(response, AgentResponse.class);
+        var expected = AgentResponse.builder()
+                .agentId(agent.agentId())
+                .ownerId(agent.ownerId())
+                .name(agent.name())
+                .purpose(agent.purpose())
+                .status(AgentStatusEnum.ACTIVE)
+                .walletAddress(agent.walletAddress())
+                .onChainTxHash(agent.onChainTxHash())
+                .policyHash(agent.policyHash())
+                .metadataHash(agent.metadataHash())
+                .createdAt(reactivated.createdAt())
+                .updatedAt(reactivated.updatedAt())
+                .build();
+        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
     }
 
     @Test
@@ -135,15 +203,32 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
         given(agentCommandHandler.updateMetadata(agent.agentId(), OWNER_ID, "new-name", "new-purpose"))
                 .willReturn(updated);
 
-        // when / then
-        mockMvc.perform(put("/api/v1/agents/{agentId}", agent.agentId())
+        // when
+        var response = mockMvc.perform(put("/api/v1/agents/{agentId}", agent.agentId())
                         .with(authentication(ownerAuth()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name": "new-name", "purpose": "new-purpose"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("new-name"));
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        var actual = jsonMapper.readValue(response, AgentResponse.class);
+        var expected = AgentResponse.builder()
+                .agentId(agent.agentId())
+                .ownerId(agent.ownerId())
+                .name("new-name")
+                .purpose("new-purpose")
+                .status(AgentStatusEnum.ACTIVE)
+                .walletAddress(agent.walletAddress())
+                .onChainTxHash(agent.onChainTxHash())
+                .policyHash(agent.policyHash())
+                .metadataHash(updated.metadataHash())
+                .createdAt(updated.createdAt())
+                .updatedAt(updated.updatedAt())
+                .build();
+        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
     }
 
     @Test
@@ -164,13 +249,27 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
                 StepStatus.COMPLETED);
         given(agentQueryHandler.getProvisioningStatus(agent.agentId(), OWNER_ID)).willReturn(provStatus);
 
-        // when / then
-        mockMvc.perform(get("/api/v1/agents/{agentId}/status", agent.agentId())
+        // when
+        var response = mockMvc.perform(get("/api/v1/agents/{agentId}/status", agent.agentId())
                         .with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.agentId").value(agent.agentId().toString()))
-                .andExpect(jsonPath("$.status").value("ACTIVE"))
-                .andExpect(jsonPath("$.steps[0].name").value("WALLET_CREATION"))
-                .andExpect(jsonPath("$.steps[0].status").value("COMPLETED"));
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        var actual = jsonMapper.readValue(response, ProvisioningStatusResponse.class);
+        var expected = ProvisioningStatusResponse.builder()
+                .agentId(agent.agentId())
+                .status(AgentStatusEnum.ACTIVE)
+                .steps(List.of(
+                        ProvisioningStepResponse.builder()
+                                .name("WALLET_CREATION")
+                                .status(StepStatusEnum.COMPLETED)
+                                .build(),
+                        ProvisioningStepResponse.builder()
+                                .name("ON_CHAIN_REGISTRATION")
+                                .status(StepStatusEnum.COMPLETED)
+                                .build()))
+                .build();
+        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
     }
 }

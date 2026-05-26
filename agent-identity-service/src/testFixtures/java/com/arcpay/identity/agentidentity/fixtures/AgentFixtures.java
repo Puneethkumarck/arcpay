@@ -1,9 +1,13 @@
 package com.arcpay.identity.agentidentity.fixtures;
 
 import com.arcpay.identity.agentidentity.domain.model.Agent;
+import com.arcpay.identity.agentidentity.domain.model.AgentOnChainSyncRequest;
+import com.arcpay.identity.agentidentity.domain.model.AgentProvisioningRequest;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import com.arcpay.identity.agentidentity.domain.model.OnChainOperation;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
@@ -97,6 +101,20 @@ public final class AgentFixtures {
             .failureReason("Circle wallet creation failed after max retries")
             .createdAt(SOME_CREATED_AT)
             .updatedAt(SOME_UPDATED_AT)
+            .build();
+
+    public static final AgentProvisioningRequest SOME_PROVISIONING_REQUEST = AgentProvisioningRequest.builder()
+            .agentId(SOME_AGENT_ID)
+            .ownerId(SOME_OWNER_ID)
+            .name("shopping-agent-01")
+            .purpose("Automated USDC payments for e-commerce purchases")
+            .metadataHash(SOME_METADATA_HASH)
+            .build();
+
+    public static final AgentOnChainSyncRequest SOME_ON_CHAIN_SYNC_REQUEST = AgentOnChainSyncRequest.builder()
+            .agentId(SOME_AGENT_ID)
+            .operation(OnChainOperation.DEACTIVATE)
+            .parameters(Map.of())
             .build();
 
     private AgentFixtures() {}

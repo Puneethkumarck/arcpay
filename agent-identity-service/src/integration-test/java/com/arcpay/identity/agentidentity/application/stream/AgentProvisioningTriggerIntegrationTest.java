@@ -1,0 +1,104 @@
+package com.arcpay.identity.agentidentity.application.stream;
+
+import com.arcpay.identity.agentidentity.domain.event.AgentRegistrationRequested;
+import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
+import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
+import com.arcpay.identity.agentidentity.domain.port.BlockchainService.RegistrationResult;
+import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
+import com.arcpay.identity.agentidentity.domain.port.CircleWalletService.WalletCreationResult;
+import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.time.Duration;
+import java.time.Instant;
+
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_METADATA_HASH;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_TX_HASH;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ADDRESS;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ID;
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.BDDMockito.given;
+
+class AgentProvisioningTriggerIntegrationTest extends FullContextIntegrationTest {
+
+    @MockitoBean
+    private CircleWalletService circleWalletService;
+
+    @MockitoBean
+    private BlockchainService blockchainService;
+
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Autowired
+    private AgentRepository agentRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void seedData() {
+        cleanDatabase();
+        jdbcTemplate.update("""
+                INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
+                VALUES (?, ?, ?, ?, 'ACTIVE')
+                ON CONFLICT DO NOTHING""",
+                SOME_OWNER_ID, "test@example.com", "0xwallet", "hash");
+        agentRepository.save(SOME_AGENT_PROVISIONING);
+    }
+
+    @AfterEach
+    void cleanUp() {
+        cleanDatabase();
+    }
+
+    private void cleanDatabase() {
+        jdbcTemplate.update("DELETE FROM agents");
+        jdbcTemplate.update("DELETE FROM owners");
+    }
+
+    @Test
+    void shouldTriggerWorkflowOnKafkaEvent() {
+        // given
+        given(circleWalletService.createWallet(SOME_AGENT_ID))
+                .willReturn(new WalletCreationResult(SOME_WALLET_ID, SOME_WALLET_ADDRESS));
+        given(blockchainService.registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_METADATA_HASH))
+                .willReturn(new RegistrationResult(SOME_TX_HASH, 42L));
+
+        var event = new AgentRegistrationRequested(
+                SOME_AGENT_ID, SOME_OWNER_ID, "shopping-agent-01",
+                "Automated USDC payments", SOME_METADATA_HASH, Instant.now());
+
+        // when
+        kafkaTemplate.send(AgentRegistrationRequested.TOPIC, SOME_AGENT_ID.toString(), event);
+
+        // then
+        var expected = SOME_AGENT_PROVISIONING.toBuilder()
+                .status(AgentStatus.ACTIVE)
+                .walletId(SOME_WALLET_ID)
+                .walletAddress(SOME_WALLET_ADDRESS)
+                .onChainTxHash(SOME_TX_HASH)
+                .build();
+
+        await().atMost(Duration.ofSeconds(30))
+                .pollInterval(Duration.ofMillis(500))
+                .untilAsserted(() -> {
+                    var agent = agentRepository.findById(SOME_AGENT_ID).orElseThrow();
+                    assertThat(agent)
+                            .usingRecursiveComparison()
+                            .ignoringFieldsOfTypes(Instant.class)
+                            .isEqualTo(expected);
+                });
+    }
+}
