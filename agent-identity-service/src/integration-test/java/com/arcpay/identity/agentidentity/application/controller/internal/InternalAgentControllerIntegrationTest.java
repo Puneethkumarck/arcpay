@@ -78,14 +78,14 @@ class InternalAgentControllerIntegrationTest extends RestControllerAbstractTest 
     }
 
     @Test
-    void shouldRejectUnauthenticatedRequestOnInternalEndpoint() throws Exception {
+    void shouldReturn403ForUnauthenticatedRequestOnInternalEndpoint() throws Exception {
         // when / then
         mockMvc.perform(put("/api/v1/internal/agents/{agentId}/policy", UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"policyHash": "%s"}
                                 """.formatted(VALID_POLICY_HASH)))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isForbidden());
     }
 
     @Test

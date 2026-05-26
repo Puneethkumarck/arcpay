@@ -31,7 +31,13 @@ public class IdempotencyHandler {
             throw new MissingIdempotencyKeyException();
         }
 
-        var idempotencyKey = UUID.fromString(idempotencyKeyHeader);
+        final UUID idempotencyKey;
+        try {
+            idempotencyKey = UUID.fromString(idempotencyKeyHeader);
+        } catch (IllegalArgumentException ex) {
+            throw new MissingIdempotencyKeyException();
+        }
+
         var existing = idempotencyKeyRepository.findByKeyAndOwnerId(idempotencyKey, ownerId);
         if (existing.isPresent()) {
             return toResponse(existing.get(), responseType);
@@ -45,21 +51,17 @@ public class IdempotencyHandler {
 
     private <T> void saveIdempotencyKey(UUID key, UUID ownerId, String endpoint, int status,
                                         T responseBody, Instant now) {
-        try {
-            var body = jsonMapper.writeValueAsString(responseBody);
-            var entry = IdempotencyKey.builder()
-                    .idempotencyKey(key)
-                    .ownerId(ownerId)
-                    .endpoint(endpoint)
-                    .responseStatus(status)
-                    .responseBody(body)
-                    .createdAt(now)
-                    .expiresAt(now.plus(IDEMPOTENCY_KEY_TTL_HOURS, ChronoUnit.HOURS))
-                    .build();
-            idempotencyKeyRepository.save(entry);
-        } catch (Exception e) {
-            log.warn("Failed to save idempotency key={}: {}", key, e.getMessage());
-        }
+        var body = jsonMapper.writeValueAsString(responseBody);
+        var entry = IdempotencyKey.builder()
+                .idempotencyKey(key)
+                .ownerId(ownerId)
+                .endpoint(endpoint)
+                .responseStatus(status)
+                .responseBody(body)
+                .createdAt(now)
+                .expiresAt(now.plus(IDEMPOTENCY_KEY_TTL_HOURS, ChronoUnit.HOURS))
+                .build();
+        idempotencyKeyRepository.save(entry);
     }
 
     @SuppressWarnings("unchecked")

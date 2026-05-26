@@ -145,10 +145,10 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
     }
 
     @Test
-    void shouldRejectUnauthenticatedRequest() throws Exception {
+    void shouldReturn403ForUnauthenticatedRequest() throws Exception {
         // when / then
         mockMvc.perform(get("/api/v1/agents/{agentId}", UUID.randomUUID()))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isForbidden());
     }
 
     @Test

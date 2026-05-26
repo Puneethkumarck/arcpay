@@ -28,7 +28,7 @@ public class OwnerController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public OwnerResponse register(@Valid @RequestBody RegisterOwnerRequest request) {
-        log.info("Owner registration requested email={}", request.email());
+        log.info("Owner registration requested");
         var result = ownerCommandHandler.registerOwner(request.email(), request.walletAddress());
         return ownerResponseMapper.toApi(result);
     }

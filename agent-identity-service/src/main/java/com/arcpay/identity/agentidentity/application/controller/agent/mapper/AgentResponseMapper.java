@@ -9,32 +9,23 @@ import com.arcpay.identity.agentidentity.api.model.StepStatusEnum;
 import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
 import com.arcpay.identity.agentidentity.domain.model.Agent;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component
-public class AgentResponseMapper {
+@Mapper(componentModel = "spring")
+public interface AgentResponseMapper {
 
-    public AgentResponse toApi(Agent agent) {
-        return AgentResponse.builder()
-                .agentId(agent.agentId())
-                .ownerId(agent.ownerId())
-                .name(agent.name())
-                .purpose(agent.purpose())
-                .status(mapStatus(agent.status()))
-                .walletAddress(agent.walletAddress())
-                .onChainTxHash(agent.onChainTxHash())
-                .policyHash(agent.policyHash())
-                .metadataHash(agent.metadataHash())
-                .failureReason(agent.failureReason())
-                .createdAt(agent.createdAt())
-                .updatedAt(agent.updatedAt())
-                .build();
+    @Mapping(source = "status", target = "status")
+    AgentResponse toApi(Agent agent);
+
+    default AgentStatusEnum map(AgentStatus status) {
+        return AgentStatusEnum.valueOf(status.name());
     }
 
-    public AgentListResponse toApi(Page<Agent> page) {
+    default AgentListResponse toApi(Page<Agent> page) {
         var content = page.getContent().stream().map(this::toApi).toList();
         return AgentListResponse.builder()
                 .content(content)
@@ -45,7 +36,7 @@ public class AgentResponseMapper {
                 .build();
     }
 
-    public ProvisioningStatusResponse toApi(AgentQueryHandler.ProvisioningStatus status) {
+    default ProvisioningStatusResponse toApi(AgentQueryHandler.ProvisioningStatus status) {
         var steps = List.of(
                 ProvisioningStepResponse.builder()
                         .name("WALLET_CREATION")
@@ -57,16 +48,12 @@ public class AgentResponseMapper {
                         .build());
         return ProvisioningStatusResponse.builder()
                 .agentId(status.agentId())
-                .status(mapStatus(status.overallStatus()))
+                .status(map(status.overallStatus()))
                 .steps(steps)
                 .build();
     }
 
-    private AgentStatusEnum mapStatus(AgentStatus status) {
-        return AgentStatusEnum.valueOf(status.name());
-    }
-
-    private StepStatusEnum mapStepStatus(AgentQueryHandler.StepStatus stepStatus) {
+    default StepStatusEnum mapStepStatus(AgentQueryHandler.StepStatus stepStatus) {
         return StepStatusEnum.valueOf(stepStatus.name());
     }
 }
