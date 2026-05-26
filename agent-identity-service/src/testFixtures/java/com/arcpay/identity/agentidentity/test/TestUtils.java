@@ -7,7 +7,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,10 +63,9 @@ public final class TestUtils {
                 return false;
             }
             try {
-                var fields = new HashSet<>(Arrays.asList(fieldsToIgnore));
                 assertThat(actual)
                         .usingRecursiveComparison()
-                        .ignoringFields(fields.toArray(String[]::new))
+                        .ignoringFields(fieldsToIgnore)
                         .isEqualTo(expected);
                 return true;
             } catch (AssertionError e) {

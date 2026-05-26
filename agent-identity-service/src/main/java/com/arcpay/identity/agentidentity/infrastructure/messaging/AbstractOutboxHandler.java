@@ -33,7 +33,12 @@ public abstract class AbstractOutboxHandler {
 
     private String resolveStaticField(Object event, String fieldName) {
         try {
-            return (String) event.getClass().getField(fieldName).get(null);
+            var value = event.getClass().getField(fieldName).get(null);
+            if (!(value instanceof String topic)) {
+                throw new IllegalArgumentException(
+                        "Event class static " + fieldName + " must be String: " + event.getClass().getName());
+            }
+            return topic;
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new IllegalArgumentException(
                     "Event class missing static " + fieldName + " field: " + event.getClass().getName(), e);

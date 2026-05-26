@@ -43,7 +43,7 @@ class OwnerValidatorTest {
         // given / when / then
         assertThatThrownBy(() -> ownerValidator.validateRegistration("not-an-email", VALID_WALLET))
                 .isInstanceOf(InvalidEmailException.class)
-                .hasMessageContaining("not-an-email");
+                .hasMessageContaining("Invalid email");
     }
 
     @Test
@@ -98,7 +98,7 @@ class OwnerValidatorTest {
         // given / when / then
         assertThatThrownBy(() -> ownerValidator.validateRegistration(VALID_EMAIL, "0x1234"))
                 .isInstanceOf(InvalidWalletAddressException.class)
-                .hasMessageContaining("0x1234");
+                .hasMessageContaining("Invalid wallet address");
     }
 
     @Test

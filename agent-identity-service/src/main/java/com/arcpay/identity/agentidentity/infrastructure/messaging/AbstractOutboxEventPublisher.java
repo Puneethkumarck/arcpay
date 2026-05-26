@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -17,6 +18,7 @@ public abstract class AbstractOutboxEventPublisher {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void publish(Object event) {
+        Objects.requireNonNull(event, "event must not be null");
         var key = resolveKey(event);
         outbox.schedule(event, key);
         log.debug("Scheduled outbox event type={} key={}", event.getClass().getSimpleName(), key);

@@ -71,25 +71,25 @@ class DomainExceptionsTest {
     }
 
     @Test
-    void shouldIncludeAddressInInvalidWalletAddressException() {
+    void shouldHaveGenericMessageInInvalidWalletAddressException() {
         // given
         var exception = new InvalidWalletAddressException("bad-address");
 
         // then
         assertThat(exception)
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("bad-address");
+                .hasMessageContaining("Invalid wallet address");
     }
 
     @Test
-    void shouldIncludeEmailInInvalidEmailException() {
+    void shouldHaveGenericMessageInInvalidEmailException() {
         // given
         var exception = new InvalidEmailException("not-an-email");
 
         // then
         assertThat(exception)
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("not-an-email");
+                .hasMessageContaining("Invalid email");
     }
 
     @Test
