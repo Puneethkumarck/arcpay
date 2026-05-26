@@ -6,8 +6,9 @@ import com.arcpay.identity.agentidentity.api.model.AgentStatusEnum;
 import com.arcpay.identity.agentidentity.api.model.ProvisioningStatusResponse;
 import com.arcpay.identity.agentidentity.api.model.ProvisioningStepResponse;
 import com.arcpay.identity.agentidentity.api.model.StepStatusEnum;
-import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
 import com.arcpay.identity.agentidentity.domain.model.Agent;
+import com.arcpay.identity.agentidentity.domain.model.ProvisioningStatus;
+import com.arcpay.identity.agentidentity.domain.model.StepStatus;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -36,7 +37,7 @@ public interface AgentResponseMapper {
                 .build();
     }
 
-    default ProvisioningStatusResponse toApi(AgentQueryHandler.ProvisioningStatus status) {
+    default ProvisioningStatusResponse toApi(ProvisioningStatus status) {
         var steps = List.of(
                 ProvisioningStepResponse.builder()
                         .name("WALLET_CREATION")
@@ -53,7 +54,7 @@ public interface AgentResponseMapper {
                 .build();
     }
 
-    default StepStatusEnum mapStepStatus(AgentQueryHandler.StepStatus stepStatus) {
+    default StepStatusEnum mapStepStatus(StepStatus stepStatus) {
         return StepStatusEnum.valueOf(stepStatus.name());
     }
 }

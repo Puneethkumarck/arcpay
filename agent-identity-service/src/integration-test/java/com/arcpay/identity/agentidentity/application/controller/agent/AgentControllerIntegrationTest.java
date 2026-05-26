@@ -7,6 +7,8 @@ import com.arcpay.identity.agentidentity.application.security.Roles;
 import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
 import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
 import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
+import com.arcpay.identity.agentidentity.domain.model.ProvisioningStatus;
+import com.arcpay.identity.agentidentity.domain.model.StepStatus;
 import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
 import com.arcpay.identity.agentidentity.domain.owner.OwnerCommandHandler;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
@@ -155,11 +157,11 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
     void shouldGetProvisioningStatus() throws Exception {
         // given
         var agent = SOME_AGENT_ACTIVE;
-        var provStatus = new AgentQueryHandler.ProvisioningStatus(
+        var provStatus = new ProvisioningStatus(
                 agent.agentId(),
                 agent.status(),
-                AgentQueryHandler.StepStatus.COMPLETED,
-                AgentQueryHandler.StepStatus.COMPLETED);
+                StepStatus.COMPLETED,
+                StepStatus.COMPLETED);
         given(agentQueryHandler.getProvisioningStatus(agent.agentId(), OWNER_ID)).willReturn(provStatus);
 
         // when / then
