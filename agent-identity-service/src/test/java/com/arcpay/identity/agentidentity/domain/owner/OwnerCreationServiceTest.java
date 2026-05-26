@@ -1,5 +1,6 @@
 package com.arcpay.identity.agentidentity.domain.owner;
 
+import com.arcpay.identity.agentidentity.domain.model.Owner;
 import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
 import org.junit.jupiter.api.Test;
 
@@ -14,13 +15,34 @@ class OwnerCreationServiceTest {
     private final OwnerCreationService ownerCreationService = new OwnerCreationService();
 
     @Test
+    void shouldCreateOwnerWithExpectedDeterministicFields() {
+        // given
+        var email = "alice@example.com";
+        var walletAddress = "0x1234567890AbCdEf1234567890aBcDeF12345678";
+
+        // when
+        var result = ownerCreationService.createOwner(email, walletAddress);
+
+        // then
+        var owner = result.owner();
+        var expected = Owner.builder()
+                .ownerId(owner.ownerId())
+                .email(email)
+                .walletAddress("0x1234567890abcdef1234567890abcdef12345678")
+                .apiKeyHash(owner.apiKeyHash())
+                .status(OwnerStatus.ACTIVE)
+                .createdAt(owner.createdAt())
+                .updatedAt(owner.updatedAt())
+                .build();
+        assertThat(owner).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @Test
     void shouldCreateOwnerWithUuidV7() {
         // given / when
         var result = ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
 
         // then
-        assertThat(result.owner().ownerId()).isNotNull();
-        // UUID v7 has version nibble = 7 in the most significant bits
         assertThat(result.owner().ownerId().version()).isEqualTo(7);
     }
 
@@ -30,8 +52,7 @@ class OwnerCreationServiceTest {
         var apiKey = ownerCreationService.generateApiKey();
 
         // then
-        assertThat(apiKey).startsWith("ak_test_");
-        assertThat(apiKey).hasSize(8 + 32); // "ak_test_" (8 chars) + 32 random chars
+        assertThat(apiKey).startsWith("ak_test_").hasSize(40);
     }
 
     @Test
@@ -62,16 +83,7 @@ class OwnerCreationServiceTest {
     }
 
     @Test
-    void shouldSetStatusToActive() {
-        // given / when
-        var result = ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
-
-        // then
-        assertThat(result.owner().status()).isEqualTo(OwnerStatus.ACTIVE);
-    }
-
-    @Test
-    void shouldReturnRawApiKeyInResult() {
+    void shouldReturnRawApiKeyDistinctFromHash() {
         // given / when
         var result = ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
 
@@ -81,13 +93,11 @@ class OwnerCreationServiceTest {
     }
 
     @Test
-    void shouldSetTimestamps() {
+    void shouldSetCreatedAtAndUpdatedAtToSameValue() {
         // given / when
         var result = ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
 
         // then
-        assertThat(result.owner().createdAt()).isNotNull();
-        assertThat(result.owner().updatedAt()).isNotNull();
         assertThat(result.owner().createdAt()).isEqualTo(result.owner().updatedAt());
     }
 }

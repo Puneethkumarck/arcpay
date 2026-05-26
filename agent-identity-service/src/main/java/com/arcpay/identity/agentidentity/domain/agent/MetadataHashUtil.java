@@ -5,10 +5,6 @@ import org.web3j.crypto.Hash;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 
-/**
- * Computes keccak256(abi.encodePacked(name, purpose)) to match the on-chain
- * AgentRegistry.sol metadataHash computation.
- */
 public final class MetadataHashUtil {
 
     private MetadataHashUtil() {}

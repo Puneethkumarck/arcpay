@@ -59,9 +59,6 @@ class OutboxEventPublisherTest {
                 .hasMessageContaining("ownerId");
     }
 
-    /**
-     * Testable subclass that bypasses @Transactional(MANDATORY) for unit testing.
-     */
     private static class TestableOutboxEventPublisher extends OutboxEventPublisher {
         TestableOutboxEventPublisher(Outbox outbox) {
             super(outbox);

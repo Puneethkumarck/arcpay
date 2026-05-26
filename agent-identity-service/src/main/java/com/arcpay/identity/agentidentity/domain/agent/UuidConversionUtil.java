@@ -3,10 +3,6 @@ package com.arcpay.identity.agentidentity.domain.agent;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-/**
- * Converts a Java UUID to a Solidity bytes32 value (left-padded with zeros).
- * UUID occupies positions 16–31, positions 0–15 are zero.
- */
 public final class UuidConversionUtil {
 
     private static final int BYTES32_LENGTH = 32;

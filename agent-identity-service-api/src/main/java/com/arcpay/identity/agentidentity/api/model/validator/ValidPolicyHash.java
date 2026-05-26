@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidPolicyHash {
-    String message() default "Invalid policy hash: must start with 0x followed by 64 hex characters";
+    String message() default ErrorMessages.POLICY_HASH_INVALID;
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

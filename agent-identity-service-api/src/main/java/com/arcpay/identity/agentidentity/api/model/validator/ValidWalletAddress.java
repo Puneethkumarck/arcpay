@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidWalletAddress {
-    String message() default "Invalid wallet address: must start with 0x followed by 40 hex characters";
+    String message() default ErrorMessages.WALLET_ADDRESS_INVALID;
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

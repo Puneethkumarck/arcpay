@@ -6,9 +6,6 @@ import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Test helpers for creating authenticated security contexts.
- */
 public final class AuthenticationGenerator {
 
     private AuthenticationGenerator() {}

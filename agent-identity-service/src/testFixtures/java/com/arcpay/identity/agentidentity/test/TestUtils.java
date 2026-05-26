@@ -13,9 +13,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.argThat;
 
-/**
- * Test utilities for timestamp-agnostic matching in BDD Mockito verifications.
- */
 public final class TestUtils {
 
     private static final Set<Class<?>> TIMESTAMP_TYPES = Set.of(
@@ -27,18 +24,10 @@ public final class TestUtils {
 
     private TestUtils() {}
 
-    /**
-     * Mockito argument matcher that compares objects using recursive comparison,
-     * ignoring all temporal fields (Instant, LocalDateTime, LocalDate, ZonedDateTime).
-     */
     public static <T> T eqIgnoringTimestamps(T expected) {
         return argThat(new RecursiveComparisonIgnoringTimestamps<>(expected));
     }
 
-    /**
-     * Mockito argument matcher that compares objects using recursive comparison,
-     * ignoring the specified fields.
-     */
     public static <T> T eqIgnoring(T expected, String... fieldsToIgnore) {
         return argThat(new RecursiveComparisonIgnoringFields<>(expected, fieldsToIgnore));
     }
