@@ -84,6 +84,7 @@ configurations {
 
 dependencies {
     "integrationTestImplementation"("org.springframework.boot:spring-boot-starter-test")
+    "integrationTestImplementation"("org.springframework.security:spring-security-test")
     "integrationTestImplementation"("org.springframework.boot:spring-boot-testcontainers")
     "integrationTestImplementation"(libs.testcontainers.junit.jupiter)
     "integrationTestImplementation"(libs.testcontainers.postgresql)

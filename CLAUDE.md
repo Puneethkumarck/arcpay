@@ -48,6 +48,7 @@ com.arcpay.identity.agentidentity
 - Java records with `@Builder(toBuilder = true)` per ADR-002
 - State transitions return new instances (immutable): `agent.withWallet(...)` returns new Agent
 - Domain exceptions are plain `RuntimeException` subclasses with contextual messages — NO error code field
+- **One public type per file** — never nest public enums or records inside service classes; extract them to their own file in `domain/model/`
 
 ### JPA Entities
 - `@NoArgsConstructor` + `@AllArgsConstructor` + `@Getter` + `@Setter` + `@Builder(toBuilder = true)`

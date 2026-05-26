@@ -4,6 +4,8 @@ import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException
 import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
 import com.arcpay.identity.agentidentity.domain.model.Agent;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import com.arcpay.identity.agentidentity.domain.model.ProvisioningStatus;
+import com.arcpay.identity.agentidentity.domain.model.StepStatus;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -79,15 +81,4 @@ public class AgentQueryHandler {
                 StepStatus.COMPLETED,
                 StepStatus.FAILED);
     }
-
-    public enum StepStatus {
-        PENDING, IN_PROGRESS, COMPLETED, FAILED
-    }
-
-    public record ProvisioningStatus(
-            UUID agentId,
-            AgentStatus overallStatus,
-            StepStatus walletCreation,
-            StepStatus onChainRegistration
-    ) {}
 }

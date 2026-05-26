@@ -1,7 +1,7 @@
 package com.arcpay.identity.agentidentity.domain.agent;
 
-import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler.ProvisioningStatus;
-import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler.StepStatus;
+import com.arcpay.identity.agentidentity.domain.model.ProvisioningStatus;
+import com.arcpay.identity.agentidentity.domain.model.StepStatus;
 import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
 import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
 import com.arcpay.identity.agentidentity.domain.model.Agent;
