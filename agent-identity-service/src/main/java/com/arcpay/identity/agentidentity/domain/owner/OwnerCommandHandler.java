@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -29,7 +27,7 @@ public class OwnerCommandHandler {
                 savedOwner.ownerId(),
                 savedOwner.email(),
                 savedOwner.walletAddress(),
-                Instant.now()));
+                savedOwner.createdAt()));
         log.info("Owner registered ownerId={}", savedOwner.ownerId());
         return new OwnerCreationService.OwnerWithApiKey(savedOwner, result.rawApiKey());
     }

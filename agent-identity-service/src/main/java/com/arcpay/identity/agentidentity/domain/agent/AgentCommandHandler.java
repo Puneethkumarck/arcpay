@@ -39,7 +39,7 @@ public class AgentCommandHandler {
                 savedAgent.name(),
                 savedAgent.purpose(),
                 savedAgent.metadataHash(),
-                Instant.now()));
+                savedAgent.createdAt()));
         log.info("Agent registration requested agentId={} ownerId={}", savedAgent.agentId(), ownerId);
         return savedAgent;
     }
@@ -58,7 +58,7 @@ public class AgentCommandHandler {
                 savedAgent.name(),
                 savedAgent.purpose(),
                 savedAgent.metadataHash(),
-                Instant.now()));
+                savedAgent.updatedAt()));
         log.info("Agent metadata updated agentId={}", agentId);
         return savedAgent;
     }
@@ -68,7 +68,7 @@ public class AgentCommandHandler {
         var agent = findAgentForUpdate(agentId, ownerId);
         var deactivatedAgent = agent.deactivate();
         var savedAgent = agentRepository.save(deactivatedAgent);
-        eventPublisher.publish(new AgentDeactivated(savedAgent.agentId(), Instant.now()));
+        eventPublisher.publish(new AgentDeactivated(savedAgent.agentId(), savedAgent.updatedAt()));
         log.info("Agent deactivated agentId={}", agentId);
         return savedAgent;
     }
@@ -78,7 +78,7 @@ public class AgentCommandHandler {
         var agent = findAgentForUpdate(agentId, ownerId);
         var reactivatedAgent = agent.reactivate();
         var savedAgent = agentRepository.save(reactivatedAgent);
-        eventPublisher.publish(new AgentReactivated(savedAgent.agentId(), Instant.now()));
+        eventPublisher.publish(new AgentReactivated(savedAgent.agentId(), savedAgent.updatedAt()));
         log.info("Agent reactivated agentId={}", agentId);
         return savedAgent;
     }
@@ -87,12 +87,13 @@ public class AgentCommandHandler {
     public Agent updatePolicy(UUID agentId, UUID ownerId, String policyHash) {
         agentValidator.validatePolicyUpdate(policyHash);
         var agent = findAgentForUpdate(agentId, ownerId);
+        var now = Instant.now();
         var updatedAgent = agent.toBuilder()
                 .policyHash(policyHash)
-                .updatedAt(Instant.now())
+                .updatedAt(now)
                 .build();
         var savedAgent = agentRepository.save(updatedAgent);
-        eventPublisher.publish(new AgentPolicyUpdated(savedAgent.agentId(), policyHash, Instant.now()));
+        eventPublisher.publish(new AgentPolicyUpdated(savedAgent.agentId(), policyHash, now));
         log.info("Agent policy updated agentId={}", agentId);
         return savedAgent;
     }

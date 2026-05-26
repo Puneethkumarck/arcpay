@@ -48,6 +48,7 @@ class AgentProvisioningServiceTest {
         var walletAddress = "0xabc123";
         given(agentRepository.findByIdForUpdate(agent.agentId())).willReturn(Optional.of(agent));
         var updatedAgent = agent.withWallet(walletId, walletAddress);
+        given(agentRepository.save(eqIgnoringTimestamps(updatedAgent))).willReturn(updatedAgent);
 
         // when
         agentProvisioningService.completeWalletCreation(agent.agentId(), walletId, walletAddress);
@@ -91,6 +92,7 @@ class AgentProvisioningServiceTest {
         var blockNumber = 42L;
         given(agentRepository.findByIdForUpdate(agent.agentId())).willReturn(Optional.of(agent));
         var updatedAgent = agent.withOnChainRegistration(txHash);
+        given(agentRepository.save(eqIgnoringTimestamps(updatedAgent))).willReturn(updatedAgent);
 
         // when
         agentProvisioningService.completeOnChainRegistration(agent.agentId(), txHash, blockNumber);
@@ -123,6 +125,7 @@ class AgentProvisioningServiceTest {
         var agent = SOME_AGENT_PROVISIONING;
         given(agentRepository.findByIdForUpdate(agent.agentId())).willReturn(Optional.of(agent));
         var failedAgent = agent.withFailure("Circle API error");
+        given(agentRepository.save(eqIgnoringTimestamps(failedAgent))).willReturn(failedAgent);
 
         // when
         agentProvisioningService.failProvisioning(agent.agentId(), "WALLET_CREATION", "Circle API error");
@@ -139,11 +142,14 @@ class AgentProvisioningServiceTest {
         // given
         var agent = SOME_AGENT_WALLET_READY;
         given(agentRepository.findByIdForUpdate(agent.agentId())).willReturn(Optional.of(agent));
+        var failedAgent = agent.withFailure("Gas estimation failed");
+        given(agentRepository.save(eqIgnoringTimestamps(failedAgent))).willReturn(failedAgent);
 
         // when
         agentProvisioningService.failProvisioning(agent.agentId(), "ON_CHAIN_REGISTRATION", "Gas estimation failed");
 
         // then
+        then(agentRepository).should().save(eqIgnoringTimestamps(failedAgent));
         then(eventPublisher).should().publish(eqIgnoring(
                 new AgentProvisioningFailed(agent.agentId(), "ON_CHAIN_REGISTRATION", "Gas estimation failed", Instant.now()),
                 "failedAt"));

@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
@@ -33,8 +32,8 @@ public class AgentProvisioningService {
             throw new AgentNotInExpectedStateException(agentId, agent.status(), AgentStatus.PROVISIONING);
         }
         var updatedAgent = agent.withWallet(walletId, walletAddress);
-        agentRepository.save(updatedAgent);
-        eventPublisher.publish(new AgentWalletProvisioned(agentId, walletId, walletAddress, Instant.now()));
+        var savedAgent = agentRepository.save(updatedAgent);
+        eventPublisher.publish(new AgentWalletProvisioned(agentId, walletId, walletAddress, savedAgent.updatedAt()));
         log.info("Wallet creation completed agentId={} walletId={}", agentId, walletId);
     }
 
@@ -46,9 +45,9 @@ public class AgentProvisioningService {
             throw new AgentNotInExpectedStateException(agentId, agent.status(), AgentStatus.WALLET_READY);
         }
         var updatedAgent = agent.withOnChainRegistration(txHash);
-        agentRepository.save(updatedAgent);
-        eventPublisher.publish(new AgentOnChainRegistered(agentId, txHash, blockNumber, Instant.now()));
-        eventPublisher.publish(new AgentActivated(agentId, Instant.now()));
+        var savedAgent = agentRepository.save(updatedAgent);
+        eventPublisher.publish(new AgentOnChainRegistered(agentId, txHash, blockNumber, savedAgent.updatedAt()));
+        eventPublisher.publish(new AgentActivated(agentId, savedAgent.updatedAt()));
         log.info("On-chain registration completed agentId={} txHash={}", agentId, txHash);
     }
 
@@ -60,8 +59,8 @@ public class AgentProvisioningService {
             throw new AgentNotInExpectedStateException(agentId, agent.status(), AgentStatus.PROVISIONING);
         }
         var updatedAgent = agent.withFailure(reason);
-        agentRepository.save(updatedAgent);
-        eventPublisher.publish(new AgentProvisioningFailed(agentId, failedStep, reason, Instant.now()));
+        var savedAgent = agentRepository.save(updatedAgent);
+        eventPublisher.publish(new AgentProvisioningFailed(agentId, failedStep, reason, savedAgent.updatedAt()));
         log.info("Provisioning failed agentId={} step={} reason={}", agentId, failedStep, reason);
     }
 }

@@ -32,12 +32,20 @@ class BlockchainAdapter implements BlockchainService {
     private final String contractAddress;
     private final GasUsageRepository gasUsageRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
     BlockchainAdapter(
             BlockchainProperties properties,
             GasUsageRepository gasUsageRepository,
             @Value("${arcpay.contract.agent-registry-address}") String contractAddress) {
         this.web3j = Web3j.build(new HttpService(properties.rpcUrl()));
         this.credentials = Credentials.create(properties.platformWalletPrivateKey());
+        this.contractAddress = contractAddress;
+        this.gasUsageRepository = gasUsageRepository;
+    }
+
+    BlockchainAdapter(Web3j web3j, GasUsageRepository gasUsageRepository, String contractAddress) {
+        this.web3j = web3j;
+        this.credentials = null;
         this.contractAddress = contractAddress;
         this.gasUsageRepository = gasUsageRepository;
     }

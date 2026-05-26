@@ -23,6 +23,7 @@ class CircleWalletAdapter implements CircleWalletService {
     private final RestClient restClient;
     private final CircleApiProperties properties;
 
+    @org.springframework.beans.factory.annotation.Autowired
     CircleWalletAdapter(CircleApiProperties properties) {
         this.properties = properties;
         var requestFactory = new SimpleClientHttpRequestFactory();
@@ -34,6 +35,11 @@ class CircleWalletAdapter implements CircleWalletService {
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + properties.apiKey())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
+    }
+
+    CircleWalletAdapter(CircleApiProperties properties, RestClient restClient) {
+        this.properties = properties;
+        this.restClient = restClient;
     }
 
     @Override
