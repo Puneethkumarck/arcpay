@@ -6,14 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
 
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_EMAIL;
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ENTITY;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_WALLET_ADDRESS;
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.someOwnerEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -26,7 +25,8 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldFindOwnerByApiKeyHash() {
         // given
-        jpaRepository.saveAndFlush(SOME_OWNER_ENTITY);
+        var owner = someOwnerEntity();
+        jpaRepository.saveAndFlush(owner);
 
         // when
         var result = jpaRepository.findByApiKeyHash(SOME_API_KEY_HASH);
@@ -36,14 +36,14 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
                 .isPresent()
                 .get()
                 .usingRecursiveComparison()
-                .ignoringFieldsOfTypes(Instant.class)
-                .isEqualTo(SOME_OWNER_ENTITY);
+                .ignoringFields("createdAt", "updatedAt")
+                .isEqualTo(owner);
     }
 
     @Test
     void shouldReturnTrueForExistingEmailCaseInsensitive() {
         // given
-        jpaRepository.saveAndFlush(SOME_OWNER_ENTITY);
+        jpaRepository.saveAndFlush(someOwnerEntity());
 
         // when
         var result = jpaRepository.existsByEmailIgnoreCase(SOME_EMAIL.toUpperCase(Locale.ROOT));
@@ -55,7 +55,7 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldReturnTrueForExistingWalletAddressCaseInsensitive() {
         // given
-        jpaRepository.saveAndFlush(SOME_OWNER_ENTITY);
+        jpaRepository.saveAndFlush(someOwnerEntity());
 
         // when
         var result = jpaRepository.existsByWalletAddressIgnoreCase(SOME_WALLET_ADDRESS.toUpperCase(Locale.ROOT));
@@ -67,8 +67,8 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldRejectDuplicateEmail() {
         // given
-        jpaRepository.saveAndFlush(SOME_OWNER_ENTITY);
-        var duplicate = SOME_OWNER_ENTITY.toBuilder()
+        jpaRepository.saveAndFlush(someOwnerEntity());
+        var duplicate = someOwnerEntity().toBuilder()
                 .ownerId(UUID.randomUUID())
                 .email(SOME_EMAIL.toUpperCase(Locale.ROOT))
                 .walletAddress("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
@@ -84,8 +84,8 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldRejectDuplicateWalletAddress() {
         // given
-        jpaRepository.saveAndFlush(SOME_OWNER_ENTITY);
-        var duplicate = SOME_OWNER_ENTITY.toBuilder()
+        jpaRepository.saveAndFlush(someOwnerEntity());
+        var duplicate = someOwnerEntity().toBuilder()
                 .ownerId(UUID.randomUUID())
                 .email("bob@example.com")
                 .walletAddress(SOME_WALLET_ADDRESS.toUpperCase(Locale.ROOT))
