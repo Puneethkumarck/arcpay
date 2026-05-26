@@ -1,5 +1,6 @@
 package com.arcpay.identity.agentidentity.domain.model;
 
+import com.arcpay.identity.agentidentity.domain.exception.AgentNotInExpectedStateException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -59,6 +60,41 @@ public record Agent(
         return toBuilder()
                 .failureReason(reason)
                 .status(AgentStatus.FAILED)
+                .updatedAt(Instant.now())
+                .build();
+    }
+
+    public Agent deactivate() {
+        if (status != AgentStatus.ACTIVE) {
+            throw new AgentNotInExpectedStateException(agentId, status, AgentStatus.ACTIVE);
+        }
+        return toBuilder()
+                .status(AgentStatus.SUSPENDED)
+                .updatedAt(Instant.now())
+                .build();
+    }
+
+    public Agent reactivate() {
+        if (status != AgentStatus.SUSPENDED) {
+            throw new AgentNotInExpectedStateException(agentId, status, AgentStatus.SUSPENDED);
+        }
+        return toBuilder()
+                .status(AgentStatus.ACTIVE)
+                .updatedAt(Instant.now())
+                .build();
+    }
+
+    public Agent updateMetadata(String name, String purpose, String metadataHash) {
+        if (status == AgentStatus.PROVISIONING || status == AgentStatus.FAILED) {
+            throw new AgentNotInExpectedStateException(agentId, status, AgentStatus.ACTIVE);
+        }
+        Objects.requireNonNull(name, "name must not be null");
+        Objects.requireNonNull(purpose, "purpose must not be null");
+        Objects.requireNonNull(metadataHash, "metadataHash must not be null");
+        return toBuilder()
+                .name(name)
+                .purpose(purpose)
+                .metadataHash(metadataHash)
                 .updatedAt(Instant.now())
                 .build();
     }

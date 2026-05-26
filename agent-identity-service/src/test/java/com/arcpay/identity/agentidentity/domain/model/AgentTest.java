@@ -1,15 +1,19 @@
 package com.arcpay.identity.agentidentity.domain.model;
 
+import com.arcpay.identity.agentidentity.domain.exception.AgentNotInExpectedStateException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_FAILED;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_SUSPENDED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -102,6 +106,134 @@ class AgentTest {
                 .updatedAt(result.updatedAt())
                 .build();
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @Test
+    void shouldTransitionToSuspendedOnDeactivate() {
+        // given
+        var agent = SOME_AGENT_ACTIVE;
+
+        // when
+        var result = agent.deactivate();
+
+        // then
+        var expected = agent.toBuilder()
+                .status(AgentStatus.SUSPENDED)
+                .updatedAt(result.updatedAt())
+                .build();
+        assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AgentStatus.class, names = "ACTIVE", mode = EnumSource.Mode.EXCLUDE)
+    void shouldThrowWhenDeactivatingNonActiveAgent(AgentStatus status) {
+        // given
+        var agent = SOME_AGENT_ACTIVE.toBuilder().status(status).build();
+
+        // when / then
+        assertThatThrownBy(agent::deactivate)
+                .isInstanceOf(AgentNotInExpectedStateException.class)
+                .hasMessageContaining(status.name())
+                .hasMessageContaining("ACTIVE");
+    }
+
+    @Test
+    void shouldTransitionToActiveOnReactivate() {
+        // given
+        var agent = SOME_AGENT_SUSPENDED;
+
+        // when
+        var result = agent.reactivate();
+
+        // then
+        var expected = agent.toBuilder()
+                .status(AgentStatus.ACTIVE)
+                .updatedAt(result.updatedAt())
+                .build();
+        assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AgentStatus.class, names = "SUSPENDED", mode = EnumSource.Mode.EXCLUDE)
+    void shouldThrowWhenReactivatingNonSuspendedAgent(AgentStatus status) {
+        // given
+        var agent = SOME_AGENT_ACTIVE.toBuilder().status(status).build();
+
+        // when / then
+        assertThatThrownBy(agent::reactivate)
+                .isInstanceOf(AgentNotInExpectedStateException.class)
+                .hasMessageContaining(status.name())
+                .hasMessageContaining("SUSPENDED");
+    }
+
+    @Test
+    void shouldUpdateMetadataOnActiveAgent() {
+        // given
+        var agent = SOME_AGENT_ACTIVE;
+
+        // when
+        var result = agent.updateMetadata("new-name", "new-purpose", "0xnewhash");
+
+        // then
+        var expected = agent.toBuilder()
+                .name("new-name")
+                .purpose("new-purpose")
+                .metadataHash("0xnewhash")
+                .updatedAt(result.updatedAt())
+                .build();
+        assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @Test
+    void shouldUpdateMetadataOnSuspendedAgent() {
+        // given
+        var agent = SOME_AGENT_SUSPENDED;
+
+        // when
+        var result = agent.updateMetadata("new-name", "new-purpose", "0xnewhash");
+
+        // then
+        var expected = agent.toBuilder()
+                .name("new-name")
+                .purpose("new-purpose")
+                .metadataHash("0xnewhash")
+                .updatedAt(result.updatedAt())
+                .build();
+        assertThat(result).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @Test
+    void shouldThrowWhenUpdatingMetadataOnProvisioningAgent() {
+        // given
+        var agent = SOME_AGENT_PROVISIONING;
+
+        // when / then
+        assertThatThrownBy(() -> agent.updateMetadata("name", "purpose", "0xhash"))
+                .isInstanceOf(AgentNotInExpectedStateException.class);
+    }
+
+    @Test
+    void shouldThrowWhenUpdatingMetadataOnFailedAgent() {
+        // given
+        var agent = SOME_AGENT_FAILED;
+
+        // when / then
+        assertThatThrownBy(() -> agent.updateMetadata("name", "purpose", "0xhash"))
+                .isInstanceOf(AgentNotInExpectedStateException.class);
+    }
+
+    @Test
+    void shouldReturnNewInstanceOnEveryTransition() {
+        // given
+        var original = SOME_AGENT_PROVISIONING;
+
+        // when
+        var withWallet = original.withWallet("w1", "0xabc");
+        var withFailure = original.withFailure("reason");
+
+        // then
+        assertThat(withWallet).isNotSameAs(original);
+        assertThat(withFailure).isNotSameAs(original);
     }
 
     @Test
