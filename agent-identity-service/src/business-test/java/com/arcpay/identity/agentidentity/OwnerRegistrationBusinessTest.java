@@ -5,14 +5,19 @@ import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import com.arcpay.identity.agentidentity.test.BusinessTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class OwnerRegistrationBusinessTest extends BusinessTest {
 
     @MockitoBean
@@ -32,6 +37,7 @@ class OwnerRegistrationBusinessTest extends BusinessTest {
     }
 
     @Test
+    @Order(1)
     @SuppressWarnings("unchecked")
     void shouldRegisterOwnerAndReturnApiKey() {
         // when
@@ -55,6 +61,41 @@ class OwnerRegistrationBusinessTest extends BusinessTest {
     }
 
     @Test
+    @Order(2)
+    @SuppressWarnings("unchecked")
+    void shouldUseApiKeyToCreateAgent() {
+        // given — register owner and extract apiKey
+        var ownerResponse = restClient().post()
+                .uri("/api/v1/owners/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"email": "bob@example.com", "walletAddress": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"}
+                        """)
+                .retrieve()
+                .body(Map.class);
+        var apiKey = (String) ownerResponse.get("apiKey");
+
+        // when — use apiKey to create agent
+        var agentResponse = restClient().post()
+                .uri("/api/v1/agents")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + apiKey)
+                .header("Idempotency-Key", UUID.randomUUID().toString())
+                .body("""
+                        {"name": "bobs-agent", "purpose": "Owner registration flow test", "policyHash": "0x%s"}
+                        """.formatted("d".repeat(64)))
+                .retrieve()
+                .toEntity(Map.class);
+
+        // then
+        assertThat(agentResponse.getStatusCode().value()).isEqualTo(201);
+        assertThat(agentResponse.getBody().get("agentId")).isNotNull();
+        assertThat(agentResponse.getBody().get("name")).isEqualTo("bobs-agent");
+        assertThat(agentResponse.getBody().get("status")).isEqualTo("PROVISIONING");
+    }
+
+    @Test
+    @Order(3)
     void shouldRejectRateLimitedRegistrations() {
         // when — register 10 times (limit is 10/hour)
         for (var i = 0; i < 10; i++) {

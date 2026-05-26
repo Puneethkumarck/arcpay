@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 
 class AgentLifecycleBusinessTest extends BusinessTest {
 
@@ -41,6 +40,7 @@ class AgentLifecycleBusinessTest extends BusinessTest {
         cleanDatabase();
         apiKey = registerOwner();
 
+        // any() required: agentId is server-generated and stubs must be in place before Temporal workflow runs
         given(circleWalletService.createWallet(any()))
                 .willReturn(new WalletCreationResult(SOME_WALLET_ID, SOME_WALLET_ADDRESS));
         given(blockchainService.registerAgent(any(), any(), any()))

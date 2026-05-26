@@ -43,6 +43,7 @@ class AgentProvisioningFailureBusinessTest extends BusinessTest {
     @SuppressWarnings("unchecked")
     void shouldReachFailedStatusOnCircleApiFailure() {
         // given — Circle wallet creation fails
+        // any() required: agentId is server-generated and stubs must be in place before Temporal workflow runs
         given(circleWalletService.createWallet(any()))
                 .willThrow(new RuntimeException("Circle API unavailable"));
 

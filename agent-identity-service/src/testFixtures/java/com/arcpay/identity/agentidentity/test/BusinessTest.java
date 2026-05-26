@@ -34,6 +34,8 @@ public abstract class BusinessTest {
     @LocalServerPort
     private int port;
 
+    private RestClient cachedRestClient;
+
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
@@ -45,9 +47,12 @@ public abstract class BusinessTest {
     }
 
     protected RestClient restClient() {
-        return RestClient.builder()
-                .baseUrl("http://localhost:" + port)
-                .build();
+        if (cachedRestClient == null) {
+            cachedRestClient = RestClient.builder()
+                    .baseUrl("http://localhost:" + port)
+                    .build();
+        }
+        return cachedRestClient;
     }
 
     protected void cleanDatabase() {

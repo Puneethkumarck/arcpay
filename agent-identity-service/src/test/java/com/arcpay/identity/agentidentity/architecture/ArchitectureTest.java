@@ -68,6 +68,9 @@ class ArchitectureTest {
             .allowEmptyShould(true);
 
     // ── Naming conventions ──
+    // Note: allowEmptyShould(true) is required because ArchUnit 1.3.0 + JDK 25 + DoNotIncludeTests
+    // does not resolve annotation-based that() predicates against main classes. The negative-form
+    // package convention rules below provide the actual enforcement.
 
     @ArchTest
     static final ArchRule controllers_should_be_suffixed = classes()
