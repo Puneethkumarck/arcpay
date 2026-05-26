@@ -83,14 +83,16 @@ class OwnerCommandHandlerTest {
     @Test
     void shouldReturnRawApiKeyInResult() {
         // given
+        var ownerId = UUID.randomUUID();
+        var now = Instant.now();
         var owner = Owner.builder()
-                .ownerId(UUID.randomUUID())
+                .ownerId(ownerId)
                 .email(VALID_EMAIL)
                 .walletAddress(VALID_WALLET)
                 .apiKeyHash("hash")
                 .status(OwnerStatus.ACTIVE)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
         var rawApiKey = "ak_test_secretkey123";
         given(ownerCreationService.createOwner(VALID_EMAIL, VALID_WALLET))
@@ -101,8 +103,10 @@ class OwnerCommandHandlerTest {
         var result = ownerCommandHandler.registerOwner(VALID_EMAIL, VALID_WALLET);
 
         // then
-        assertThat(result.rawApiKey()).startsWith("ak_test_");
-        assertThat(result.owner().apiKeyHash()).isNotEqualTo(result.rawApiKey());
+        var expected = new OwnerCreationService.OwnerWithApiKey(owner, rawApiKey);
+        assertThat(result).usingRecursiveComparison()
+                .ignoringFields("owner.createdAt", "owner.updatedAt")
+                .isEqualTo(expected);
     }
 
     @Test

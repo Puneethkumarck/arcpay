@@ -3,6 +3,7 @@ package com.arcpay.identity.agentidentity.domain.agent;
 import com.arcpay.identity.agentidentity.domain.exception.AgentNameDuplicateException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidAgentNameException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidPolicyHashException;
+import com.arcpay.identity.agentidentity.domain.exception.InvalidPurposeException;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -60,10 +61,10 @@ public class AgentValidator {
 
     private void validatePurpose(String purpose) {
         if (purpose == null || purpose.isBlank()) {
-            throw new IllegalArgumentException("Purpose must not be empty");
+            throw new InvalidPurposeException("Purpose must not be empty");
         }
         if (purpose.length() > MAX_PURPOSE_LENGTH) {
-            throw new IllegalArgumentException("Purpose must not exceed " + MAX_PURPOSE_LENGTH + " characters");
+            throw new InvalidPurposeException("Purpose must not exceed " + MAX_PURPOSE_LENGTH + " characters");
         }
     }
 

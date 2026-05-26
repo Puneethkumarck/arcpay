@@ -3,6 +3,7 @@ package com.arcpay.identity.agentidentity.domain.agent;
 import com.arcpay.identity.agentidentity.domain.exception.AgentNameDuplicateException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidAgentNameException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidPolicyHashException;
+import com.arcpay.identity.agentidentity.domain.exception.InvalidPurposeException;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -94,7 +95,7 @@ class AgentValidatorTest {
     void shouldRejectBlankPurpose(String purpose) {
         // given / when / then
         assertThatThrownBy(() -> agentValidator.validateRegistration(SOME_OWNER_ID, VALID_NAME, purpose, null))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidPurposeException.class);
     }
 
     @Test
@@ -104,7 +105,7 @@ class AgentValidatorTest {
 
         // when / then
         assertThatThrownBy(() -> agentValidator.validateRegistration(SOME_OWNER_ID, VALID_NAME, longPurpose, null))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidPurposeException.class);
     }
 
     @Test

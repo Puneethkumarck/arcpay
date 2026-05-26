@@ -2,9 +2,11 @@ package com.arcpay.identity.agentidentity.infrastructure.client.circle;
 
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -15,7 +17,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @EnableConfigurationProperties(CircleApiProperties.class)
-@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(prefix = "circle.api", name = "base-url")
+@ConditionalOnProperty(prefix = "circle.api", name = "base-url")
 class CircleWalletAdapter implements CircleWalletService {
 
     private final RestClient restClient;
@@ -23,8 +25,12 @@ class CircleWalletAdapter implements CircleWalletService {
 
     CircleWalletAdapter(CircleApiProperties properties) {
         this.properties = properties;
+        var requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(properties.connectTimeoutMs());
+        requestFactory.setReadTimeout(properties.readTimeoutMs());
         this.restClient = RestClient.builder()
                 .baseUrl(properties.baseUrl())
+                .requestFactory(requestFactory)
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + properties.apiKey())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();

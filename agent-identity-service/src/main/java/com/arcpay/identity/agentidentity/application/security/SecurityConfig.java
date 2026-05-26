@@ -1,7 +1,6 @@
 package com.arcpay.identity.agentidentity.application.security;
 
 import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,13 +13,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final OwnerRepository ownerRepository;
+    private final String serviceToken;
 
-    @Value("${arcpay.security.service-token:}")
-    private String serviceToken;
+    public SecurityConfig(
+            OwnerRepository ownerRepository,
+            @Value("${arcpay.security.service-token:}") String serviceToken) {
+        this.ownerRepository = ownerRepository;
+        this.serviceToken = serviceToken;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

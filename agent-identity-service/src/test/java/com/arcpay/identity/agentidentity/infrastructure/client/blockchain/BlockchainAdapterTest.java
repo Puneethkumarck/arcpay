@@ -1,12 +1,12 @@
 package com.arcpay.identity.agentidentity.infrastructure.client.blockchain;
 
 import com.arcpay.identity.agentidentity.domain.agent.UuidConversionUtil;
-import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class BlockchainAdapterTest {
 
@@ -39,45 +39,31 @@ class BlockchainAdapterTest {
     }
 
     @Test
-    void shouldHaveCorrectPortMethodSignatures() {
-        // given - verify the port interface compiles and has expected methods
-        BlockchainService service = new BlockchainService() {
-            @Override
-            public RegistrationResult registerAgent(UUID agentId, UUID ownerId, String metadataHash) {
-                return new RegistrationResult("0xtxhash", 42L);
-            }
+    void shouldRejectNullUuidInToBytes32() {
+        // given / when / then
+        assertThatThrownBy(() -> UuidConversionUtil.uuidToBytes32(null))
+                .isInstanceOf(NullPointerException.class);
+    }
 
-            @Override
-            public String deactivateAgent(UUID agentId) {
-                return "0xdeactivate";
-            }
+    @Test
+    void shouldRejectNonCanonicalBytes32() {
+        // given
+        var bytes32 = new byte[32];
+        bytes32[0] = 1;
 
-            @Override
-            public String reactivateAgent(UUID agentId) {
-                return "0xreactivate";
-            }
+        // when / then
+        assertThatThrownBy(() -> UuidConversionUtil.bytes32ToUuid(bytes32))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Non-canonical");
+    }
 
-            @Override
-            public String updateMetadata(UUID agentId, String metadataHash) {
-                return "0xupdate";
-            }
-
-            @Override
-            public String updatePolicy(UUID agentId, String policyHash) {
-                return "0xpolicy";
-            }
-
-            @Override
-            public boolean isAgentActive(UUID agentId) {
-                return true;
-            }
-        };
-
-        // when
-        var result = service.registerAgent(UUID.randomUUID(), UUID.randomUUID(), "0xhash");
+    @Test
+    void shouldCreateBlockchainPropertiesWithAllFields() {
+        // given / when
+        var props = new BlockchainProperties("http://localhost:8545", 5042002L, "0xprivatekey");
 
         // then
-        assertThat(result.txHash()).isEqualTo("0xtxhash");
-        assertThat(result.blockNumber()).isEqualTo(42L);
+        assertThat(props).usingRecursiveComparison().isEqualTo(
+                new BlockchainProperties("http://localhost:8545", 5042002L, "0xprivatekey"));
     }
 }

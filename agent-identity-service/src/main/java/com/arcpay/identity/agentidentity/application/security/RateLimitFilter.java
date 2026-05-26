@@ -28,6 +28,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         if ("POST".equalsIgnoreCase(request.getMethod()) && RATE_LIMITED_PATH.equals(request.getRequestURI())) {
+            evictExpiredEntries();
             var clientIp = getClientIp(request);
             var entry = rateLimits.compute(clientIp, (key, existing) -> {
                 if (existing == null || existing.isExpired()) {
@@ -45,6 +46,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private void evictExpiredEntries() {
+        rateLimits.entrySet().removeIf(entry -> entry.getValue().isExpired());
     }
 
     private String getClientIp(HttpServletRequest request) {

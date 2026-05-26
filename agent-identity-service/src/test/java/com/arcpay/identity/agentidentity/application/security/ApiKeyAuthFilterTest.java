@@ -45,7 +45,7 @@ class ApiKeyAuthFilterTest {
     }
 
     @Test
-    void shouldSetAuthenticationForValidApiKey() throws ServletException, IOException, Exception {
+    void shouldSetAuthenticationForValidApiKey() throws ServletException, IOException {
         // given
         var rawApiKey = "ak_test_valid123";
         var hash = hashKey(rawApiKey);
