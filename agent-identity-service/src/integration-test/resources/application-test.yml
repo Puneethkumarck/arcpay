@@ -11,6 +11,17 @@ spring:
       - org.springframework.cloud.stream.config.BindersHealthIndicatorAutoConfiguration
       - org.springframework.cloud.stream.config.BindingsEndpointAutoConfiguration
       - org.springframework.cloud.stream.config.ChannelsEndpointAutoConfiguration
+  kafka:
+    consumer:
+      group-id: agent-identity-service-test
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.arcpay.identity.agentidentity.domain.event
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   temporal:
     test-server:
       enabled: true
