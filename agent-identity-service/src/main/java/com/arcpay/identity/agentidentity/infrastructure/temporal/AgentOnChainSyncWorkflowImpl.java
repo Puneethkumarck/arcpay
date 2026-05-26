@@ -5,6 +5,7 @@ import com.arcpay.identity.agentidentity.domain.agent.AgentOnChainSyncWorkflow;
 import com.arcpay.identity.agentidentity.domain.model.AgentOnChainSyncRequest;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
+import io.temporal.failure.ActivityFailure;
 import io.temporal.spring.boot.WorkflowImpl;
 import io.temporal.workflow.Workflow;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ class AgentOnChainSyncWorkflowImpl implements AgentOnChainSyncWorkflow {
         try {
             syncActivities.syncToChain(request);
             log.info("On-chain sync completed for agentId={} operation={}", request.agentId(), request.operation());
-        } catch (Exception e) {
+        } catch (ActivityFailure e) {
             log.warn("On-chain sync failed for agentId={} operation={}: {}",
                     request.agentId(), request.operation(), e.getMessage());
         }

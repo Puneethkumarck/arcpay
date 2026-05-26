@@ -1,6 +1,7 @@
 package com.arcpay.identity.agentidentity.infrastructure.temporal;
 
 import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningWorkflow;
+import com.arcpay.identity.agentidentity.domain.model.Agent;
 import com.arcpay.identity.agentidentity.domain.model.AgentProvisioningRequest;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
@@ -96,10 +97,16 @@ class AgentProvisioningWorkflowIntegrationTest extends FullContextIntegrationTes
 
         // then
         var agent = agentRepository.findById(SOME_AGENT_ID).orElseThrow();
-        assertThat(agent.status()).isEqualTo(AgentStatus.ACTIVE);
-        assertThat(agent.walletId()).isEqualTo(SOME_WALLET_ID);
-        assertThat(agent.walletAddress()).isEqualTo(SOME_WALLET_ADDRESS);
-        assertThat(agent.onChainTxHash()).isEqualTo(SOME_TX_HASH);
+        var expected = SOME_AGENT_PROVISIONING.toBuilder()
+                .status(AgentStatus.ACTIVE)
+                .walletId(SOME_WALLET_ID)
+                .walletAddress(SOME_WALLET_ADDRESS)
+                .onChainTxHash(SOME_TX_HASH)
+                .build();
+        assertThat(agent)
+                .usingRecursiveComparison()
+                .ignoringFieldsOfTypes(java.time.Instant.class)
+                .isEqualTo(expected);
     }
 
     @Test

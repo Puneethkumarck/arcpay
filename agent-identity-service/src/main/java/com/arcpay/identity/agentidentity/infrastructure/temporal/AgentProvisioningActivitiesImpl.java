@@ -2,11 +2,9 @@ package com.arcpay.identity.agentidentity.infrastructure.temporal;
 
 import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningActivities;
 import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningService;
-import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
-import io.temporal.activity.ActivityInterface;
 import io.temporal.failure.ApplicationFailure;
 import io.temporal.spring.boot.ActivityImpl;
 import lombok.RequiredArgsConstructor;
