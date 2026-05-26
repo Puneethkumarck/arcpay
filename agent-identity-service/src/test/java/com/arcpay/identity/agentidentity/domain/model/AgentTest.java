@@ -103,4 +103,48 @@ class AgentTest {
                 .build();
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
+
+    @Test
+    void shouldRejectNullWalletIdInWithWallet() {
+        // given
+        var agent = SOME_AGENT_PROVISIONING;
+
+        // when / then
+        assertThatThrownBy(() -> agent.withWallet(null, "0xabc"))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("walletId");
+    }
+
+    @Test
+    void shouldRejectNullWalletAddressInWithWallet() {
+        // given
+        var agent = SOME_AGENT_PROVISIONING;
+
+        // when / then
+        assertThatThrownBy(() -> agent.withWallet("wallet-123", null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("walletAddress");
+    }
+
+    @Test
+    void shouldRejectNullTxHashInWithOnChainRegistration() {
+        // given
+        var agent = SOME_AGENT_ACTIVE;
+
+        // when / then
+        assertThatThrownBy(() -> agent.withOnChainRegistration(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("txHash");
+    }
+
+    @Test
+    void shouldRejectNullReasonInWithFailure() {
+        // given
+        var agent = SOME_AGENT_PROVISIONING;
+
+        // when / then
+        assertThatThrownBy(() -> agent.withFailure(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("reason");
+    }
 }

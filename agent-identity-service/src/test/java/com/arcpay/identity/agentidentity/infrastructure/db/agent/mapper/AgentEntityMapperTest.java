@@ -133,4 +133,22 @@ class AgentEntityMapperTest {
         // then
         assertThat(result).usingRecursiveComparison().isEqualTo(original);
     }
+
+    @Test
+    void shouldReturnNullWhenMapToEntityWithNullInput() {
+        // given / when
+        var result = mapper.mapToEntity(null);
+
+        // then
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void shouldReturnNullWhenMapToDomainWithNullInput() {
+        // given / when
+        var result = mapper.mapToDomain(null);
+
+        // then
+        assertThat(result).isNull();
+    }
 }

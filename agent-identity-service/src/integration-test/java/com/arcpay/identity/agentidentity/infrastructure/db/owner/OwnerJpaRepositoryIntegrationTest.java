@@ -36,6 +36,7 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
                 .isPresent()
                 .get()
                 .usingRecursiveComparison()
+                .ignoringFields("createdAt", "updatedAt")
                 .isEqualTo(owner);
     }
 

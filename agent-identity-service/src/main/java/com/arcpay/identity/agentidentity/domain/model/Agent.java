@@ -35,6 +35,8 @@ public record Agent(
     }
 
     public Agent withWallet(String walletId, String walletAddress) {
+        Objects.requireNonNull(walletId, "walletId must not be null");
+        Objects.requireNonNull(walletAddress, "walletAddress must not be null");
         return toBuilder()
                 .walletId(walletId)
                 .walletAddress(walletAddress)
@@ -44,6 +46,7 @@ public record Agent(
     }
 
     public Agent withOnChainRegistration(String txHash) {
+        Objects.requireNonNull(txHash, "txHash must not be null");
         return toBuilder()
                 .onChainTxHash(txHash)
                 .status(AgentStatus.ACTIVE)
@@ -52,6 +55,7 @@ public record Agent(
     }
 
     public Agent withFailure(String reason) {
+        Objects.requireNonNull(reason, "reason must not be null");
         return toBuilder()
                 .failureReason(reason)
                 .status(AgentStatus.FAILED)

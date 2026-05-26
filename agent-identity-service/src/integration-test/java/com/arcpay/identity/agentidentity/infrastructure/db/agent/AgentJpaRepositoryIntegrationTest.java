@@ -1,14 +1,13 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.agent;
 
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
-import com.arcpay.identity.agentidentity.fixtures.OwnerFixtures;
-import com.arcpay.identity.agentidentity.infrastructure.db.owner.OwnerJpaRepository;
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -26,12 +25,22 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
     private AgentJpaRepository agentJpaRepository;
 
     @Autowired
-    private OwnerJpaRepository ownerJpaRepository;
+    private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void seedOwners() {
-        ownerJpaRepository.save(OwnerFixtures.someOwnerEntity());
-        ownerJpaRepository.save(OwnerFixtures.otherOwnerEntity());
+        jdbcTemplate.update("""
+                INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
+                VALUES (?, ?, ?, ?, 'ACTIVE')
+                ON CONFLICT DO NOTHING""",
+                SOME_OWNER_ID, "alice@example.com",
+                "0x1234567890abcdef1234567890abcdef12345678", "a".repeat(64));
+        jdbcTemplate.update("""
+                INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
+                VALUES (?, ?, ?, ?, 'ACTIVE')
+                ON CONFLICT DO NOTHING""",
+                OTHER_OWNER_ID, "bob@example.com",
+                "0xfedcba9876543210fedcba9876543210fedcba98", "b".repeat(64));
     }
 
     @Test

@@ -2,13 +2,12 @@ package com.arcpay.identity.agentidentity.infrastructure.db.agent;
 
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
-import com.arcpay.identity.agentidentity.fixtures.OwnerFixtures;
-import com.arcpay.identity.agentidentity.infrastructure.db.owner.OwnerJpaRepository;
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,11 +29,16 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
     private AgentRepository agentRepository;
 
     @Autowired
-    private OwnerJpaRepository ownerJpaRepository;
+    private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void seedOwner() {
-        ownerJpaRepository.save(OwnerFixtures.someOwnerEntity());
+        jdbcTemplate.update("""
+                INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
+                VALUES (?, ?, ?, ?, 'ACTIVE')
+                ON CONFLICT DO NOTHING""",
+                SOME_OWNER_ID, "alice@example.com",
+                "0x1234567890abcdef1234567890abcdef12345678", "a".repeat(64));
     }
 
     @Test
