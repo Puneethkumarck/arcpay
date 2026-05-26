@@ -96,13 +96,11 @@ dependencies {
 tasks.register<Test>("integrationTest") {
     testClassesDirs = sourceSets["integrationTest"].output.classesDirs
     classpath = sourceSets["integrationTest"].runtimeClasspath
-    useJUnitPlatform()
     shouldRunAfter(tasks.test)
 }
 
 tasks.register<Test>("businessTest") {
     testClassesDirs = sourceSets["businessTest"].output.classesDirs
     classpath = sourceSets["businessTest"].runtimeClasspath
-    useJUnitPlatform()
     shouldRunAfter(tasks.named("integrationTest"))
 }
