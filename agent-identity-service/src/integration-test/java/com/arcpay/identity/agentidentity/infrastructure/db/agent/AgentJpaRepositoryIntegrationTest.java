@@ -50,7 +50,7 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
     }
 
     @Test
-    void shouldPaginateByOwnerIdAndStatus() {
+    void shouldReportTotalCountFilteredByOwnerAndStatus() {
         // given
         agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "active-1", AgentStatus.ACTIVE));
         agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "active-2", AgentStatus.ACTIVE));
@@ -59,16 +59,40 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         agentJpaRepository.save(newAgentEntity(OTHER_OWNER_ID, "other-active", AgentStatus.ACTIVE));
 
         // when
-        var firstPage = agentJpaRepository.findByOwnerIdAndStatus(SOME_OWNER_ID, AgentStatus.ACTIVE, PageRequest.of(0, 2));
+        var page = agentJpaRepository.findByOwnerIdAndStatus(SOME_OWNER_ID, AgentStatus.ACTIVE, PageRequest.of(0, 10));
+
+        // then
+        assertThat(page.getTotalElements()).isEqualTo(3);
+    }
+
+    @Test
+    void shouldReturnOnlyRequestedStatusWhenPaginating() {
+        // given
+        agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "active-1", AgentStatus.ACTIVE));
+        agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "active-2", AgentStatus.ACTIVE));
+        agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "suspended-1", AgentStatus.SUSPENDED));
+
+        // when
+        var page = agentJpaRepository.findByOwnerIdAndStatus(SOME_OWNER_ID, AgentStatus.ACTIVE, PageRequest.of(0, 10));
+
+        // then
+        assertThat(page.getContent())
+                .extracting(AgentEntity::getStatus)
+                .containsOnly(AgentStatus.ACTIVE);
+    }
+
+    @Test
+    void shouldPaginateSecondPageWhenResultsExceedPageSize() {
+        // given
+        agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "active-1", AgentStatus.ACTIVE));
+        agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "active-2", AgentStatus.ACTIVE));
+        agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "active-3", AgentStatus.ACTIVE));
+
+        // when
         var secondPage = agentJpaRepository.findByOwnerIdAndStatus(SOME_OWNER_ID, AgentStatus.ACTIVE, PageRequest.of(1, 2));
 
         // then
-        assertThat(firstPage.getTotalElements()).isEqualTo(3);
-        assertThat(firstPage.getContent()).hasSize(2);
         assertThat(secondPage.getContent()).hasSize(1);
-        assertThat(firstPage.getContent())
-                .extracting(AgentEntity::getStatus)
-                .containsOnly(AgentStatus.ACTIVE);
     }
 
     @Test

@@ -103,6 +103,18 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
     }
 
     @Test
+    void shouldReturnEmptyOptionalFromFindByIdForUpdateWhenAgentMissing() {
+        // given
+        var randomId = UUID.randomUUID();
+
+        // when
+        var result = agentRepository.findByIdForUpdate(randomId);
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void shouldFindByOwnerIdAndStatusPaginated() {
         // given
         agentRepository.save(SOME_AGENT_ACTIVE);
@@ -130,7 +142,13 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
         var page = agentRepository.findByOwnerId(SOME_OWNER_ID, PageRequest.of(0, 10));
 
         // then
-        assertThat(page.getTotalElements()).isEqualTo(4);
+        assertThat(page.getContent())
+                .usingRecursiveFieldByFieldElementComparator()
+                .containsExactlyInAnyOrder(
+                        SOME_AGENT_PROVISIONING,
+                        SOME_AGENT_ACTIVE,
+                        SOME_AGENT_SUSPENDED,
+                        SOME_AGENT_FAILED);
     }
 
     @Test
