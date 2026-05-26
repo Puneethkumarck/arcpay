@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
@@ -25,6 +26,7 @@ public class IdempotencyHandler {
     private final IdempotencyKeyRepository idempotencyKeyRepository;
     private final JsonMapper jsonMapper;
 
+    @Transactional
     public <T> ResponseEntity<T> handle(String idempotencyKeyHeader, UUID ownerId, String endpoint,
                                         Supplier<T> action, Class<T> responseType) {
         if (idempotencyKeyHeader == null || idempotencyKeyHeader.isBlank()) {

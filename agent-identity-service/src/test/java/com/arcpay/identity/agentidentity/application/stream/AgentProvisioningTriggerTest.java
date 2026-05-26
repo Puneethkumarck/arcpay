@@ -2,6 +2,7 @@ package com.arcpay.identity.agentidentity.application.stream;
 
 import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningWorkflow;
 import com.arcpay.identity.agentidentity.domain.event.AgentRegistrationRequested;
+import io.temporal.api.enums.v1.WorkflowIdReusePolicy;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowOptions;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,7 @@ class AgentProvisioningTriggerTest {
                 .setWorkflowId("AgentProvisioning_" + SOME_AGENT_ID)
                 .setTaskQueue("AgentIdentityTaskQueue")
                 .setWorkflowExecutionTimeout(Duration.ofSeconds(300))
+                .setWorkflowIdReusePolicy(WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_REJECT_DUPLICATE)
                 .build();
         var mockWorkflow = mock(AgentProvisioningWorkflow.class);
         given(workflowClient.newWorkflowStub(AgentProvisioningWorkflow.class, expectedOptions))

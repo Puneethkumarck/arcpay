@@ -61,6 +61,7 @@ class AgentProvisioningWorkflowImpl implements AgentProvisioningWorkflow {
             var reason = extractReason(e);
             log.warn("Provisioning failed for agentId={} step={} reason={}", request.agentId(), failedStep, reason);
             compensationActivities.failProvisioning(request.agentId(), failedStep, reason);
+            throw e;
         }
     }
 

@@ -10,6 +10,7 @@ import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService.WalletCreationResult;
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
 import io.temporal.client.WorkflowClient;
+import io.temporal.client.WorkflowFailedException;
 import io.temporal.client.WorkflowOptions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALL
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ID;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 class AgentProvisioningWorkflowIntegrationTest extends FullContextIntegrationTest {
@@ -101,10 +103,10 @@ class AgentProvisioningWorkflowIntegrationTest extends FullContextIntegrationTes
         given(circleWalletService.createWallet(SOME_AGENT_ID))
                 .willThrow(new RuntimeException("Circle API unavailable"));
 
-        // when
-        provisionWorkflow(SOME_PROVISIONING_REQUEST);
+        // when / then
+        assertThatThrownBy(() -> provisionWorkflow(SOME_PROVISIONING_REQUEST))
+                .isInstanceOf(WorkflowFailedException.class);
 
-        // then
         var agent = agentRepository.findById(SOME_AGENT_ID).orElseThrow();
         var expected = SOME_AGENT_PROVISIONING.toBuilder()
                 .status(AgentStatus.FAILED)
@@ -125,10 +127,10 @@ class AgentProvisioningWorkflowIntegrationTest extends FullContextIntegrationTes
         given(blockchainService.registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_METADATA_HASH))
                 .willThrow(new RuntimeException("Gas estimation failed"));
 
-        // when
-        provisionWorkflow(SOME_PROVISIONING_REQUEST);
+        // when / then
+        assertThatThrownBy(() -> provisionWorkflow(SOME_PROVISIONING_REQUEST))
+                .isInstanceOf(WorkflowFailedException.class);
 
-        // then
         var agent = agentRepository.findById(SOME_AGENT_ID).orElseThrow();
         var expected = SOME_AGENT_PROVISIONING.toBuilder()
                 .status(AgentStatus.FAILED)

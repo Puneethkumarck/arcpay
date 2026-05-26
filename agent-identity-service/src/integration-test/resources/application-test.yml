@@ -13,7 +13,7 @@ spring:
       - org.springframework.cloud.stream.config.ChannelsEndpointAutoConfiguration
   kafka:
     consumer:
-      group-id: agent-identity-service-test
+      group-id: agent-identity-service-test-${random.uuid}
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer

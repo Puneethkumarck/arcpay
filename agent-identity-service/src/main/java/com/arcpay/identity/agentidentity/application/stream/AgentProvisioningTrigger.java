@@ -3,6 +3,7 @@ package com.arcpay.identity.agentidentity.application.stream;
 import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningWorkflow;
 import com.arcpay.identity.agentidentity.domain.event.AgentRegistrationRequested;
 import com.arcpay.identity.agentidentity.domain.model.AgentProvisioningRequest;
+import io.temporal.api.enums.v1.WorkflowIdReusePolicy;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowExecutionAlreadyStarted;
 import io.temporal.client.WorkflowOptions;
@@ -35,6 +36,7 @@ class AgentProvisioningTrigger {
                 .setWorkflowId(AgentProvisioningWorkflow.workflowId(event.agentId()))
                 .setTaskQueue("AgentIdentityTaskQueue")
                 .setWorkflowExecutionTimeout(Duration.ofSeconds(300))
+                .setWorkflowIdReusePolicy(WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_REJECT_DUPLICATE)
                 .build();
 
         try {

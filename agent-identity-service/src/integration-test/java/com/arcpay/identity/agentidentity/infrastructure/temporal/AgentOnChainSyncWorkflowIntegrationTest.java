@@ -17,6 +17,7 @@ import java.util.Map;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.atLeastOnce;
 
 class AgentOnChainSyncWorkflowIntegrationTest extends FullContextIntegrationTest {
 
@@ -59,7 +60,8 @@ class AgentOnChainSyncWorkflowIntegrationTest extends FullContextIntegrationTest
         // when — should complete without throwing even though sync failed
         syncWorkflow(request);
 
-        // then — workflow completed (no exception thrown)
+        // then
+        then(blockchainService).should(atLeastOnce()).reactivateAgent(SOME_AGENT_ID);
     }
 
     private void syncWorkflow(AgentOnChainSyncRequest request) {

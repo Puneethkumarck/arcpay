@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -137,5 +138,8 @@ class OwnerControllerIntegrationTest extends RestControllerAbstractTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("ARCPAY-IDENTITY-0001"));
+
+        then(ownerCommandHandler).should()
+                .registerOwner("bad-email", "0x1234567890abcdef1234567890abcdef12345678");
     }
 }
