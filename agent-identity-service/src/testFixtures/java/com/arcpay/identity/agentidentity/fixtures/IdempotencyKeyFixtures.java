@@ -1,6 +1,7 @@
 package com.arcpay.identity.agentidentity.fixtures;
 
 import com.arcpay.identity.agentidentity.domain.model.IdempotencyKey;
+import com.arcpay.identity.agentidentity.infrastructure.db.idempotency.IdempotencyKeyEntity;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -29,6 +30,26 @@ public final class IdempotencyKeyFixtures {
             .build();
 
     public static final IdempotencyKey SOME_IDEMPOTENCY_KEY_EXPIRED = IdempotencyKey.builder()
+            .idempotencyKey(SOME_EXPIRED_IDEMPOTENCY_KEY_ID)
+            .ownerId(SOME_OWNER_ID)
+            .endpoint(SOME_ENDPOINT)
+            .responseStatus(201)
+            .responseBody(SOME_RESPONSE_BODY)
+            .createdAt(SOME_EXPIRED_CREATED_AT)
+            .expiresAt(SOME_EXPIRED_EXPIRES_AT)
+            .build();
+
+    public static final IdempotencyKeyEntity SOME_IDEMPOTENCY_KEY_ENTITY = IdempotencyKeyEntity.builder()
+            .idempotencyKey(SOME_IDEMPOTENCY_KEY_ID)
+            .ownerId(SOME_OWNER_ID)
+            .endpoint(SOME_ENDPOINT)
+            .responseStatus(201)
+            .responseBody(SOME_RESPONSE_BODY)
+            .createdAt(SOME_CREATED_AT)
+            .expiresAt(SOME_EXPIRES_AT)
+            .build();
+
+    public static final IdempotencyKeyEntity SOME_IDEMPOTENCY_KEY_ENTITY_EXPIRED = IdempotencyKeyEntity.builder()
             .idempotencyKey(SOME_EXPIRED_IDEMPOTENCY_KEY_ID)
             .ownerId(SOME_OWNER_ID)
             .endpoint(SOME_ENDPOINT)

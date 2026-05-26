@@ -1,6 +1,7 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.idempotency;
 
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +29,17 @@ class IdempotencyKeyJpaRepositoryIntegrationTest extends FullContextIntegrationT
     private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
-    void cleanDatabase() {
+    void setUp() {
         jdbcTemplate.update("DELETE FROM idempotency_keys");
         jdbcTemplate.update("DELETE FROM owners");
         insertOwner(SOME_OWNER_ID, "alice@example.com", "0x1111111111111111111111111111111111111111");
         insertOwner(OTHER_OWNER_ID, "bob@example.com", "0x2222222222222222222222222222222222222222");
+    }
+
+    @AfterEach
+    void tearDown() {
+        jdbcTemplate.update("DELETE FROM idempotency_keys");
+        jdbcTemplate.update("DELETE FROM owners");
     }
 
     @Test

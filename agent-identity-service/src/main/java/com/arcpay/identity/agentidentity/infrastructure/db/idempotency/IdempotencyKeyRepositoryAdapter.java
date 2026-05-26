@@ -5,7 +5,6 @@ import com.arcpay.identity.agentidentity.domain.port.IdempotencyKeyRepository;
 import com.arcpay.identity.agentidentity.infrastructure.db.idempotency.mapper.IdempotencyKeyEntityMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -31,7 +30,6 @@ class IdempotencyKeyRepositoryAdapter implements IdempotencyKeyRepository {
     }
 
     @Override
-    @Transactional
     public void deleteExpiredBefore(Instant cutoff) {
         jpaRepository.deleteByExpiresAtBefore(cutoff);
     }

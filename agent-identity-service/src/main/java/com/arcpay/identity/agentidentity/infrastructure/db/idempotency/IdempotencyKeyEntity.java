@@ -11,8 +11,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -30,13 +28,11 @@ public class IdempotencyKeyEntity {
 
     @Id
     @Column(name = "idempotency_key", nullable = false)
-    @JdbcTypeCode(SqlTypes.UUID)
     @ToString.Include
     private UUID idempotencyKey;
 
     @Id
     @Column(name = "owner_id", nullable = false)
-    @JdbcTypeCode(SqlTypes.UUID)
     @ToString.Include
     private UUID ownerId;
 
@@ -46,7 +42,7 @@ public class IdempotencyKeyEntity {
     @Column(name = "response_status", nullable = false)
     private int responseStatus;
 
-    @Column(name = "response_body", nullable = false)
+    @Column(name = "response_body", nullable = false, columnDefinition = "TEXT")
     private String responseBody;
 
     @Column(name = "created_at", nullable = false)
