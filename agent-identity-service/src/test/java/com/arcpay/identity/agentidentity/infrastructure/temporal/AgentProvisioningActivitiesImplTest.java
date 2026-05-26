@@ -16,11 +16,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_WALLET_READY;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_TX_HASH;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ADDRESS;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -81,8 +81,10 @@ class AgentProvisioningActivitiesImplTest {
 
         // when / then
         assertThatThrownBy(() -> activities.registerOnChain(SOME_AGENT_ID))
-                .isInstanceOf(ApplicationFailure.class)
-                .hasMessageContaining("Agent not found");
+                .isInstanceOfSatisfying(ApplicationFailure.class, af -> {
+                    assertThat(af.isNonRetryable()).isTrue();
+                    assertThat(af.getMessage()).contains("Agent not found");
+                });
     }
 
     @Test

@@ -38,14 +38,7 @@ class AgentOnChainSyncWorkflowIntegrationTest extends FullContextIntegrationTest
                 .build();
 
         // when
-        var workflow = workflowClient.newWorkflowStub(
-                AgentOnChainSyncWorkflow.class,
-                WorkflowOptions.newBuilder()
-                        .setWorkflowId(AgentOnChainSyncWorkflow.workflowId(SOME_AGENT_ID, OnChainOperation.DEACTIVATE))
-                        .setTaskQueue("AgentIdentityTaskQueue")
-                        .setWorkflowExecutionTimeout(Duration.ofSeconds(30))
-                        .build());
-        workflow.sync(request);
+        syncWorkflow(request);
 
         // then
         then(blockchainService).should().deactivateAgent(SOME_AGENT_ID);
@@ -64,15 +57,19 @@ class AgentOnChainSyncWorkflowIntegrationTest extends FullContextIntegrationTest
                 .build();
 
         // when — should complete without throwing even though sync failed
+        syncWorkflow(request);
+
+        // then — workflow completed (no exception thrown)
+    }
+
+    private void syncWorkflow(AgentOnChainSyncRequest request) {
         var workflow = workflowClient.newWorkflowStub(
                 AgentOnChainSyncWorkflow.class,
                 WorkflowOptions.newBuilder()
-                        .setWorkflowId(AgentOnChainSyncWorkflow.workflowId(SOME_AGENT_ID, OnChainOperation.REACTIVATE))
+                        .setWorkflowId(AgentOnChainSyncWorkflow.workflowId(request.agentId(), request.operation()))
                         .setTaskQueue("AgentIdentityTaskQueue")
                         .setWorkflowExecutionTimeout(Duration.ofSeconds(30))
                         .build());
         workflow.sync(request);
-
-        // then — workflow completed (no exception thrown)
     }
 }

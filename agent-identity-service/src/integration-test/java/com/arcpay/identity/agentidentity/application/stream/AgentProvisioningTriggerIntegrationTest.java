@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.Duration;
 import java.time.Instant;
 
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
@@ -26,6 +27,7 @@ import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALL
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ID;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.BDDMockito.given;
 
 class AgentProvisioningTriggerIntegrationTest extends FullContextIntegrationTest {
@@ -66,24 +68,8 @@ class AgentProvisioningTriggerIntegrationTest extends FullContextIntegrationTest
         jdbcTemplate.update("DELETE FROM owners");
     }
 
-    @SuppressWarnings("BusyWait")
-    private void pollUntilAgentActive() throws InterruptedException {
-        var deadline = System.currentTimeMillis() + 30_000;
-        while (System.currentTimeMillis() < deadline) {
-            var agent = agentRepository.findById(SOME_AGENT_ID).orElseThrow();
-            if (agent.status() == AgentStatus.ACTIVE) {
-                assertThat(agent.walletId()).isEqualTo(SOME_WALLET_ID);
-                assertThat(agent.onChainTxHash()).isEqualTo(SOME_TX_HASH);
-                return;
-            }
-            Thread.sleep(500);
-        }
-        var agent = agentRepository.findById(SOME_AGENT_ID).orElseThrow();
-        assertThat(agent.status()).as("Agent should be ACTIVE within 30s").isEqualTo(AgentStatus.ACTIVE);
-    }
-
     @Test
-    void shouldTriggerWorkflowOnKafkaEvent() throws InterruptedException {
+    void shouldTriggerWorkflowOnKafkaEvent() {
         // given
         given(circleWalletService.createWallet(SOME_AGENT_ID))
                 .willReturn(new WalletCreationResult(SOME_WALLET_ID, SOME_WALLET_ADDRESS));
@@ -97,7 +83,22 @@ class AgentProvisioningTriggerIntegrationTest extends FullContextIntegrationTest
         // when
         kafkaTemplate.send(AgentRegistrationRequested.TOPIC, SOME_AGENT_ID.toString(), event);
 
-        // then — poll until the async workflow completes
-        pollUntilAgentActive();
+        // then
+        var expected = SOME_AGENT_PROVISIONING.toBuilder()
+                .status(AgentStatus.ACTIVE)
+                .walletId(SOME_WALLET_ID)
+                .walletAddress(SOME_WALLET_ADDRESS)
+                .onChainTxHash(SOME_TX_HASH)
+                .build();
+
+        await().atMost(Duration.ofSeconds(30))
+                .pollInterval(Duration.ofMillis(500))
+                .untilAsserted(() -> {
+                    var agent = agentRepository.findById(SOME_AGENT_ID).orElseThrow();
+                    assertThat(agent)
+                            .usingRecursiveComparison()
+                            .ignoringFieldsOfTypes(Instant.class)
+                            .isEqualTo(expected);
+                });
     }
 }
