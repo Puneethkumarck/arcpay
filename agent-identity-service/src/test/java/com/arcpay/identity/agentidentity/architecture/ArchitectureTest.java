@@ -1,11 +1,13 @@
 package com.arcpay.identity.agentidentity.architecture;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.Architectures;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 @AnalyzeClasses(
@@ -34,15 +36,14 @@ class ArchitectureTest {
             .allowEmptyShould(true);
 
     @ArchTest
-    static final ArchRule domain_does_not_use_spring_beyond_stereotype_and_tx = noClasses()
+    static final ArchRule domain_only_uses_allowed_spring_packages = classes()
             .that().resideInAPackage(BASE + ".domain..")
-            .should().dependOnClassesThat().resideInAnyPackage(
-                    "org.springframework.web..",
-                    "org.springframework.data..",
-                    "org.springframework.kafka..",
-                    "org.springframework.boot..",
-                    "org.springframework.context.annotation..",
-                    "org.springframework.beans.factory.annotation.."
+            .should().onlyDependOnClassesThat(
+                    JavaClass.Predicates.resideOutsideOfPackage("org.springframework..")
+                            .or(JavaClass.Predicates.resideInAnyPackage(
+                                    "org.springframework.stereotype..",
+                                    "org.springframework.transaction.."
+                            ))
             )
             .allowEmptyShould(true);
 
@@ -53,7 +54,7 @@ class ArchitectureTest {
             .allowEmptyShould(true);
 
     @ArchTest
-    static final ArchRule no_autowired_anywhere = noClasses()
+    static final ArchRule production_code_does_not_use_autowired = noClasses()
             .should().dependOnClassesThat().haveFullyQualifiedName("org.springframework.beans.factory.annotation.Autowired")
             .allowEmptyShould(true);
 }

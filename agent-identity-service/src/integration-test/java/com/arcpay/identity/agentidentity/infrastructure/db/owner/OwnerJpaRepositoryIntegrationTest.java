@@ -7,6 +7,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.UUID;
 
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
@@ -45,7 +46,7 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         jpaRepository.saveAndFlush(SOME_OWNER_ENTITY);
 
         // when
-        var result = jpaRepository.existsByEmailIgnoreCase(SOME_EMAIL.toUpperCase());
+        var result = jpaRepository.existsByEmailIgnoreCase(SOME_EMAIL.toUpperCase(Locale.ROOT));
 
         // then
         assertThat(result).isTrue();
@@ -57,7 +58,7 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         jpaRepository.saveAndFlush(SOME_OWNER_ENTITY);
 
         // when
-        var result = jpaRepository.existsByWalletAddressIgnoreCase(SOME_WALLET_ADDRESS.toUpperCase());
+        var result = jpaRepository.existsByWalletAddressIgnoreCase(SOME_WALLET_ADDRESS.toUpperCase(Locale.ROOT));
 
         // then
         assertThat(result).isTrue();
@@ -69,7 +70,7 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         jpaRepository.saveAndFlush(SOME_OWNER_ENTITY);
         var duplicate = SOME_OWNER_ENTITY.toBuilder()
                 .ownerId(UUID.randomUUID())
-                .email(SOME_EMAIL.toUpperCase())
+                .email(SOME_EMAIL.toUpperCase(Locale.ROOT))
                 .walletAddress("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
                 .apiKeyHash("b".repeat(64))
                 .build();
@@ -87,7 +88,7 @@ class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         var duplicate = SOME_OWNER_ENTITY.toBuilder()
                 .ownerId(UUID.randomUUID())
                 .email("bob@example.com")
-                .walletAddress(SOME_WALLET_ADDRESS.toUpperCase())
+                .walletAddress(SOME_WALLET_ADDRESS.toUpperCase(Locale.ROOT))
                 .apiKeyHash("c".repeat(64))
                 .build();
 

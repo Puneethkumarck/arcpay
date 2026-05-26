@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Locale;
 
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_CHECKSUMMED_WALLET;
@@ -61,7 +62,7 @@ class OwnerRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
         ownerRepository.save(SOME_OWNER);
 
         // when
-        var result = ownerRepository.existsByEmailIgnoreCase(SOME_EMAIL.toUpperCase());
+        var result = ownerRepository.existsByEmailIgnoreCase(SOME_EMAIL.toUpperCase(Locale.ROOT));
 
         // then
         assertThat(result).isTrue();
