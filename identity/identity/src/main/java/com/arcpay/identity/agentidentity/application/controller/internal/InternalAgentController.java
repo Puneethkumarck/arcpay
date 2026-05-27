@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +28,14 @@ public class InternalAgentController {
     private final AgentCommandHandler agentCommandHandler;
     private final AgentResponseMapper agentResponseMapper;
     private final AgentRepository agentRepository;
+
+    @GetMapping("/{agentId}")
+    public AgentResponse getAgent(@PathVariable UUID agentId) {
+        log.info("Internal agent lookup agentId={}", agentId);
+        var agent = agentRepository.findById(agentId)
+                .orElseThrow(() -> new com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException(agentId));
+        return agentResponseMapper.toApi(agent);
+    }
 
     @PutMapping("/{agentId}/policy")
     public AgentResponse updatePolicy(
