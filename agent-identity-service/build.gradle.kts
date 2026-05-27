@@ -47,6 +47,7 @@ dependencies {
     testFixturesImplementation("org.springframework.boot:spring-boot-starter-test")
     testFixturesImplementation("org.springframework.boot:spring-boot-starter-web")
     testFixturesImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testFixturesImplementation("org.springframework.boot:spring-boot-starter-data-jpa")
     testFixturesImplementation(libs.testcontainers.junit.jupiter)
     testFixturesImplementation(libs.testcontainers.postgresql)
     testFixturesImplementation(libs.testcontainers.kafka)
