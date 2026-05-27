@@ -4,6 +4,7 @@ import com.arcpay.identity.agentidentity.api.model.AgentResponse;
 import com.arcpay.identity.agentidentity.api.model.UpdateAgentPolicyRequest;
 import com.arcpay.identity.agentidentity.application.controller.agent.mapper.AgentResponseMapper;
 import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
+import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class InternalAgentController {
     public AgentResponse getAgent(@PathVariable UUID agentId) {
         log.info("Internal agent lookup agentId={}", agentId);
         var agent = agentRepository.findById(agentId)
-                .orElseThrow(() -> new com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException(agentId));
+                .orElseThrow(() -> new AgentNotFoundException(agentId));
         return agentResponseMapper.toApi(agent);
     }
 
@@ -43,7 +44,7 @@ public class InternalAgentController {
             @Valid @RequestBody UpdateAgentPolicyRequest request) {
         log.info("Internal policy update requested agentId={}", agentId);
         var agent = agentRepository.findById(agentId)
-                .orElseThrow(() -> new com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException(agentId));
+                .orElseThrow(() -> new AgentNotFoundException(agentId));
         var updated = agentCommandHandler.updatePolicy(agentId, agent.ownerId(), request.policyHash());
         return agentResponseMapper.toApi(updated);
     }

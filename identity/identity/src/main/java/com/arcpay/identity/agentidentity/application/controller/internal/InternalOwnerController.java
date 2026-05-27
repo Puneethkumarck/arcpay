@@ -20,7 +20,7 @@ public class InternalOwnerController {
 
     @GetMapping("/by-api-key-hash/{hash}")
     public OwnerPrincipalResponse resolveByApiKeyHash(@PathVariable String hash) {
-        log.info("Internal owner lookup by api-key-hash");
+        log.info("Internal owner lookup by api-key-hash={}", hash);
         var owner = ownerRepository.findByApiKeyHash(hash)
                 .orElseThrow(() -> new OwnerNotFoundException(hash));
         return OwnerPrincipalResponse.builder()
