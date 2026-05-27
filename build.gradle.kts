@@ -4,6 +4,10 @@ plugins {
     java
 }
 
+val springBootVersion: String by project
+val springCloudVersion: String by project
+val lombokVersion: String by project
+
 tasks.jar { enabled = false }
 
 subprojects {
@@ -22,16 +26,16 @@ subprojects {
 
     configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
         imports {
-            mavenBom("org.springframework.boot:spring-boot-dependencies:4.0.3")
-            mavenBom("org.springframework.cloud:spring-cloud-dependencies:2025.0.0")
+            mavenBom("org.springframework.boot:spring-boot-dependencies:$springBootVersion")
+            mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
         }
     }
 
     dependencies {
-        "compileOnly"("org.projectlombok:lombok:1.18.46")
-        "annotationProcessor"("org.projectlombok:lombok:1.18.46")
-        "testCompileOnly"("org.projectlombok:lombok:1.18.46")
-        "testAnnotationProcessor"("org.projectlombok:lombok:1.18.46")
+        "compileOnly"("org.projectlombok:lombok:$lombokVersion")
+        "annotationProcessor"("org.projectlombok:lombok:$lombokVersion")
+        "testCompileOnly"("org.projectlombok:lombok:$lombokVersion")
+        "testAnnotationProcessor"("org.projectlombok:lombok:$lombokVersion")
     }
 
     tasks.withType<JavaCompile> {

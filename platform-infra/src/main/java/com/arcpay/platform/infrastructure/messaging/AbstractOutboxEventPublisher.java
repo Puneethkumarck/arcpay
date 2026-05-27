@@ -28,7 +28,6 @@ public abstract class AbstractOutboxEventPublisher {
         for (String fieldName : keyFieldNames) {
             try {
                 var method = event.getClass().getMethod(fieldName);
-                method.setAccessible(true);
                 var value = method.invoke(event);
                 if (value != null) {
                     return String.valueOf(value);

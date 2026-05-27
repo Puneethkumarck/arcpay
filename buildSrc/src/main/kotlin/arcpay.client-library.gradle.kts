@@ -2,13 +2,16 @@ plugins {
     `java-library`
 }
 
+val junitVersion: String by project
+val assertjVersion: String by project
+
 dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
-    testImplementation(platform("org.junit:junit-bom:5.11.4"))
+    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.assertj:assertj-core:3.27.0")
+    testImplementation("org.assertj:assertj-core:$assertjVersion")
 }
 
 tasks.withType<Test> {

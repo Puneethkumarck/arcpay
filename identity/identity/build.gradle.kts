@@ -2,13 +2,17 @@ plugins {
     id("arcpay.service")
 }
 
+val temporalVersion: String by project
+val web3jVersion: String by project
+val wiremockVersion: String by project
+
 dependencies {
     implementation(project(":identity:identity-api"))
 
     // Service-specific dependencies
-    implementation("io.temporal:temporal-spring-boot-starter:1.35.0")
-    implementation("org.web3j:core:4.12.3")
+    implementation("io.temporal:temporal-spring-boot-starter:$temporalVersion")
+    implementation("org.web3j:core:$web3jVersion")
 
     // WireMock for adapter tests
-    testImplementation("org.wiremock:wiremock-standalone:3.10.0")
+    testImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
 }

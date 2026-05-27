@@ -3,13 +3,17 @@ plugins {
     `java-test-fixtures`
 }
 
+val assertjVersion: String by project
+val archunitVersion: String by project
+val testcontainersVersion: String by project
+
 dependencies {
-    testFixturesApi("org.assertj:assertj-core:3.27.0")
+    testFixturesApi("org.assertj:assertj-core:$assertjVersion")
     testFixturesApi("org.mockito:mockito-core")
-    testFixturesApi("com.tngtech.archunit:archunit-junit5:1.3.0")
-    testFixturesApi("org.testcontainers:postgresql:1.21.4")
-    testFixturesApi("org.testcontainers:kafka:1.21.4")
-    testFixturesApi("org.testcontainers:junit-jupiter:1.21.4")
+    testFixturesApi("com.tngtech.archunit:archunit-junit5:$archunitVersion")
+    testFixturesApi("org.testcontainers:postgresql:$testcontainersVersion")
+    testFixturesApi("org.testcontainers:kafka:$testcontainersVersion")
+    testFixturesApi("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testFixturesApi("org.springframework.boot:spring-boot-starter-test")
     testFixturesApi("org.springframework.boot:spring-boot-starter-webmvc-test")
     testFixturesApi("org.springframework.boot:spring-boot-starter-security-test")

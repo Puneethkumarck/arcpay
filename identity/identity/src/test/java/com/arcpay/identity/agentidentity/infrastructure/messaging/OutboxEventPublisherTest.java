@@ -65,15 +65,15 @@ class OutboxEventPublisherTest {
         }
     }
 
-    record AgentEvent(UUID agentId, UUID ownerId, Instant createdAt) {
+    public record AgentEvent(UUID agentId, UUID ownerId, Instant createdAt) {
         public static final String TOPIC = "agent.registered";
     }
 
-    record OwnerEvent(UUID ownerId, Instant createdAt) {
+    public record OwnerEvent(UUID ownerId, Instant createdAt) {
         public static final String TOPIC = "owner.registered";
     }
 
-    record NoKeyEvent(String data) {
+    public record NoKeyEvent(String data) {
         public static final String TOPIC = "no.key";
     }
 }

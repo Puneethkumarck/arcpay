@@ -8,12 +8,24 @@ plugins {
 }
 
 // ---------------------------------------------------------------------------
+// Version properties from gradle.properties
+// ---------------------------------------------------------------------------
+val springCloudVersion: String by project
+val mapstructVersion: String by project
+val namastackVersion: String by project
+val flywayVersion: String by project
+val uuidCreatorVersion: String by project
+val archunitVersion: String by project
+val testcontainersVersion: String by project
+val wiremockVersion: String by project
+
+// ---------------------------------------------------------------------------
 // BOM imports
 // ---------------------------------------------------------------------------
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2025.0.0")
-        mavenBom("org.testcontainers:testcontainers-bom:1.21.4")
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
+        mavenBom("org.testcontainers:testcontainers-bom:$testcontainersVersion")
     }
 }
 
@@ -79,19 +91,19 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-stream-binder-kafka")
 
     // MapStruct
-    implementation("org.mapstruct:mapstruct:1.6.3")
-    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
+    implementation("org.mapstruct:mapstruct:$mapstructVersion")
+    annotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
 
     // Outbox (namastack)
-    implementation("io.namastack:namastack-outbox-starter-jdbc:1.6.0")
+    implementation("io.namastack:namastack-outbox-starter-jdbc:$namastackVersion")
 
     // Database
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     runtimeOnly("org.postgresql:postgresql")
-    runtimeOnly("org.flywaydb:flyway-database-postgresql:11.9.1")
+    runtimeOnly("org.flywaydb:flyway-database-postgresql:$flywayVersion")
 
     // UUID
-    implementation("com.github.f4b6a3:uuid-creator:6.0.0")
+    implementation("com.github.f4b6a3:uuid-creator:$uuidCreatorVersion")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
@@ -110,7 +122,7 @@ dependencies {
     // Unit tests
     testImplementation(testFixtures(project(":platform-test")))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
+    testImplementation("com.tngtech.archunit:archunit-junit5:$archunitVersion")
 
     // Integration tests
     "integrationTestImplementation"("org.springframework.boot:spring-boot-starter-test")
