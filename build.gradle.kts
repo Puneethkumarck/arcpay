@@ -1,15 +1,14 @@
 plugins {
+    id("org.springframework.boot") apply false
+    id("io.spring.dependency-management") apply false
     java
-    alias(libs.plugins.spring.boot) apply false
-    alias(libs.plugins.spring.dependency.management) apply false
 }
 
 tasks.jar { enabled = false }
 
 subprojects {
-    group = "com.arcpay.identity"
-
     apply(plugin = "java")
+    apply(plugin = "io.spring.dependency-management")
 
     java {
         toolchain {
@@ -21,14 +20,25 @@ subprojects {
         mavenCentral()
     }
 
-    dependencies {
-        compileOnly(rootProject.libs.lombok)
-        annotationProcessor(rootProject.libs.lombok)
-        testCompileOnly(rootProject.libs.lombok)
-        testAnnotationProcessor(rootProject.libs.lombok)
+    configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
+        imports {
+            mavenBom("org.springframework.boot:spring-boot-dependencies:4.0.3")
+            mavenBom("org.springframework.cloud:spring-cloud-dependencies:2025.0.0")
+        }
     }
 
-    tasks.withType<Test>().configureEach {
+    dependencies {
+        "compileOnly"("org.projectlombok:lombok:1.18.46")
+        "annotationProcessor"("org.projectlombok:lombok:1.18.46")
+        "testCompileOnly"("org.projectlombok:lombok:1.18.46")
+        "testAnnotationProcessor"("org.projectlombok:lombok:1.18.46")
+    }
+
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.add("-parameters")
+    }
+
+    tasks.withType<Test> {
         useJUnitPlatform()
     }
 }
