@@ -1,0 +1,47 @@
+package com.arcpay.platform.infrastructure.messaging;
+
+import io.namastack.outbox.handler.OutboxRecordMetadata;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
+
+import java.util.concurrent.TimeUnit;
+
+@Slf4j
+@RequiredArgsConstructor
+public abstract class AbstractOutboxHandler {
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    @io.namastack.outbox.annotation.OutboxHandler
+    public void handle(Object event, OutboxRecordMetadata metadata) {
+        var topic = resolveStaticField(event, "TOPIC");
+        var key = metadata.getKey();
+        try {
+            kafkaTemplate.send(topic, key, event).get(10, TimeUnit.SECONDS);
+            log.debug("Published outbox event type={} topic={} key={}",
+                    event.getClass().getSimpleName(), topic, key);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Kafka send interrupted for event " + event.getClass().getSimpleName(), e);
+        } catch (Exception e) {
+            log.error("Failed to publish event type={} topic={}: {}",
+                    event.getClass().getSimpleName(), topic, e.getMessage());
+            throw new RuntimeException("Kafka send failed for event " + event.getClass().getSimpleName(), e);
+        }
+    }
+
+    private String resolveStaticField(Object event, String fieldName) {
+        try {
+            var value = event.getClass().getField(fieldName).get(null);
+            if (!(value instanceof String topic)) {
+                throw new IllegalArgumentException(
+                        "Event class static " + fieldName + " must be String: " + event.getClass().getName());
+            }
+            return topic;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new IllegalArgumentException(
+                    "Event class missing static " + fieldName + " field: " + event.getClass().getName(), e);
+        }
+    }
+}

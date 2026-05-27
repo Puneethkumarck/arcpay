@@ -17,6 +17,11 @@ jackson = "2.20"
 junit = "5.11.4"
 hibernate-validator = "9.0.1.Final"
 expressly = "6.0.0"
+resilience4j = "2.3.0"
+caffeine = "3.2.0"
+jcs = "1.1"
+shedlock = "6.8.0"
+flyway = "11.9.1"
 
 [libraries]
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
@@ -32,6 +37,7 @@ spring-cloud-bom = { module = "org.springframework.cloud:spring-cloud-dependenci
 spring-cloud-stream = { module = "org.springframework.cloud:spring-cloud-stream" }
 spring-cloud-stream-binder-kafka = { module = "org.springframework.cloud:spring-cloud-stream-binder-kafka" }
 spring-cloud-stream-test-binder = { module = "org.springframework.cloud:spring-cloud-stream-test-binder" }
+spring-cloud-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
 
 mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
@@ -41,6 +47,7 @@ lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 namastack-outbox = { module = "io.namastack:namastack-outbox-starter-jdbc", version.ref = "namastack" }
 
 temporal = { module = "io.temporal:temporal-spring-boot-starter", version.ref = "temporal" }
+temporal-testing = { module = "io.temporal:temporal-testing", version.ref = "temporal" }
 
 web3j = { module = "org.web3j:core", version.ref = "web3j" }
 
@@ -53,6 +60,18 @@ testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql" }
 testcontainers-kafka = { module = "org.testcontainers:kafka" }
+
+resilience4j-spring-boot = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
+resilience4j-circuitbreaker = { module = "io.github.resilience4j:resilience4j-circuitbreaker", version.ref = "resilience4j" }
+
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+
+jcs = { module = "org.erdtman:jcs", version.ref = "jcs" }
+
+shedlock-spring = { module = "net.javacrumbs.shedlock:shedlock-spring", version.ref = "shedlock" }
+shedlock-provider-jdbc-template = { module = "net.javacrumbs.shedlock:shedlock-provider-jdbc-template", version.ref = "shedlock" }
+
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

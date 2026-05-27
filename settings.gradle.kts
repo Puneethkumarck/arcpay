@@ -1,4 +1,15 @@
-rootProject.name = "agent-identity-service"
+rootProject.name = "arcpay-platform"
 
-include(":agent-identity-service")
-include(":agent-identity-service-api")
+buildCache {
+    local { isEnabled = true }
+}
+
+// Shared platform modules
+include("platform-api")
+include("platform-infra")
+include("platform-test")
+
+// Identity Service
+include("identity:identity-api")
+include("identity:identity-client")
+include("identity:identity")
