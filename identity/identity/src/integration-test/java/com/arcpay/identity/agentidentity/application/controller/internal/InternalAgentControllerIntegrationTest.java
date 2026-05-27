@@ -22,6 +22,7 @@ import java.util.UUID;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -128,5 +129,48 @@ class InternalAgentControllerIntegrationTest extends RestControllerAbstractTest 
                                 """.formatted(VALID_POLICY_HASH)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ARCPAY-IDENTITY-0002"));
+    }
+
+    @Test
+    void shouldGetAgentByIdWithServiceAuth() throws Exception {
+        // given
+        var agent = SOME_AGENT_ACTIVE;
+        given(agentRepository.findById(agent.agentId())).willReturn(Optional.of(agent));
+
+        // when / then
+        mockMvc.perform(get("/api/v1/internal/agents/{agentId}", agent.agentId())
+                        .with(authentication(serviceAuth())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.agentId").value(agent.agentId().toString()))
+                .andExpect(jsonPath("$.name").value(agent.name()))
+                .andExpect(jsonPath("$.status").value(agent.status().name()));
+    }
+
+    @Test
+    void shouldReturn404ForUnknownAgentOnGet() throws Exception {
+        // given
+        var agentId = UUID.randomUUID();
+        given(agentRepository.findById(agentId)).willReturn(Optional.empty());
+
+        // when / then
+        mockMvc.perform(get("/api/v1/internal/agents/{agentId}", agentId)
+                        .with(authentication(serviceAuth())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ARCPAY-IDENTITY-0002"));
+    }
+
+    @Test
+    void shouldReturn403ForGetWithoutAuth() throws Exception {
+        // when / then
+        mockMvc.perform(get("/api/v1/internal/agents/{agentId}", UUID.randomUUID()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldReturn403ForGetWithOwnerAuth() throws Exception {
+        // when / then
+        mockMvc.perform(get("/api/v1/internal/agents/{agentId}", UUID.randomUUID())
+                        .with(authentication(ownerAuth())))
+                .andExpect(status().isForbidden());
     }
 }

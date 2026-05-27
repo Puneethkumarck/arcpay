@@ -14,6 +14,7 @@ import com.arcpay.identity.agentidentity.domain.exception.InvalidPurposeExceptio
 import com.arcpay.identity.agentidentity.domain.exception.InvalidWalletAddressException;
 import com.arcpay.identity.agentidentity.domain.exception.MissingIdempotencyKeyException;
 import com.arcpay.identity.agentidentity.domain.exception.OwnerEmailAlreadyExistsException;
+import com.arcpay.identity.agentidentity.domain.exception.OwnerNotFoundException;
 import com.arcpay.identity.agentidentity.domain.exception.OwnerWalletAlreadyExistsException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +32,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(AgentNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(AgentNotFoundException ex) {
+    @ExceptionHandler({AgentNotFoundException.class, OwnerNotFoundException.class})
+    public ResponseEntity<ApiError> handleNotFound(RuntimeException ex) {
         return toError(ex, ErrorCodes.NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 
