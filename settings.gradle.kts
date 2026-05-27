@@ -13,3 +13,8 @@ include("platform-test")
 include("identity:identity-api")
 include("identity:identity-client")
 include("identity:identity")
+
+// Policy Engine Service
+include("policy-engine:policy-engine-api")
+include("policy-engine:policy-engine-client")
+include("policy-engine:policy-engine")

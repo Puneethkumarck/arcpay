@@ -17,7 +17,7 @@ jackson = "2.20"
 junit = "5.11.4"
 hibernate-validator = "9.0.1.Final"
 expressly = "6.0.0"
-resilience4j = "2.3.0"
+resilience4j = "2.4.0"
 caffeine = "3.2.0"
 jcs = "1.1"
 shedlock = "6.8.0"
@@ -61,12 +61,12 @@ testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql" }
 testcontainers-kafka = { module = "org.testcontainers:kafka" }
 
-resilience4j-spring-boot = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
+resilience4j-spring-boot = { module = "io.github.resilience4j:resilience4j-spring-boot4", version.ref = "resilience4j" }
 resilience4j-circuitbreaker = { module = "io.github.resilience4j:resilience4j-circuitbreaker", version.ref = "resilience4j" }
 
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 
-jcs = { module = "org.erdtman:jcs", version.ref = "jcs" }
+jcs = { module = "io.github.erdtman:java-json-canonicalization", version.ref = "jcs" }
 
 shedlock-spring = { module = "net.javacrumbs.shedlock:shedlock-spring", version.ref = "shedlock" }
 shedlock-provider-jdbc-template = { module = "net.javacrumbs.shedlock:shedlock-provider-jdbc-template", version.ref = "shedlock" }
