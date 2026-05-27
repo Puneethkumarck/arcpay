@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Map;
@@ -96,16 +97,18 @@ class OwnerRegistrationBusinessTest extends BusinessTest {
 
     @Test
     @Order(3)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void shouldRejectRateLimitedRegistrations() {
-        // when — register 10 times (limit is 10/hour)
+        // when — register 10 times (limit is 10/hour), each should succeed
         for (var i = 0; i < 10; i++) {
-            restClient().post()
+            var status = restClient().post()
                     .uri("/api/v1/owners/register")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body("""
                             {"email": "user%d@example.com", "walletAddress": "0x%s"}
                             """.formatted(i, "a".repeat(38) + String.format("%02d", i)))
                     .exchange((req, resp) -> resp.getStatusCode().value());
+            assertThat(status).as("Registration %d should succeed", i + 1).isEqualTo(201);
         }
 
         // then — 11th registration should be rate limited

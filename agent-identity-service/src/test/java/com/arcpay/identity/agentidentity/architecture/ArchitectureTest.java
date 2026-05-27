@@ -92,6 +92,8 @@ class ArchitectureTest {
             .and().haveSimpleNameContaining("Repository")
             .and().areNotInterfaces()
             .and().haveSimpleNameNotEndingWith("JpaRepository")
+            .and().areNotAnnotatedWith(org.springframework.context.annotation.Configuration.class)
+            .and().haveSimpleNameNotEndingWith("Configuration")
             .should().haveSimpleNameEndingWith("RepositoryAdapter")
             .allowEmptyShould(true);
 

@@ -55,7 +55,6 @@ class IdempotencyBusinessTest extends BusinessTest {
                 .toEntity(Map.class);
 
         assertThat(firstResponse.getStatusCode().value()).isEqualTo(201);
-        var firstAgentId = firstResponse.getBody().get("agentId");
 
         // when — second request with same idempotency key
         var secondResponse = restClient().post()
@@ -67,9 +66,9 @@ class IdempotencyBusinessTest extends BusinessTest {
                 .retrieve()
                 .toEntity(Map.class);
 
-        // then — same response returned
+        // then — same response returned (full body comparison)
         assertThat(secondResponse.getStatusCode().value()).isEqualTo(201);
-        assertThat(secondResponse.getBody().get("agentId")).isEqualTo(firstAgentId);
+        assertThat(secondResponse.getBody()).isEqualTo(firstResponse.getBody());
     }
 
     @SuppressWarnings("unchecked")
