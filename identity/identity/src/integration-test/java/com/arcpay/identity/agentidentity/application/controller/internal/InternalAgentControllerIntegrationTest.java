@@ -158,4 +158,19 @@ class InternalAgentControllerIntegrationTest extends RestControllerAbstractTest 
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ARCPAY-IDENTITY-0002"));
     }
+
+    @Test
+    void shouldReturn403ForGetWithoutAuth() throws Exception {
+        // when / then
+        mockMvc.perform(get("/api/v1/internal/agents/{agentId}", UUID.randomUUID()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldReturn403ForGetWithOwnerAuth() throws Exception {
+        // when / then
+        mockMvc.perform(get("/api/v1/internal/agents/{agentId}", UUID.randomUUID())
+                        .with(authentication(ownerAuth())))
+                .andExpect(status().isForbidden());
+    }
 }
