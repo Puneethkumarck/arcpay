@@ -14,6 +14,7 @@ configurations.all {
 
 dependencies {
     implementation(project(":policy-engine:policy-engine-api"))
+    testFixturesImplementation(project(":policy-engine:policy-engine-api"))
 
     // identity:identity-client will be added in #51 (Feign Client integration)
 
@@ -33,6 +34,9 @@ dependencies {
     // ShedLock for scheduled cleanup
     implementation(libs.shedlock.spring)
     implementation(libs.shedlock.provider.jdbc.template)
+
+    // Jackson JSR310 for serialization tests
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // WireMock for adapter tests
     testImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
