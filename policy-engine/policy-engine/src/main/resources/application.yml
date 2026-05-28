@@ -41,10 +41,6 @@ resilience4j:
         sliding-window-size: 10
         wait-duration-in-open-state: 30s
         permitted-number-of-calls-in-half-open-state: 3
-  timelimiter:
-    instances:
-      identity-service:
-        timeout-duration: 3s
 
 namastack:
   outbox:
