@@ -241,8 +241,10 @@ class PolicyEvaluationServiceTest {
             var result = invoke(false);
 
             // then
-            assertThat(result.verdict()).isEqualTo(PolicyVerdict.REJECTED);
-            assertThat(result.ruleResults()).containsExactly(FAIL_PER_TX);
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .ignoringFields("evaluationId", "evaluatedAt", "durationMs")
+                    .isEqualTo(expectedResult(PolicyVerdict.REJECTED, false, List.of(FAIL_PER_TX)));
             then(spendingLedgerService).should(never()).getSpendingSummary(SOME_AGENT_ID, 0);
             then(dailyEvaluator).shouldHaveNoInteractions();
         }
@@ -263,8 +265,10 @@ class PolicyEvaluationServiceTest {
             var result = invoke(true);
 
             // then
-            assertThat(result.ruleResults()).containsExactly(FAIL_PER_TX, FAIL_DAILY);
-            assertThat(result.verdict()).isEqualTo(PolicyVerdict.REJECTED);
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .ignoringFields("evaluationId", "evaluatedAt", "durationMs")
+                    .isEqualTo(expectedResult(PolicyVerdict.REJECTED, true, List.of(FAIL_PER_TX, FAIL_DAILY)));
         }
     }
 

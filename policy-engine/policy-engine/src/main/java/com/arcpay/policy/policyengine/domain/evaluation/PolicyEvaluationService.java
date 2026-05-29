@@ -53,7 +53,7 @@ public class PolicyEvaluationService {
     @Transactional
     public PolicyEvaluationResult evaluate(UUID agentId, String recipientAddress,
             BigDecimal amount, Instant requestedAt, boolean dryRun) {
-        var startTime = Instant.now();
+        var startNanos = System.nanoTime();
 
         var policy = policyRepository.findActiveByAgentId(agentId)
                 .orElseThrow(() -> new PolicyNotFoundException(agentId, "no policy configured"));
@@ -75,7 +75,7 @@ public class PolicyEvaluationService {
             var result = evaluateRule(rule, context);
             results.add(result);
             if (!dryRun && result.verdict() == RuleVerdict.FAIL) {
-                return finalize(context, policy, results, startTime);
+                return complete(context, policy, results, startNanos);
             }
         }
 
@@ -92,16 +92,16 @@ public class PolicyEvaluationService {
             var result = evaluateRule(rule, context);
             results.add(result);
             if (!dryRun && result.verdict() == RuleVerdict.FAIL) {
-                return finalize(context, policy, results, startTime);
+                return complete(context, policy, results, startNanos);
             }
         }
 
-        return finalize(context, policy, results, startTime);
+        return complete(context, policy, results, startNanos);
     }
 
-    private PolicyEvaluationResult finalize(EvaluationContext context, Policy policy,
-            List<RuleEvaluationResult> results, Instant startTime) {
-        var evalResult = buildResult(context, policy, results, startTime);
+    private PolicyEvaluationResult complete(EvaluationContext context, Policy policy,
+            List<RuleEvaluationResult> results, long startNanos) {
+        var evalResult = buildResult(context, policy, results, startNanos);
 
         // Persist rejections, requires-approval, and all dry-runs; approved real
         // evaluations are transient (captured downstream by the Audit Ledger).
@@ -154,7 +154,7 @@ public class PolicyEvaluationService {
     }
 
     private PolicyEvaluationResult buildResult(EvaluationContext context, Policy policy,
-            List<RuleEvaluationResult> results, Instant startTime) {
+            List<RuleEvaluationResult> results, long startNanos) {
         var verdict = determineVerdict(results);
         var now = Instant.now();
         return PolicyEvaluationResult.builder()
@@ -167,7 +167,7 @@ public class PolicyEvaluationService {
                 .recipientAddress(context.recipientAddress())
                 .dryRun(context.dryRun())
                 .evaluatedAt(now)
-                .durationMs(now.toEpochMilli() - startTime.toEpochMilli())
+                .durationMs((System.nanoTime() - startNanos) / 1_000_000)
                 .build();
     }
 
