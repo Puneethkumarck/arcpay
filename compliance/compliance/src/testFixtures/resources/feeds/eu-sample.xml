@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export xmlns="http://eu.europa.ec/fpi/fsd/export">
+  <sanctionEntity logicalId="40001">
+    <nameAlias wholeName="Sample EU Person" firstName="Sample" lastName="Person"/>
+    <birthdate year="1969"/>
+  </sanctionEntity>
+  <sanctionEntity logicalId="40002">
+    <nameAlias wholeName="Sample EU Organisation"/>
+    <address city="Brussels" country="Belgium"/>
+  </sanctionEntity>
+</export>

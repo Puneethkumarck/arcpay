@@ -12,6 +12,7 @@ import com.arcpay.compliance.test.FullContextIntegrationTest;
 import com.github.f4b6a3.uuid.UuidCreator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.Instant;
@@ -36,6 +37,7 @@ class CompliancePersistenceIntegrationTest extends FullContextIntegrationTest {
     private WatchlistStore watchlistStore;
 
     @Autowired
+    @Qualifier("sanctionsSnapshotAdapter")
     private SanctionsSetProvider sanctionsSetProvider;
 
     @Autowired
