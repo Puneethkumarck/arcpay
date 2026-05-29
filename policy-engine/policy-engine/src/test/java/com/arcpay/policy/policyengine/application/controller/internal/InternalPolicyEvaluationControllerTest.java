@@ -3,7 +3,7 @@ package com.arcpay.policy.policyengine.application.controller.internal;
 import com.arcpay.policy.policyengine.api.model.InternalEvaluateRequest;
 import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
 import com.arcpay.policy.policyengine.api.model.RuleResultResponse;
-import com.arcpay.policy.policyengine.application.controller.internal.mapper.EvaluationResponseMapper;
+import com.arcpay.policy.policyengine.application.controller.mapper.EvaluationResponseMapper;
 import com.arcpay.policy.policyengine.domain.evaluation.PolicyEvaluationService;
 import com.arcpay.policy.policyengine.domain.exception.PolicyHashMismatchException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
@@ -11,6 +11,8 @@ import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
+import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
+import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,12 +34,19 @@ import static org.mockito.BDDMockito.given;
 class InternalPolicyEvaluationControllerTest {
 
     private static final UUID SOME_AGENT_ID = UUID.fromString("019576a0-0000-7000-8000-000000000010");
+    private static final UUID SOME_OWNER_ID = UUID.fromString("019576a0-0000-7000-8000-000000000040");
     private static final UUID SOME_POLICY_ID = UUID.fromString("019576a0-0000-7000-8000-000000000020");
     private static final UUID SOME_EVALUATION_ID = UUID.fromString("019576a0-0000-7000-8000-000000000030");
     private static final String SOME_RECIPIENT = "0x1234567890abcdef1234567890abcdef12345678";
+    private static final String SOME_POLICY_HASH = "0xabc";
     private static final BigDecimal SOME_AMOUNT = new BigDecimal("25.00");
     private static final Instant SOME_REQUESTED_AT = Instant.parse("2026-01-07T10:00:00Z");
     private static final Instant SOME_EVALUATED_AT = Instant.parse("2026-01-07T10:00:01Z");
+    private static final AgentInfo SOME_AGENT =
+            new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", SOME_POLICY_HASH);
+
+    @Mock
+    private AgentServiceClient agentServiceClient;
 
     @Mock
     private PolicyEvaluationService policyEvaluationService;
@@ -48,7 +58,8 @@ class InternalPolicyEvaluationControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new InternalPolicyEvaluationController(policyEvaluationService, evaluationResponseMapper);
+        controller = new InternalPolicyEvaluationController(
+                agentServiceClient, policyEvaluationService, evaluationResponseMapper);
     }
 
     private InternalEvaluateRequest someRequest() {
@@ -81,8 +92,9 @@ class InternalPolicyEvaluationControllerTest {
                 .evaluatedAt(SOME_EVALUATED_AT)
                 .durationMs(12)
                 .build();
+        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
         given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
+                SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
                 .willReturn(result);
 
         // when
@@ -125,23 +137,37 @@ class InternalPolicyEvaluationControllerTest {
                 .evaluatedAt(SOME_EVALUATED_AT)
                 .durationMs(5)
                 .build();
+        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
         given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
+                SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
                 .willReturn(result);
 
         // when
         var response = controller.evaluate(someRequest());
 
         // then
-        assertThat(response.verdict()).isEqualTo("REJECTED");
-        assertThat(response.dryRun()).isFalse();
+        var expected = PolicyEvaluationResponse.builder()
+                .evaluationId(SOME_EVALUATION_ID)
+                .agentId(SOME_AGENT_ID)
+                .policyId(SOME_POLICY_ID)
+                .verdict("REJECTED")
+                .ruleResults(List.of(RuleResultResponse.builder()
+                        .ruleType("PER_TX_LIMIT")
+                        .verdict("FAIL")
+                        .build()))
+                .dryRun(false)
+                .evaluatedAt(SOME_EVALUATED_AT)
+                .durationMs(5)
+                .build();
+        assertThat(response).usingRecursiveComparison().isEqualTo(expected);
     }
 
     @Test
     void shouldPropagatePolicyNotFound() {
         // given
+        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
         given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
+                SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
                 .willThrow(new PolicyNotFoundException(SOME_AGENT_ID, "no policy configured"));
 
         // when / then
@@ -152,8 +178,9 @@ class InternalPolicyEvaluationControllerTest {
     @Test
     void shouldPropagatePolicyHashMismatch() {
         // given
+        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
         given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
+                SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
                 .willThrow(new PolicyHashMismatchException(SOME_AGENT_ID, "0xexpected", "0xactual"));
 
         // when / then

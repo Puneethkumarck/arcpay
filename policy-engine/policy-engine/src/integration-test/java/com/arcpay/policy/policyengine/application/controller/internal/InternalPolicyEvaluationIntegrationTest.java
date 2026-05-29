@@ -79,7 +79,9 @@ class InternalPolicyEvaluationIntegrationTest extends RestControllerAbstractTest
                 new PolicyRule.PerTransactionLimit(new BigDecimal("100.00")),
                 new PolicyRule.DailyLimit(new BigDecimal("1000.00"))));
 
-        // when / then
+        // when
+
+        // then
         mockMvc.perform(post("/api/v1/internal/policies/evaluate")
                         .header("X-Service-Auth", SERVICE_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -95,7 +97,9 @@ class InternalPolicyEvaluationIntegrationTest extends RestControllerAbstractTest
         // given
         var agentId = persistPolicy(List.of(new PolicyRule.PerTransactionLimit(new BigDecimal("25.00"))));
 
-        // when / then
+        // when
+
+        // then
         mockMvc.perform(post("/api/v1/internal/policies/evaluate")
                         .header("X-Service-Auth", SERVICE_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -109,7 +113,8 @@ class InternalPolicyEvaluationIntegrationTest extends RestControllerAbstractTest
         // given
         var agentId = persistPolicy(List.of(new PolicyRule.PerTransactionLimit(new BigDecimal("100.00"))));
 
-        // when / then — no X-Service-Auth header → unauthenticated
+        // when
+        // then
         mockMvc.perform(post("/api/v1/internal/policies/evaluate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request(agentId, new BigDecimal("30.00")))))

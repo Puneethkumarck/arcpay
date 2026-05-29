@@ -50,7 +50,9 @@ class InternalSpendingLedgerIntegrationTest extends RestControllerAbstractTest {
         var paymentId = UUID.randomUUID();
         var executedAt = Instant.now().minus(1, ChronoUnit.HOURS).truncatedTo(ChronoUnit.MICROS);
 
-        // when / then
+        // when
+
+        // then
         mockMvc.perform(post("/api/v1/internal/spending-ledger")
                         .header("X-Service-Auth", SERVICE_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -71,13 +73,13 @@ class InternalSpendingLedgerIntegrationTest extends RestControllerAbstractTest {
         var executedAt = Instant.now().minus(1, ChronoUnit.HOURS).truncatedTo(ChronoUnit.MICROS);
         record(agentId, paymentId, new BigDecimal("50.00"), executedAt);
 
-        // when — same paymentId, different amount
+        // when
+        // then
         mockMvc.perform(post("/api/v1/internal/spending-ledger")
                         .header("X-Service-Auth", SERVICE_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 request(agentId, paymentId, new BigDecimal("999.00"), executedAt))))
-                // then — 200, not 409
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.amount").value(50.000000));
 
@@ -93,7 +95,9 @@ class InternalSpendingLedgerIntegrationTest extends RestControllerAbstractTest {
         record(agentId, UUID.randomUUID(), new BigDecimal("10.00"), within24Hours);
         record(agentId, UUID.randomUUID(), new BigDecimal("20.00"), within7Days);
 
-        // when / then
+        // when
+
+        // then
         mockMvc.perform(get("/api/v1/internal/agents/{agentId}/spending-summary", agentId)
                         .header("X-Service-Auth", SERVICE_TOKEN))
                 .andExpect(status().isOk())
@@ -108,7 +112,8 @@ class InternalSpendingLedgerIntegrationTest extends RestControllerAbstractTest {
         // given
         var agentId = UUID.randomUUID();
 
-        // when / then — no X-Service-Auth header → unauthenticated
+        // when
+        // then
         mockMvc.perform(get("/api/v1/internal/agents/{agentId}/spending-summary", agentId))
                 .andExpect(status().isUnauthorized());
     }
