@@ -5,13 +5,6 @@ plugins {
 val web3jVersion: String by project
 val wiremockVersion: String by project
 
-// Exclude Spring Cloud Stream — not needed until #52 (Outbox Publisher)
-configurations.all {
-    exclude(group = "org.springframework.cloud", module = "spring-cloud-stream")
-    exclude(group = "org.springframework.cloud", module = "spring-cloud-stream-binder-kafka")
-    exclude(group = "org.springframework.cloud", module = "spring-cloud-stream-binder-kafka-core")
-}
-
 dependencies {
     implementation(project(":policy-engine:policy-engine-api"))
     testFixturesImplementation(project(":policy-engine:policy-engine-api"))
