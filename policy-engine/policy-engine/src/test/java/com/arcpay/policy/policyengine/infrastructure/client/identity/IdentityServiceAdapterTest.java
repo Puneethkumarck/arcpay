@@ -5,7 +5,7 @@ import com.arcpay.identity.agentidentity.api.model.UpdateAgentPolicyRequest;
 import com.arcpay.identity.client.IdentityServiceClient;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
+import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.junit.jupiter.api.BeforeEach;

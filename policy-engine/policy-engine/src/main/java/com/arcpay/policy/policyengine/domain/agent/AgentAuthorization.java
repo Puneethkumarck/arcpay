@@ -3,8 +3,8 @@ package com.arcpay.policy.policyengine.domain.agent;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
+import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
