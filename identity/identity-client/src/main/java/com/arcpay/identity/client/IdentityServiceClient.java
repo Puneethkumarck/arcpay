@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.Optional;
 import java.util.UUID;
 
-@FeignClient(name = "identity-service", url = "${arcpay.identity-service.url}")
+@FeignClient(
+        name = "identity-service",
+        url = "${arcpay.identity-service.url}",
+        fallbackFactory = IdentityClientFallbackFactory.class)
 public interface IdentityServiceClient {
 
     @GetMapping("/api/v1/internal/owners/by-api-key-hash/{hash}")

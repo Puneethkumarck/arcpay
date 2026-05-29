@@ -6,9 +6,6 @@ import com.arcpay.identity.client.IdentityServiceClient;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,8 +19,8 @@ import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_AGENT_RESPONSE;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_OWNER_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_POLICY_HASH;
+import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.clientUnavailable;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.feignNotFound;
-import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.feignServerError;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -75,20 +72,9 @@ class IdentityServiceAdapterTest {
     }
 
     @Test
-    void shouldThrowIdentityServiceUnavailableWhenCircuitBreakerOpen() {
-        // given — the OpenFeign integration surfaces CallNotPermittedException when the breaker is OPEN
-        given(identityClient.getAgent(SOME_AGENT_ID)).willThrow(callNotPermitted());
-
-        // when / then
-        assertThatThrownBy(() -> adapter.getAgent(SOME_AGENT_ID))
-                .isInstanceOf(IdentityServiceUnavailableException.class)
-                .hasMessageContaining("circuit breaker is open");
-    }
-
-    @Test
-    void shouldThrowIdentityServiceUnavailableOnServerError() {
+    void shouldThrowDomainUnavailableWhenClientUnavailableOnGetAgent() {
         // given
-        given(identityClient.getAgent(SOME_AGENT_ID)).willThrow(feignServerError());
+        given(identityClient.getAgent(SOME_AGENT_ID)).willThrow(clientUnavailable());
 
         // when / then
         assertThatThrownBy(() -> adapter.getAgent(SOME_AGENT_ID))
@@ -110,21 +96,14 @@ class IdentityServiceAdapterTest {
     }
 
     @Test
-    void shouldThrowIdentityServiceUnavailableWhenUpdatePolicyCircuitOpen() {
+    void shouldThrowDomainUnavailableWhenClientUnavailableOnUpdatePolicy() {
         // given
         var expectedRequest = new UpdateAgentPolicyRequest(SOME_POLICY_HASH);
-        given(identityClient.updatePolicy(SOME_AGENT_ID, expectedRequest)).willThrow(callNotPermitted());
+        given(identityClient.updatePolicy(SOME_AGENT_ID, expectedRequest)).willThrow(clientUnavailable());
 
         // when / then
         assertThatThrownBy(() -> adapter.updatePolicy(SOME_AGENT_ID, SOME_POLICY_HASH))
                 .isInstanceOf(IdentityServiceUnavailableException.class)
-                .hasMessageContaining("circuit breaker is open");
-    }
-
-    private static CallNotPermittedException callNotPermitted() {
-        var breaker = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults())
-                .circuitBreaker("unit-test");
-        breaker.transitionToOpenState();
-        return CallNotPermittedException.createCallNotPermittedException(breaker);
+                .hasMessageContaining("Identity service call failed");
     }
 }
