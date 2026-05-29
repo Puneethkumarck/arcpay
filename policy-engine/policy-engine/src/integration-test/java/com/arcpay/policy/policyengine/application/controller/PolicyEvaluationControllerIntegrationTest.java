@@ -6,12 +6,14 @@ import com.arcpay.platform.infrastructure.security.Roles;
 import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
 import com.arcpay.policy.policyengine.api.model.RuleResultResponse;
 import com.arcpay.policy.policyengine.domain.evaluation.PolicyEvaluationService;
+import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
+import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
+import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
 import com.arcpay.policy.policyengine.test.RestControllerAbstractTest;
 import tools.jackson.databind.json.JsonMapper;
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -25,21 +27,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.FAIL_PER_TX;
 import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_RECIPIENT;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_AGENT;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_OWNED_BY_OTHER;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_EMAIL;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_POLICY_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_SUSPENDED_AGENT;
 import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.booleanThat;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -55,9 +52,6 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
               "amount": "30.00"
             }
             """;
-
-    @MockitoBean
-    private AgentServiceClient agentServiceClient;
 
     @MockitoBean
     private PolicyEvaluationService policyEvaluationService;
@@ -92,7 +86,6 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
         var evaluationId = UuidCreator.getTimeOrderedEpoch();
         var evaluatedAt = Instant.parse("2026-01-07T10:00:00Z");
         var result = rejectedResult(evaluationId, evaluatedAt);
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_ACTIVE_AGENT));
         given(dryRunEvaluate()).willReturn(result);
 
         // when
@@ -127,7 +120,7 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
     @Test
     void shouldReturn403WhenAgentNotOwned() throws Exception {
         // given
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT_OWNED_BY_OTHER));
+        given(dryRunEvaluate()).willThrow(new AgentOwnershipException(SOME_AGENT_ID, SOME_OWNER_ID));
 
         // when
         var response = mockMvc.perform(post("/api/v1/policies/evaluate")
@@ -145,7 +138,7 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
     @Test
     void shouldReturn404WhenAgentNotFound() throws Exception {
         // given
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.empty());
+        given(dryRunEvaluate()).willThrow(new AgentNotFoundException(SOME_AGENT_ID));
 
         // when
         var response = mockMvc.perform(post("/api/v1/policies/evaluate")
@@ -163,7 +156,7 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
     @Test
     void shouldReturn422WhenAgentNotActive() throws Exception {
         // given
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_SUSPENDED_AGENT));
+        given(dryRunEvaluate()).willThrow(new AgentNotActiveException(SOME_AGENT_ID, "SUSPENDED"));
 
         // when
         var response = mockMvc.perform(post("/api/v1/policies/evaluate")
@@ -199,7 +192,6 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
                 .evaluatedAt(evaluatedAt)
                 .durationMs(1)
                 .build();
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_ACTIVE_AGENT));
         given(dryRunEvaluate()).willReturn(result);
 
         // when
@@ -255,8 +247,7 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
     @Test
     void shouldReturn503WhenIdentityServiceUnavailable() throws Exception {
         // given
-        given(agentServiceClient.getAgent(SOME_AGENT_ID))
-                .willThrow(new IdentityServiceUnavailableException("Identity Service unavailable"));
+        given(dryRunEvaluate()).willThrow(new IdentityServiceUnavailableException("Identity Service unavailable"));
 
         // when
         var response = mockMvc.perform(post("/api/v1/policies/evaluate")
@@ -282,12 +273,10 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
     }
 
     private PolicyEvaluationResult dryRunEvaluate() {
-        return policyEvaluationService.evaluate(
+        return policyEvaluationService.evaluateDryRunForOwner(
+                eqIgnoringTimestamps(SOME_OWNER_ID),
                 eqIgnoringTimestamps(SOME_AGENT_ID),
-                eqIgnoringTimestamps(SOME_ACTIVE_AGENT),
                 eqIgnoringTimestamps(SOME_RECIPIENT),
-                eqIgnoringTimestamps(AMOUNT),
-                eqIgnoringTimestamps(Instant.now()),
-                booleanThat(Boolean.TRUE::equals));
+                eqIgnoringTimestamps(AMOUNT));
     }
 }

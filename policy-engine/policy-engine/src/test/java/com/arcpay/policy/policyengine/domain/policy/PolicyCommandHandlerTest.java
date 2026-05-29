@@ -1,8 +1,8 @@
 package com.arcpay.policy.policyengine.domain.policy;
 
+import com.arcpay.policy.policyengine.domain.agent.AgentAuthorization;
 import com.arcpay.policy.policyengine.domain.event.PolicyCreated;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
-import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
 import com.arcpay.policy.policyengine.domain.exception.InvalidPolicyException;
 import com.arcpay.policy.policyengine.domain.model.Policy;
@@ -22,23 +22,24 @@ import java.util.Optional;
 
 import static com.arcpay.platform.test.TestUtils.eqIgnoring;
 import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_AGENT;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY_WITH_COMPUTED_HASH;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_OWNED_BY_OTHER;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_COMPUTED_HASH;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_PRINCIPAL;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_RULES;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_SUSPENDED_AGENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class PolicyCommandHandlerTest {
+
+    @Mock
+    private AgentAuthorization agentAuthorization;
 
     @Mock
     private AgentServiceClient agentServiceClient;
@@ -79,7 +80,6 @@ class PolicyCommandHandlerTest {
     void shouldCreateFirstPolicyForAgent() {
         // given
         var created = newActivePolicy(1);
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_ACTIVE_AGENT));
         given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
         given(policyRepository.findMaxVersionByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
         given(policyCreationService.createPolicy(SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 1))
@@ -104,7 +104,6 @@ class PolicyCommandHandlerTest {
         var differentRulesHash = "0xdifferent";
         var existingDifferent = existing.toBuilder().policyHash(differentRulesHash).build();
         var created = newActivePolicy(2);
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_ACTIVE_AGENT));
         given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.of(existingDifferent));
         given(policyRepository.findMaxVersionByAgentId(SOME_AGENT_ID)).willReturn(Optional.of(1));
         given(policyCreationService.createPolicy(SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 2))
@@ -125,7 +124,6 @@ class PolicyCommandHandlerTest {
     void shouldReturnExistingPolicyWhenSameHash() {
         // given
         var existing = SOME_ACTIVE_POLICY_WITH_COMPUTED_HASH;
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_ACTIVE_AGENT));
         given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.of(existing));
 
         // when
@@ -142,19 +140,10 @@ class PolicyCommandHandlerTest {
     }
 
     @Test
-    void shouldRejectWhenAgentNotFound() {
-        // given
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.empty());
-
-        // when / then
-        assertThatThrownBy(() -> policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES))
-                .isInstanceOf(AgentNotFoundException.class);
-    }
-
-    @Test
     void shouldRejectWhenAgentNotOwnedByPrincipal() {
         // given
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT_OWNED_BY_OTHER));
+        willThrow(new AgentOwnershipException(SOME_AGENT_ID, SOME_OWNER_ID))
+                .given(agentAuthorization).verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
 
         // when / then
         assertThatThrownBy(() -> policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES))
@@ -164,7 +153,8 @@ class PolicyCommandHandlerTest {
     @Test
     void shouldRejectWhenAgentNotActive() {
         // given
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_SUSPENDED_AGENT));
+        willThrow(new AgentNotActiveException(SOME_AGENT_ID, "SUSPENDED"))
+                .given(agentAuthorization).verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
 
         // when / then
         assertThatThrownBy(() -> policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES))
@@ -174,8 +164,7 @@ class PolicyCommandHandlerTest {
     @Test
     void shouldRejectInvalidRules() {
         // given
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_ACTIVE_AGENT));
-        org.mockito.BDDMockito.willThrow(new InvalidPolicyException("bad rules"))
+        willThrow(new InvalidPolicyException("bad rules"))
                 .given(policyValidator).validate(SOME_RULES);
 
         // when / then
@@ -188,7 +177,6 @@ class PolicyCommandHandlerTest {
     void shouldSyncPolicyHashToIdentityService() {
         // given
         var created = newActivePolicy(1);
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_ACTIVE_AGENT));
         given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
         given(policyRepository.findMaxVersionByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
         given(policyCreationService.createPolicy(SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 1))
@@ -206,7 +194,6 @@ class PolicyCommandHandlerTest {
     void shouldPublishPolicyCreatedEvent() {
         // given
         var created = newActivePolicy(1);
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_ACTIVE_AGENT));
         given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
         given(policyRepository.findMaxVersionByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
         given(policyCreationService.createPolicy(SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 1))

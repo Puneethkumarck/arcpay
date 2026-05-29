@@ -1,6 +1,7 @@
 package com.arcpay.policy.policyengine.domain.evaluation;
 
 import com.arcpay.policy.policyengine.api.PolicyRule;
+import com.arcpay.policy.policyengine.domain.agent.AgentAuthorization;
 import com.arcpay.policy.policyengine.domain.event.PolicyViolationDetected;
 import com.arcpay.policy.policyengine.domain.exception.PolicyHashMismatchException;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
@@ -44,12 +45,19 @@ public class PolicyEvaluationService {
     private static final String NO_POLICY_RULE_TYPE = "NO_ACTIVE_POLICY";
     private static final String NO_POLICY_MESSAGE = "no active policy configured";
 
+    private final AgentAuthorization agentAuthorization;
     private final PolicyRepository policyRepository;
     private final PolicyEvaluationRepository policyEvaluationRepository;
     private final SpendingLockService spendingLockService;
     private final SpendingLedgerService spendingLedgerService;
     private final RuleEvaluatorRegistry ruleEvaluatorRegistry;
     private final EventPublisher eventPublisher;
+
+    public PolicyEvaluationResult evaluateDryRunForOwner(UUID ownerId, UUID agentId,
+            String recipientAddress, BigDecimal amount) {
+        var agent = agentAuthorization.verifyOwnershipAndActive(agentId, ownerId);
+        return evaluate(agentId, agent, recipientAddress, amount, Instant.now(), true);
+    }
 
     @Transactional
     public PolicyEvaluationResult evaluate(UUID agentId, AgentInfo agent, String recipientAddress,

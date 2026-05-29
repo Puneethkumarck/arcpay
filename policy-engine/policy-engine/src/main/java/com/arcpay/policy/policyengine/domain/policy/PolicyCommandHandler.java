@@ -2,13 +2,10 @@ package com.arcpay.policy.policyengine.domain.policy;
 
 import com.arcpay.platform.api.OwnerPrincipal;
 import com.arcpay.policy.policyengine.api.PolicyRule;
+import com.arcpay.policy.policyengine.domain.agent.AgentAuthorization;
 import com.arcpay.policy.policyengine.domain.event.PolicyCreated;
-import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
-import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
-import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
 import com.arcpay.policy.policyengine.domain.model.Policy;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
 import com.arcpay.policy.policyengine.domain.port.EventPublisher;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
 import com.arcpay.policy.policyengine.domain.port.SpendingLockRepository;
@@ -25,8 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PolicyCommandHandler {
 
-    private static final String ACTIVE_STATUS = "ACTIVE";
-
+    private final AgentAuthorization agentAuthorization;
     private final AgentServiceClient agentServiceClient;
     private final PolicyValidator policyValidator;
     private final PolicyCreationService policyCreationService;
@@ -37,7 +33,7 @@ public class PolicyCommandHandler {
     @Transactional
     public Policy createOrUpdatePolicy(UUID agentId, OwnerPrincipal principal, List<PolicyRule> rules) {
         var ownerId = principal.ownerId();
-        verifyOwnershipAndActive(agentId, ownerId);
+        agentAuthorization.verifyOwnershipAndActive(agentId, ownerId);
         policyValidator.validate(rules);
         var policyHash = PolicyHashUtil.computePolicyHash(rules);
 
@@ -74,21 +70,5 @@ public class PolicyCommandHandler {
         log.info("Policy created agentId={} policyId={} version={} hash={}",
                 agentId, savedPolicy.policyId(), savedPolicy.version(), policyHash);
         return savedPolicy;
-    }
-
-    private void verifyOwnershipAndActive(UUID agentId, UUID ownerId) {
-        var agent = verifyOwnership(agentId, ownerId);
-        if (!ACTIVE_STATUS.equals(agent.status())) {
-            throw new AgentNotActiveException(agentId, agent.status());
-        }
-    }
-
-    private AgentInfo verifyOwnership(UUID agentId, UUID ownerId) {
-        var agent = agentServiceClient.getAgent(agentId)
-                .orElseThrow(() -> new AgentNotFoundException(agentId));
-        if (!agent.ownerId().equals(ownerId)) {
-            throw new AgentOwnershipException(agentId, ownerId);
-        }
-        return agent;
     }
 }
