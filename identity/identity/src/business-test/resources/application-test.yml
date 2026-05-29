@@ -4,13 +4,6 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
-  autoconfigure:
-    exclude:
-      - org.springframework.cloud.stream.config.BindingServiceConfiguration
-      - org.springframework.cloud.stream.function.FunctionConfiguration
-      - org.springframework.cloud.stream.config.BindersHealthIndicatorAutoConfiguration
-      - org.springframework.cloud.stream.config.BindingsEndpointAutoConfiguration
-      - org.springframework.cloud.stream.config.ChannelsEndpointAutoConfiguration
   kafka:
     consumer:
       group-id: agent-identity-service-biz-${random.uuid}

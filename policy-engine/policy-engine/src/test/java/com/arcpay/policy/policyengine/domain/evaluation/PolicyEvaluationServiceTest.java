@@ -10,7 +10,6 @@ import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
 import com.arcpay.policy.policyengine.domain.port.EventPublisher;
 import com.arcpay.policy.policyengine.domain.port.PolicyEvaluationRepository;
@@ -70,9 +69,6 @@ class PolicyEvaluationServiceTest {
     private PolicyEvaluationRepository policyEvaluationRepository;
 
     @Mock
-    private AgentServiceClient agentServiceClient;
-
-    @Mock
     private SpendingLockService spendingLockService;
 
     @Mock
@@ -101,7 +97,7 @@ class PolicyEvaluationServiceTest {
     @BeforeEach
     void setUp() {
         service = new PolicyEvaluationService(policyRepository, policyEvaluationRepository,
-                agentServiceClient, spendingLockService, spendingLedgerService,
+                spendingLockService, spendingLedgerService,
                 ruleEvaluatorRegistry, eventPublisher);
     }
 
@@ -121,11 +117,14 @@ class PolicyEvaluationServiceTest {
 
     private void givenActivePolicy(Policy policy) {
         given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.of(policy));
-        given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
     }
 
     private PolicyEvaluationResult invoke(boolean dryRun) {
-        return service.evaluate(SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, dryRun);
+        return service.evaluate(SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, dryRun);
+    }
+
+    private PolicyEvaluationResult invoke(AgentInfo agent, boolean dryRun) {
+        return service.evaluate(SOME_AGENT_ID, agent, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, dryRun);
     }
 
     private static EvaluationContext context(boolean dryRun) {
@@ -231,7 +230,7 @@ class PolicyEvaluationServiceTest {
 
         @Test
         void shouldFailFastInRealMode() {
-            // given — in-memory rule fails, so spending query must never run
+            // given
             givenActivePolicy(policyWith(SOME_PER_TX, SOME_DAILY));
             given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
             given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
@@ -251,7 +250,7 @@ class PolicyEvaluationServiceTest {
 
         @Test
         void shouldEvaluateAllRulesInDryRunMode() {
-            // given — both an in-memory FAIL and a spending FAIL; dry-run must evaluate everything
+            // given
             givenActivePolicy(policyWith(SOME_PER_TX, SOME_DAILY));
             given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
             given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(true)))
@@ -277,7 +276,7 @@ class PolicyEvaluationServiceTest {
 
         @Test
         void shouldFetchSpendingSummaryOnlyWhenSpendingRulesExist() {
-            // given — only an in-memory rule
+            // given
             givenActivePolicy(policyWith(SOME_PER_TX));
             given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
             given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
@@ -347,7 +346,7 @@ class PolicyEvaluationServiceTest {
 
         @Test
         void shouldPersistDryRunEvaluation() {
-            // given — APPROVED but dry-run, so still persisted
+            // given
             givenActivePolicy(policyWith(SOME_PER_TX));
             given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
             given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(true)))
@@ -425,7 +424,8 @@ class PolicyEvaluationServiceTest {
             // given
             given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
 
-            // when / then
+            // when
+            // then
             assertThatThrownBy(() -> invoke(false))
                     .isInstanceOf(PolicyNotFoundException.class)
                     .hasMessageContaining("no policy configured");
@@ -435,11 +435,11 @@ class PolicyEvaluationServiceTest {
         void shouldDetectPolicyHashMismatch() {
             // given
             given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.of(policyWith(SOME_PER_TX)));
-            given(agentServiceClient.getAgent(SOME_AGENT_ID))
-                    .willReturn(Optional.of(new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", "0xdifferent")));
+            var mismatchedAgent = new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", "0xdifferent");
 
-            // when / then
-            assertThatThrownBy(() -> invoke(false))
+            // when
+            // then
+            assertThatThrownBy(() -> invoke(mismatchedAgent, false))
                     .isInstanceOf(PolicyHashMismatchException.class);
             then(spendingLockService).shouldHaveNoInteractions();
         }
