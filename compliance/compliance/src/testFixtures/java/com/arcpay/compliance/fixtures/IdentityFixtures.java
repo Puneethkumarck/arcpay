@@ -43,6 +43,19 @@ public final class IdentityFixtures {
             .createdAt(Instant.parse("2026-01-01T00:00:00Z"))
             .build();
 
+    public static String someAgentResponseJson() {
+        return """
+                {
+                  "agentId": "%s",
+                  "ownerId": "%s",
+                  "status": "ACTIVE",
+                  "policyHash": "0xabc123def456",
+                  "name": "test-agent",
+                  "createdAt": "2026-01-01T00:00:00Z"
+                }
+                """.formatted(ComplianceFixtures.SOME_AGENT_ID, SOME_OWNER_ID);
+    }
+
     public static FeignException.NotFound feignNotFound() {
         return new FeignException.NotFound("Not Found", someRequest(), null, Collections.emptyMap());
     }

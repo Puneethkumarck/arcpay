@@ -9,17 +9,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.List;
 
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OFFICER_EMAIL;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OTHER_OWNER_ID;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_EMAIL;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
+import static com.arcpay.compliance.fixtures.SecurityContextFixtures.authenticate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -90,11 +87,5 @@ class DefaultReviewAuthorizerTest {
 
         // then
         assertThat(result).isFalse();
-    }
-
-    private static void authenticate(OwnerPrincipal principal, String authority) {
-        var authentication = new UsernamePasswordAuthenticationToken(
-                principal, null, List.of(new SimpleGrantedAuthority(authority)));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

@@ -17,8 +17,11 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 
+import static com.arcpay.compliance.fixtures.CircuitBreakerFixtures.getAgentBreaker;
+import static com.arcpay.compliance.fixtures.CircuitBreakerFixtures.identityCallBreaker;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
+import static com.arcpay.compliance.fixtures.IdentityFixtures.someAgentResponseJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,7 +78,7 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody(agentJson())));
+                        .withBody(someAgentResponseJson())));
 
         // when / then
         assertThat(ownerResolver.resolveOwner(SOME_AGENT_ID)).isEqualTo(SOME_OWNER_ID);
@@ -94,7 +97,7 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
         }
 
         // then
-        assertThat(identityBreaker().getState()).isEqualTo(CircuitBreaker.State.OPEN);
+        assertThat(identityCallBreaker(circuitBreakerRegistry).getState()).isEqualTo(CircuitBreaker.State.OPEN);
 
         assertThatThrownBy(() -> ownerResolver.resolveOwner(SOME_AGENT_ID))
                 .isInstanceOf(IdentityServiceUnavailableException.class);
@@ -108,7 +111,7 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
                         .withStatus(200)
                         .withFixedDelay(3_000)
                         .withHeader("Content-Type", "application/json")
-                        .withBody(agentJson())));
+                        .withBody(someAgentResponseJson())));
 
         // when / then
         assertThatThrownBy(() -> ownerResolver.resolveOwner(SOME_AGENT_ID))
@@ -128,39 +131,8 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
         }
 
         // then
-        var breaker = getAgentBreaker();
+        var breaker = getAgentBreaker(circuitBreakerRegistry);
         assertThat(breaker.getState()).isEqualTo(CircuitBreaker.State.CLOSED);
         assertThat(breaker.getMetrics().getNumberOfFailedCalls()).isZero();
-    }
-
-    private static String agentJson() {
-        return "{"
-                + "\"agentId\":\"" + SOME_AGENT_ID + "\","
-                + "\"ownerId\":\"" + SOME_OWNER_ID + "\","
-                + "\"status\":\"ACTIVE\","
-                + "\"policyHash\":\"0xabc123def456\","
-                + "\"name\":\"test-agent\","
-                + "\"createdAt\":\"2026-01-01T00:00:00Z\""
-                + "}";
-    }
-
-    private CircuitBreaker identityBreaker() {
-        return circuitBreakerRegistry.getAllCircuitBreakers().stream()
-                .filter(b -> b.getName().startsWith("IdentityServiceClient")
-                        && b.getMetrics().getNumberOfBufferedCalls() > 0)
-                .findFirst()
-                .orElseThrow(() -> new AssertionError(
-                        "No IdentityServiceClient circuit breaker recorded any calls — "
-                                + "the OpenFeign circuit-breaker integration did not engage"));
-    }
-
-    private CircuitBreaker getAgentBreaker() {
-        return circuitBreakerRegistry.getAllCircuitBreakers().stream()
-                .filter(b -> b.getName().startsWith("IdentityServiceClient")
-                        && b.getName().contains("getAgent"))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError(
-                        "No IdentityServiceClient getAgent circuit breaker was registered — "
-                                + "the OpenFeign circuit-breaker integration did not engage"));
     }
 }

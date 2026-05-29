@@ -13,6 +13,8 @@ dependencies {
     implementation(project(":identity:identity-client"))
     testFixturesImplementation(project(":identity:identity-client"))
     testFixturesImplementation("io.github.openfeign:feign-core")
+    testFixturesImplementation("org.springframework.boot:spring-boot-starter-security")
+    testFixturesImplementation(libs.resilience4j.circuitbreaker)
 
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("io.temporal:temporal-spring-boot-starter:$temporalVersion")
