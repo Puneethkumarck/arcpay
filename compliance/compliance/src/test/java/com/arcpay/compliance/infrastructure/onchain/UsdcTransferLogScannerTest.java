@@ -74,7 +74,8 @@ class UsdcTransferLogScannerTest {
     void shouldReturnEmptyWhenNoLogsInWindow() throws Exception {
         // given
         givenLatestBlock();
-        given(web3j.ethGetLogs(org.mockito.ArgumentMatchers.any())).willReturn((Request) ethLogRequest);
+        var filterCaptor = ArgumentCaptor.forClass(EthFilter.class);
+        given(web3j.ethGetLogs(filterCaptor.capture())).willReturn((Request) ethLogRequest);
         given(ethLogRequest.send()).willReturn(ethLogResponse(List.of()), ethLogResponse(List.of()));
         var scanner = new UsdcTransferLogScanner(web3j, properties);
 
