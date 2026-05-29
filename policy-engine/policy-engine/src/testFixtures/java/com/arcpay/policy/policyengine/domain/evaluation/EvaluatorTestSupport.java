@@ -14,7 +14,7 @@ public final class EvaluatorTestSupport {
     private static final UUID SOME_AGENT_ID = UUID.fromString("019576a0-0000-7000-8000-000000000001");
     private static final UUID SOME_OWNER_ID = UUID.fromString("019576a0-0000-7000-8000-000000000002");
     private static final UUID SOME_POLICY_ID = UUID.fromString("019576a0-0000-7000-8000-000000000003");
-    private static final Instant SOME_REQUESTED_AT = Instant.parse("2026-01-07T10:00:00Z");
+    public static final Instant SOME_REQUESTED_AT = Instant.parse("2026-01-07T10:00:00Z");
 
     public static final String SOME_RECIPIENT = "0xrecipient";
 

@@ -10,14 +10,13 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.SOME_REQUESTED_AT;
 import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextAt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CooldownEvaluatorTest {
 
     private final CooldownEvaluator evaluator = new CooldownEvaluator();
-
-    private static final Instant SOME_REQUESTED_AT = Instant.parse("2026-01-07T10:00:00Z");
 
     private SpendingSummary withLastTransactionAt(Instant lastTransactionAt) {
         return SpendingSummary.builder()
@@ -99,6 +98,30 @@ class CooldownEvaluatorTest {
             // given
             var rule = new PolicyRule.Cooldown(60);
             var lastTransactionAt = SOME_REQUESTED_AT.minusSeconds(30);
+            var context = contextAt(new BigDecimal("10.00"), SOME_REQUESTED_AT, withLastTransactionAt(lastTransactionAt));
+
+            // when
+            var result = evaluator.evaluate(rule, context);
+
+            // then
+            var expected = RuleEvaluationResult.builder()
+                    .ruleType("COOLDOWN")
+                    .verdict(RuleVerdict.FAIL)
+                    .build();
+
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .ignoringFields("message")
+                    .isEqualTo(expected);
+            assertThat(result.message()).startsWith("Cooldown period not elapsed. Last transaction at");
+        }
+
+        @Test
+        void shouldFailWhenLastTransactionIsInFuture() {
+            // given a last transaction timestamp after the request (clock skew / out-of-order)
+            // the elapsed duration is negative, so we conservatively fail closed
+            var rule = new PolicyRule.Cooldown(60);
+            var lastTransactionAt = SOME_REQUESTED_AT.plusSeconds(30);
             var context = contextAt(new BigDecimal("10.00"), SOME_REQUESTED_AT, withLastTransactionAt(lastTransactionAt));
 
             // when
