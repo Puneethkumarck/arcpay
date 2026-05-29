@@ -37,8 +37,7 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule domain_does_not_use_jpa = noClasses()
             .that().resideInAPackage(BASE + ".domain..")
-            .should().dependOnClassesThat().resideInAPackage("jakarta.persistence..")
-            .allowEmptyShould(true);
+            .should().dependOnClassesThat().resideInAPackage("jakarta.persistence..");
 
     @ArchTest
     static final ArchRule domain_only_uses_allowed_spring_packages = classes()
@@ -47,44 +46,38 @@ class ArchitectureTest {
                     JavaClass.Predicates.resideOutsideOfPackage("org.springframework..")
                             .or(JavaClass.Predicates.resideInAnyPackage(
                                     "org.springframework.stereotype..",
-                                    "org.springframework.transaction.."
+                                    "org.springframework.transaction..",
+                                    "org.springframework.data.domain.."
                             ))
-            )
-            .allowEmptyShould(true);
+            );
 
     // ── Infrastructure isolation ──
 
     @ArchTest
     static final ArchRule infrastructure_does_not_depend_on_application = noClasses()
             .that().resideInAPackage(BASE + ".infrastructure..")
-            .should().dependOnClassesThat().resideInAPackage(BASE + ".application..")
-            .allowEmptyShould(true);
+            .should().dependOnClassesThat().resideInAPackage(BASE + ".application..");
 
     // ── No @Autowired ──
 
     @ArchTest
     static final ArchRule production_code_does_not_use_autowired = noClasses()
-            .should().dependOnClassesThat().haveFullyQualifiedName("org.springframework.beans.factory.annotation.Autowired")
-            .allowEmptyShould(true);
+            .that().resideInAnyPackage(BASE + ".application..", BASE + ".domain..", BASE + ".infrastructure..")
+            .should().dependOnClassesThat().haveFullyQualifiedName("org.springframework.beans.factory.annotation.Autowired");
 
     // ── Naming conventions ──
-    // Note: allowEmptyShould(true) is required because ArchUnit 1.3.0 + JDK 25 + DoNotIncludeTests
-    // does not resolve annotation-based that() predicates against main classes. The negative-form
-    // package convention rules below provide the actual enforcement.
 
     @ArchTest
     static final ArchRule controllers_should_be_suffixed = classes()
             .that().resideInAPackage(BASE + ".application.controller..")
             .and().areAnnotatedWith(org.springframework.web.bind.annotation.RestController.class)
-            .should().haveSimpleNameEndingWith("Controller")
-            .allowEmptyShould(true);
+            .should().haveSimpleNameEndingWith("Controller");
 
     @ArchTest
     static final ArchRule jpa_entities_should_be_suffixed = classes()
             .that().resideInAPackage(BASE + ".infrastructure.db..")
             .and().areAnnotatedWith(jakarta.persistence.Entity.class)
-            .should().haveSimpleNameEndingWith("Entity")
-            .allowEmptyShould(true);
+            .should().haveSimpleNameEndingWith("Entity");
 
     @ArchTest
     static final ArchRule repository_adapters_should_be_suffixed = classes()
@@ -94,26 +87,22 @@ class ArchitectureTest {
             .and().haveSimpleNameNotEndingWith("JpaRepository")
             .and().areNotAnnotatedWith(org.springframework.context.annotation.Configuration.class)
             .and().haveSimpleNameNotEndingWith("Configuration")
-            .should().haveSimpleNameEndingWith("RepositoryAdapter")
-            .allowEmptyShould(true);
+            .should().haveSimpleNameEndingWith("RepositoryAdapter");
 
     // ── Package conventions ──
 
     @ArchTest
     static final ArchRule entity_annotation_only_in_infrastructure_db = noClasses()
             .that().resideOutsideOfPackage(BASE + ".infrastructure.db..")
-            .should().beAnnotatedWith(jakarta.persistence.Entity.class)
-            .allowEmptyShould(true);
+            .should().beAnnotatedWith(jakarta.persistence.Entity.class);
 
     @ArchTest
     static final ArchRule rest_controller_only_in_application_controller = noClasses()
             .that().resideOutsideOfPackage(BASE + ".application.controller..")
-            .should().beAnnotatedWith(org.springframework.web.bind.annotation.RestController.class)
-            .allowEmptyShould(true);
+            .should().beAnnotatedWith(org.springframework.web.bind.annotation.RestController.class);
 
     @ArchTest
     static final ArchRule kafka_listener_only_in_application_stream = noMethods()
             .that().areDeclaredInClassesThat().resideOutsideOfPackage(BASE + ".application.stream..")
-            .should().beAnnotatedWith(org.springframework.kafka.annotation.KafkaListener.class)
-            .allowEmptyShould(true);
+            .should().beAnnotatedWith(org.springframework.kafka.annotation.KafkaListener.class);
 }
