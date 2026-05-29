@@ -7,9 +7,10 @@ import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
 import com.arcpay.policy.policyengine.api.model.RuleResultResponse;
 import com.arcpay.policy.policyengine.domain.evaluation.PolicyEvaluationService;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
-import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
 import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
+import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
+import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
 import com.arcpay.policy.policyengine.test.RestControllerAbstractTest;
 import tools.jackson.databind.json.JsonMapper;
@@ -178,22 +179,54 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
     }
 
     @Test
-    void shouldReturn404WhenNoActivePolicy() throws Exception {
+    void shouldReturnRejectedWhenNoActivePolicy() throws Exception {
         // given
+        var evaluationId = UuidCreator.getTimeOrderedEpoch();
+        var evaluatedAt = Instant.parse("2026-01-07T10:00:00Z");
+        var result = PolicyEvaluationResult.builder()
+                .evaluationId(evaluationId)
+                .agentId(SOME_AGENT_ID)
+                .policyId(new UUID(0L, 0L))
+                .verdict(PolicyVerdict.REJECTED)
+                .ruleResults(List.of(RuleEvaluationResult.builder()
+                        .ruleType("NO_ACTIVE_POLICY")
+                        .verdict(RuleVerdict.FAIL)
+                        .message("no active policy configured")
+                        .build()))
+                .requestedAmount(AMOUNT)
+                .recipientAddress(SOME_RECIPIENT)
+                .dryRun(true)
+                .evaluatedAt(evaluatedAt)
+                .durationMs(1)
+                .build();
         given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_ACTIVE_AGENT));
-        given(dryRunEvaluate()).willThrow(new PolicyNotFoundException(SOME_AGENT_ID, "no policy configured"));
+        given(dryRunEvaluate()).willReturn(result);
 
         // when
         var response = mockMvc.perform(post("/api/v1/policies/evaluate")
                         .with(authentication(ownerAuth()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(EVALUATE_BODY))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
         // then
-        var actual = jsonMapper.readValue(response, ApiError.class);
-        assertThat(actual.code()).isEqualTo("ARCPAY-POLICY-0001");
+        var actual = jsonMapper.readValue(response, PolicyEvaluationResponse.class);
+        var expected = PolicyEvaluationResponse.builder()
+                .evaluationId(evaluationId)
+                .agentId(SOME_AGENT_ID)
+                .policyId(new UUID(0L, 0L))
+                .verdict("REJECTED")
+                .ruleResults(List.of(RuleResultResponse.builder()
+                        .ruleType("NO_ACTIVE_POLICY")
+                        .verdict("FAIL")
+                        .message("no active policy configured")
+                        .build()))
+                .dryRun(true)
+                .evaluatedAt(evaluatedAt)
+                .durationMs(1)
+                .build();
+        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
     }
 
     @Test

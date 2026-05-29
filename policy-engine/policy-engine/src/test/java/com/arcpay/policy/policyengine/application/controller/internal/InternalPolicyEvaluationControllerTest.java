@@ -6,7 +6,6 @@ import com.arcpay.policy.policyengine.api.model.RuleResultResponse;
 import com.arcpay.policy.policyengine.application.controller.mapper.EvaluationResponseMapper;
 import com.arcpay.policy.policyengine.domain.evaluation.PolicyEvaluationService;
 import com.arcpay.policy.policyengine.domain.exception.PolicyHashMismatchException;
-import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
 import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
@@ -163,16 +162,48 @@ class InternalPolicyEvaluationControllerTest {
     }
 
     @Test
-    void shouldPropagatePolicyNotFound() {
+    void shouldReturnRejectedWhenNoActivePolicy() {
         // given
+        var noPolicyResult = PolicyEvaluationResult.builder()
+                .evaluationId(SOME_EVALUATION_ID)
+                .agentId(SOME_AGENT_ID)
+                .policyId(new UUID(0L, 0L))
+                .verdict(PolicyVerdict.REJECTED)
+                .ruleResults(List.of(RuleEvaluationResult.builder()
+                        .ruleType("NO_ACTIVE_POLICY")
+                        .verdict(RuleVerdict.FAIL)
+                        .message("no active policy configured")
+                        .build()))
+                .requestedAmount(SOME_AMOUNT)
+                .recipientAddress(SOME_RECIPIENT)
+                .dryRun(false)
+                .evaluatedAt(SOME_EVALUATED_AT)
+                .durationMs(3)
+                .build();
         given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
         given(policyEvaluationService.evaluate(
                 SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
-                .willThrow(new PolicyNotFoundException(SOME_AGENT_ID, "no policy configured"));
+                .willReturn(noPolicyResult);
 
-        // when / then
-        assertThatThrownBy(() -> controller.evaluate(someRequest()))
-                .isInstanceOf(PolicyNotFoundException.class);
+        // when
+        var response = controller.evaluate(someRequest());
+
+        // then
+        var expected = PolicyEvaluationResponse.builder()
+                .evaluationId(SOME_EVALUATION_ID)
+                .agentId(SOME_AGENT_ID)
+                .policyId(new UUID(0L, 0L))
+                .verdict("REJECTED")
+                .ruleResults(List.of(RuleResultResponse.builder()
+                        .ruleType("NO_ACTIVE_POLICY")
+                        .verdict("FAIL")
+                        .message("no active policy configured")
+                        .build()))
+                .dryRun(false)
+                .evaluatedAt(SOME_EVALUATED_AT)
+                .durationMs(3)
+                .build();
+        assertThat(response).usingRecursiveComparison().isEqualTo(expected);
     }
 
     @Test

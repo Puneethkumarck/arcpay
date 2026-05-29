@@ -360,17 +360,17 @@ class PolicyEngineBusinessTest extends BusinessTest {
         stubAgent(agentId, ownerId, "ACTIVE", "0xhash");
 
         // when
-        var result = restClient().post()
+        var verdict = restClient().post()
                 .uri("/api/v1/policies/evaluate")
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(evaluateBody(agentId, RECIPIENT, "10.00"))
-                .exchange((req, resp) -> new ErrorResult(
-                        resp.getStatusCode().value(), resp.bodyTo(ApiError.class)));
+                .retrieve()
+                .body(PolicyEvaluationResponse.class);
 
         // then
-        assertThat(result.status()).isEqualTo(404);
-        assertThat(result.error().code()).isEqualTo("ARCPAY-POLICY-0001");
+        assertThat(verdict.verdict()).isEqualTo("REJECTED");
+        assertThat(verdict.ruleResults()).anyMatch(r -> r.ruleType().equals("NO_ACTIVE_POLICY"));
     }
 
     @Test
