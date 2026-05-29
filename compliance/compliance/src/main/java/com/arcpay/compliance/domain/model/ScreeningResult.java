@@ -26,5 +26,6 @@ public record ScreeningResult(
         Objects.requireNonNull(agentId, "agentId must not be null");
         Objects.requireNonNull(recipientAddress, "recipientAddress must not be null");
         Objects.requireNonNull(verdict, "verdict must not be null");
+        checks = checks == null ? List.of() : List.copyOf(checks);
     }
 }

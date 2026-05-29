@@ -32,6 +32,25 @@ class ScreeningResultTest {
         assertThat(rebuilt).usingRecursiveComparison().isEqualTo(expected);
     }
 
+    @Test
+    void shouldExposeUnmodifiableChecks() {
+        // given
+        var result = SOME_SCREENING_RESULT_PASS;
+
+        // when / then
+        assertThatThrownBy(() -> result.checks().add(SOME_CLEAR_CHECK))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void shouldDefaultNullChecksToEmptyList() {
+        // given / when
+        var result = SOME_SCREENING_RESULT_PASS.toBuilder().checks(null).build();
+
+        // then
+        assertThat(result.checks()).isEmpty();
+    }
+
     @ParameterizedTest
     @MethodSource("nullRequiredFields")
     void shouldRejectNullRequiredField(String fieldName, UnaryOperator<ScreeningResult.ScreeningResultBuilder> mutator) {

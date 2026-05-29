@@ -16,6 +16,7 @@ public record SanctionsSet(
 
     public SanctionsSet {
         Objects.requireNonNull(addresses, "addresses must not be null");
+        addresses = Set.copyOf(addresses);
     }
 
     public boolean contains(String normalizedAddress) {

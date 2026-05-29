@@ -16,5 +16,6 @@ public record ScreeningCheck(
     public ScreeningCheck {
         Objects.requireNonNull(type, "type must not be null");
         Objects.requireNonNull(result, "result must not be null");
+        details = details == null ? Map.of() : Map.copyOf(details);
     }
 }
