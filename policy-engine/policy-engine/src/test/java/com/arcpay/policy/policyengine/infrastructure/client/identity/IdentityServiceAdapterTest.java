@@ -1,29 +1,32 @@
 package com.arcpay.policy.policyengine.infrastructure.client.identity;
 
-import com.arcpay.identity.agentidentity.api.model.AgentResponse;
 import com.arcpay.identity.agentidentity.api.model.AgentStatusEnum;
 import com.arcpay.identity.agentidentity.api.model.UpdateAgentPolicyRequest;
 import com.arcpay.identity.client.IdentityServiceClient;
+import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
-import feign.FeignException;
-import feign.Request;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.timelimiter.TimeLimiter;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Collections;
+import java.time.Duration;
 import java.util.Optional;
-import java.util.UUID;
 
+import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_AGENT_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_AGENT_RESPONSE;
+import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_OWNER_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_POLICY_HASH;
+import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.feignNotFound;
+import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.feignServerError;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -35,31 +38,24 @@ class IdentityServiceAdapterTest {
     @Mock
     private IdentityServiceClient identityClient;
 
-    private IdentityServiceAdapter adapter;
+    private final AgentInfoMapper agentInfoMapper = Mappers.getMapper(AgentInfoMapper.class);
 
-    private static final UUID SOME_AGENT_ID = UUID.fromString("019576a0-0000-7000-8000-000000000002");
-    private static final UUID SOME_OWNER_ID = UUID.fromString("019576a0-0000-7000-8000-000000000003");
-    private static final String SOME_POLICY_HASH = "0xabc123def456";
+    private IdentityServiceAdapter adapter;
 
     @BeforeEach
     void setUp() {
         var circuitBreaker = CircuitBreakerRegistry.of(CircuitBreakerConfig.ofDefaults())
                 .circuitBreaker("test-identity-service");
-        adapter = new IdentityServiceAdapter(identityClient, circuitBreaker);
+        var timeLimiter = TimeLimiterRegistry.of(
+                        TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(3)).build())
+                .timeLimiter("test-identity-service");
+        adapter = new IdentityServiceAdapter(identityClient, circuitBreaker, timeLimiter, agentInfoMapper);
     }
 
     @Test
     void shouldGetAgent() {
         // given
-        var response = AgentResponse.builder()
-                .agentId(SOME_AGENT_ID)
-                .ownerId(SOME_OWNER_ID)
-                .status(AgentStatusEnum.ACTIVE)
-                .policyHash(SOME_POLICY_HASH)
-                .name("test-agent")
-                .createdAt(Instant.now())
-                .build();
-        given(identityClient.getAgent(SOME_AGENT_ID)).willReturn(response);
+        given(identityClient.getAgent(SOME_AGENT_ID)).willReturn(SOME_AGENT_RESPONSE);
 
         // when
         var result = adapter.getAgent(SOME_AGENT_ID);
@@ -76,33 +72,25 @@ class IdentityServiceAdapterTest {
     }
 
     @Test
-    void shouldReturnEmptyWhenAgentNotFound() {
+    void shouldThrowAgentNotFoundWhenAgentMissing() {
         // given
-        given(identityClient.getAgent(SOME_AGENT_ID))
-                .willThrow(feignNotFound());
+        given(identityClient.getAgent(SOME_AGENT_ID)).willThrow(feignNotFound());
 
-        // when
-        var result = adapter.getAgent(SOME_AGENT_ID);
-
-        // then
-        assertThat(result).isEmpty();
+        // when / then
+        assertThatThrownBy(() -> adapter.getAgent(SOME_AGENT_ID))
+                .isInstanceOf(AgentNotFoundException.class)
+                .hasMessageContaining(SOME_AGENT_ID.toString());
     }
 
     @Test
     void shouldThrowIdentityServiceUnavailableWhenCircuitBreakerOpen() {
         // given
-        var config = CircuitBreakerConfig.custom()
-                .failureRateThreshold(50)
-                .slidingWindowSize(2)
-                .minimumNumberOfCalls(2)
-                .build();
-        var openCircuitBreaker = CircuitBreakerRegistry.of(config)
+        var openCircuitBreaker = CircuitBreakerRegistry.ofDefaults()
                 .circuitBreaker("open-test");
-
-        // Force the circuit breaker to open by recording failures
         openCircuitBreaker.transitionToOpenState();
-
-        var adapterWithOpenCb = new IdentityServiceAdapter(identityClient, openCircuitBreaker);
+        var timeLimiter = TimeLimiterRegistry.ofDefaults().timeLimiter("open-test");
+        var adapterWithOpenCb = new IdentityServiceAdapter(
+                identityClient, openCircuitBreaker, timeLimiter, agentInfoMapper);
 
         // when / then
         assertThatThrownBy(() -> adapterWithOpenCb.getAgent(SOME_AGENT_ID))
@@ -111,10 +99,9 @@ class IdentityServiceAdapterTest {
     }
 
     @Test
-    void shouldThrowIdentityServiceUnavailableOnConnectionFailure() {
+    void shouldThrowIdentityServiceUnavailableOnServerError() {
         // given
-        given(identityClient.getAgent(SOME_AGENT_ID))
-                .willThrow(feignServerError());
+        given(identityClient.getAgent(SOME_AGENT_ID)).willThrow(feignServerError());
 
         // when / then
         assertThatThrownBy(() -> adapter.getAgent(SOME_AGENT_ID))
@@ -123,34 +110,38 @@ class IdentityServiceAdapterTest {
     }
 
     @Test
+    void shouldThrowIdentityServiceUnavailableWhenCallTimesOut() {
+        // given
+        var circuitBreaker = CircuitBreakerRegistry.ofDefaults().circuitBreaker("timeout-test");
+        var shortTimeLimiter = TimeLimiterRegistry.of(
+                        TimeLimiterConfig.custom()
+                                .timeoutDuration(Duration.ofMillis(100))
+                                .cancelRunningFuture(true)
+                                .build())
+                .timeLimiter("timeout-test");
+        var slowAdapter = new IdentityServiceAdapter(
+                identityClient, circuitBreaker, shortTimeLimiter, agentInfoMapper);
+        given(identityClient.getAgent(SOME_AGENT_ID)).willAnswer(invocation -> {
+            Thread.sleep(2_000);
+            return SOME_AGENT_RESPONSE;
+        });
+
+        // when / then
+        assertThatThrownBy(() -> slowAdapter.getAgent(SOME_AGENT_ID))
+                .isInstanceOf(IdentityServiceUnavailableException.class)
+                .hasMessageContaining("timed out");
+    }
+
+    @Test
     void shouldUpdatePolicy() {
         // given
         var expectedRequest = new UpdateAgentPolicyRequest(SOME_POLICY_HASH);
-        var response = AgentResponse.builder()
-                .agentId(SOME_AGENT_ID)
-                .ownerId(SOME_OWNER_ID)
-                .status(AgentStatusEnum.ACTIVE)
-                .policyHash(SOME_POLICY_HASH)
-                .build();
-        given(identityClient.updatePolicy(SOME_AGENT_ID, expectedRequest)).willReturn(response);
+        given(identityClient.updatePolicy(SOME_AGENT_ID, expectedRequest)).willReturn(SOME_AGENT_RESPONSE);
 
         // when
         adapter.updatePolicy(SOME_AGENT_ID, SOME_POLICY_HASH);
 
         // then
         then(identityClient).should().updatePolicy(SOME_AGENT_ID, expectedRequest);
-    }
-
-    private static FeignException.NotFound feignNotFound() {
-        var request = Request.create(Request.HttpMethod.GET, "/test",
-                Collections.emptyMap(), null, StandardCharsets.UTF_8, null);
-        return new FeignException.NotFound("Not Found", request, null, Collections.emptyMap());
-    }
-
-    private static FeignException feignServerError() {
-        var request = Request.create(Request.HttpMethod.GET, "/test",
-                Collections.emptyMap(), null, StandardCharsets.UTF_8, null);
-        return new FeignException.InternalServerError("Internal Server Error",
-                request, null, Collections.emptyMap());
     }
 }

@@ -2,87 +2,106 @@ package com.arcpay.policy.policyengine.infrastructure.client.identity;
 
 import com.arcpay.identity.agentidentity.api.model.UpdateAgentPolicyRequest;
 import com.arcpay.identity.client.IdentityServiceClient;
+import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import lombok.RequiredArgsConstructor;
+import io.github.resilience4j.timelimiter.TimeLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 class IdentityServiceAdapter implements AgentServiceClient {
 
     private final IdentityServiceClient identityClient;
-    private final CircuitBreaker identityCircuitBreaker;
+    private final CircuitBreaker circuitBreaker;
+    private final TimeLimiter timeLimiter;
+    private final AgentInfoMapper agentInfoMapper;
+    private final ExecutorService executor;
 
-    @Override
-    public Optional<AgentInfo> resolveApiKey(String apiKeyHash) {
-        try {
-            return identityCircuitBreaker.executeSupplier(() -> {
-                try {
-                    return identityClient.resolveApiKey(apiKeyHash)
-                            .map(r -> new AgentInfo(r.ownerId(), r.ownerId(), null, null));
-                } catch (FeignException.NotFound e) {
-                    log.debug("API key not found for hash={}", apiKeyHash);
-                    return Optional.<AgentInfo>empty();
-                } catch (FeignException e) {
-                    throw new IdentityServiceUnavailableException(
-                            "Identity service call failed: " + e.getMessage(), e);
-                }
-            });
-        } catch (CallNotPermittedException e) {
-            throw new IdentityServiceUnavailableException(
-                    "Identity service circuit breaker is open", e);
-        }
+    IdentityServiceAdapter(IdentityServiceClient identityClient,
+                           CircuitBreaker identityCircuitBreaker,
+                           TimeLimiter identityTimeLimiter,
+                           AgentInfoMapper agentInfoMapper) {
+        this.identityClient = identityClient;
+        this.circuitBreaker = identityCircuitBreaker;
+        this.timeLimiter = identityTimeLimiter;
+        this.agentInfoMapper = agentInfoMapper;
+        this.executor = Executors.newCachedThreadPool();
     }
 
     @Override
     public Optional<AgentInfo> getAgent(UUID agentId) {
         try {
-            return identityCircuitBreaker.executeSupplier(() -> {
-                try {
-                    var response = identityClient.getAgent(agentId);
-                    return Optional.of(new AgentInfo(
-                            response.agentId(),
-                            response.ownerId(),
-                            response.status() != null ? response.status().name() : null,
-                            response.policyHash()));
-                } catch (FeignException.NotFound e) {
-                    log.debug("Agent not found agentId={}", agentId);
-                    return Optional.<AgentInfo>empty();
-                } catch (FeignException e) {
-                    throw new IdentityServiceUnavailableException(
-                            "Identity service call failed: " + e.getMessage(), e);
-                }
-            });
-        } catch (CallNotPermittedException e) {
-            throw new IdentityServiceUnavailableException(
-                    "Identity service circuit breaker is open", e);
+            var response = call(() -> identityClient.getAgent(agentId));
+            return Optional.of(agentInfoMapper.toDomain(response));
+        } catch (FeignException.NotFound e) {
+            log.debug("Agent not found in Identity Service");
+            throw new AgentNotFoundException(agentId);
         }
     }
 
     @Override
     public void updatePolicy(UUID agentId, String policyHash) {
+        var request = new UpdateAgentPolicyRequest(policyHash);
+        call(() -> identityClient.updatePolicy(agentId, request));
+    }
+
+    /**
+     * Decorates an Identity Service call with the circuit breaker and time limiter.
+     *
+     * <ul>
+     *   <li>Circuit OPEN ({@link CallNotPermittedException}) → {@link IdentityServiceUnavailableException}</li>
+     *   <li>Timeout ({@link TimeoutException}) → {@link IdentityServiceUnavailableException} (call is cancelled)</li>
+     *   <li>Server-side {@link FeignException} → {@link IdentityServiceUnavailableException}</li>
+     * </ul>
+     *
+     * {@link FeignException.NotFound} is rethrown so callers can map 404 to their own semantics.
+     */
+    private <T> T call(Supplier<T> supplier) {
+        var decorated = circuitBreaker.decorateSupplier(supplier);
         try {
-            identityCircuitBreaker.executeSupplier(() -> {
-                try {
-                    var request = new UpdateAgentPolicyRequest(policyHash);
-                    return identityClient.updatePolicy(agentId, request);
-                } catch (FeignException e) {
-                    throw new IdentityServiceUnavailableException(
-                            "Identity service call failed: " + e.getMessage(), e);
-                }
-            });
+            return timeLimiter.executeFutureSupplier(
+                    () -> CompletableFuture.supplyAsync(decorated, executor));
+        } catch (FeignException.NotFound e) {
+            throw e;
         } catch (CallNotPermittedException e) {
             throw new IdentityServiceUnavailableException(
                     "Identity service circuit breaker is open", e);
+        } catch (TimeoutException e) {
+            throw new IdentityServiceUnavailableException(
+                    "Identity service call timed out", e);
+        } catch (FeignException e) {
+            throw new IdentityServiceUnavailableException(
+                    "Identity service call failed", e);
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof FeignException.NotFound notFound) {
+                throw notFound;
+            }
+            if (e.getCause() instanceof CallNotPermittedException cnp) {
+                throw new IdentityServiceUnavailableException(
+                        "Identity service circuit breaker is open", cnp);
+            }
+            if (e.getCause() instanceof FeignException feign) {
+                throw new IdentityServiceUnavailableException(
+                        "Identity service call failed", feign);
+            }
+            throw new IdentityServiceUnavailableException(
+                    "Identity service call failed", e);
+        } catch (Exception e) {
+            throw new IdentityServiceUnavailableException(
+                    "Identity service call failed", e);
         }
     }
 }

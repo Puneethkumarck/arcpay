@@ -23,24 +23,12 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: com.arcpay.policy.policyengine.domain.event
-  cache:
-    caffeine:
-      spec: maximumSize=1000,expireAfterWrite=60s
 
 arcpay:
   identity-service:
     url: http://localhost:8080
   security:
     service-token: ${SERVICE_AUTH_TOKEN:}
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      identity-service:
-        failure-rate-threshold: 50
-        sliding-window-size: 10
-        wait-duration-in-open-state: 30s
-        permitted-number-of-calls-in-half-open-state: 3
 
 namastack:
   outbox:
