@@ -25,6 +25,10 @@ public final class ComplianceFixtures {
 
     public static final String SOME_RECIPIENT_ADDRESS = "0xabcdef1234567890abcdef1234567890abcdef12";
     public static final String SOME_SANCTIONED_ADDRESS = "0x1111111111111111111111111111111111111111";
+    public static final String SOME_WATCHLIST_ADDRESS = "0xabcabcabcabcabcabcabcabcabcabcabcabcabca";
+    public static final String SOME_WATCHLIST_ADDRESS_MIXED_CASE = "0xABCabcABCabcABCabcABCabcABCabcABCabcABCa";
+    public static final String SOME_WATCHLIST_LABEL = "operator-flagged mixer";
+    public static final String SOME_MALFORMED_ADDRESS = "not-an-address";
 
     public static final Instant SOME_SCREENED_AT = Instant.parse("2026-06-01T10:05:00Z");
     public static final Instant SOME_CREATED_AT = Instant.parse("2026-06-01T10:05:00Z");
