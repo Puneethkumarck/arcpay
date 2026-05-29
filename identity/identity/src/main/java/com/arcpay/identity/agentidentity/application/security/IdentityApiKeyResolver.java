@@ -13,10 +13,11 @@ import java.util.Optional;
 class IdentityApiKeyResolver implements ApiKeyResolver {
 
     private final OwnerRepository ownerRepository;
+    private final OwnerAuthorities ownerAuthorities;
 
     @Override
     public Optional<OwnerPrincipal> resolve(String apiKeyHash) {
         return ownerRepository.findByApiKeyHash(apiKeyHash)
-                .map(owner -> new OwnerPrincipal(owner.ownerId(), owner.email()));
+                .map(owner -> new OwnerPrincipal(owner.ownerId(), owner.email(), ownerAuthorities.forApiKeyHash(apiKeyHash)));
     }
 }

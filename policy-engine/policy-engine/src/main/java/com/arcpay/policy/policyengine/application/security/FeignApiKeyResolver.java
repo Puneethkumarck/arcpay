@@ -21,6 +21,6 @@ public class FeignApiKeyResolver implements ApiKeyResolver {
     @Override
     public Optional<OwnerPrincipal> resolve(String apiKeyHash) {
         return identityClient.resolveApiKey(apiKeyHash)
-                .map(r -> new OwnerPrincipal(r.ownerId(), r.email()));
+                .map(r -> new OwnerPrincipal(r.ownerId(), r.email(), r.authority()));
     }
 }

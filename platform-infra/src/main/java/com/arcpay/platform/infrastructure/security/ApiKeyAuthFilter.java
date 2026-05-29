@@ -37,7 +37,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
             var principalOpt = apiKeyResolver.resolve(hash);
             if (principalOpt.isPresent()) {
                 var principal = principalOpt.get();
-                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + Roles.OWNER));
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + principal.authority()));
                 var authentication = new UsernamePasswordAuthenticationToken(principal, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
