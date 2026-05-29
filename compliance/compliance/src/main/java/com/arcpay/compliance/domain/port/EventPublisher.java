@@ -1,6 +1,6 @@
 package com.arcpay.compliance.domain.port;
 
-public interface EventPublisher<T> {
+public interface EventPublisher {
 
-    void publish(T event);
+    void publish(Object event);
 }
