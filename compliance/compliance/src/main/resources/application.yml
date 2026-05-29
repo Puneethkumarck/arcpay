@@ -59,7 +59,15 @@ compliance:
     poll-interval-ms: 60000
     staleness-warn-hours: 12
     staleness-critical-hours: 24
+    staleness-check-interval-ms: 3600000
+    download-timeout-seconds: 30
     sources: [OFAC_SDN, OFAC_NONSDN, UN, EU, UK_HMT]
+    source-urls:
+      OFAC_SDN: ${SANCTIONS_OFAC_SDN_URL:https://www.treasury.gov/ofac/downloads/sdn.xml}
+      OFAC_NONSDN: ${SANCTIONS_OFAC_NONSDN_URL:https://www.treasury.gov/ofac/downloads/consolidated/cons_prim.csv}
+      UN: ${SANCTIONS_UN_URL:https://scsanctions.un.org/resources/xml/en/consolidated.xml}
+      EU: ${SANCTIONS_EU_URL:https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content}
+      UK_HMT: ${SANCTIONS_UK_HMT_URL:https://ofsistorage.blob.core.windows.net/publishlive/2022format/ConList.csv}
   onchain:
     usdc-contract: ${ARC_USDC_ADDRESS}
     scan-block-window: 50000
