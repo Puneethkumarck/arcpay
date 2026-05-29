@@ -5,13 +5,13 @@ import com.arcpay.compliance.domain.event.ScreeningCompleted;
 import com.arcpay.compliance.domain.model.CheckResult;
 import com.arcpay.compliance.domain.model.CheckType;
 import com.arcpay.compliance.domain.model.ReviewState;
+import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.model.Verdict;
 import com.arcpay.compliance.domain.port.SanctionsSetProvider;
 import com.arcpay.compliance.domain.port.WatchlistStore;
 import com.arcpay.compliance.test.BusinessTest;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -36,6 +36,13 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.arcpay.compliance.domain.model.CheckResult.CLEAR;
+import static com.arcpay.compliance.domain.model.CheckResult.MATCH;
+import static com.arcpay.compliance.domain.model.CheckType.ONCHAIN_INTERACTION;
+import static com.arcpay.compliance.domain.model.CheckType.ONCHAIN_MIXER;
+import static com.arcpay.compliance.domain.model.CheckType.ONCHAIN_NOVELTY;
+import static com.arcpay.compliance.domain.model.CheckType.SANCTIONS_OFAC;
+import static com.arcpay.compliance.domain.model.CheckType.WATCHLIST;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_CLEAN_COUNTERPARTY;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
@@ -44,6 +51,7 @@ import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_WATCHLIST_A
 import static com.arcpay.compliance.fixtures.OnChainFixtures.blockNumberJson;
 import static com.arcpay.compliance.fixtures.OnChainFixtures.transferLogsJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -94,12 +102,12 @@ class ScreeningVerdictPathsTest extends BusinessTest {
     void resetState() {
         rpcServer.resetAll();
         rpcServer.stubFor(post(urlEqualTo("/"))
-                .withRequestBody(matchingJsonPath("$.method", WireMock.equalTo("eth_blockNumber")))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("eth_blockNumber")))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(blockNumberJson(LATEST_BLOCK))));
         rpcServer.stubFor(post(urlEqualTo("/"))
-                .withRequestBody(matchingJsonPath("$.method", WireMock.equalTo("eth_getLogs")))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("eth_getLogs")))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(transferLogsJson(SOME_RECIPIENT_ADDRESS, SOME_CLEAN_COUNTERPARTY))));
@@ -124,8 +132,24 @@ class ScreeningVerdictPathsTest extends BusinessTest {
 
         // then
         var completed = awaitCompleted(paymentId);
-        assertThat(completed.verdict()).isEqualTo(Verdict.PASS);
-        assertThat(completed.riskScore()).isZero();
+        assertThat(completed).usingRecursiveComparison()
+                .ignoringFieldsOfTypes(Instant.class)
+                .ignoringFields("checks")
+                .isEqualTo(ScreeningCompleted.builder()
+                        .paymentId(paymentId)
+                        .agentId(SOME_AGENT_ID)
+                        .verdict(Verdict.PASS)
+                        .riskScore(0)
+                        .listVersionId(versionId)
+                        .screenedAt(Instant.EPOCH)
+                        .build());
+        assertThat(completed.checks())
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("details")
+                .containsExactlyInAnyOrderElementsOf(List.of(
+                        check(WATCHLIST, CLEAR, 0),
+                        check(ONCHAIN_INTERACTION, CLEAR, 0),
+                        check(ONCHAIN_NOVELTY, CLEAR, 0),
+                        check(ONCHAIN_MIXER, CLEAR, 0)));
         assertThat(verdictRow(paymentId)).isEqualTo(Verdict.PASS.name());
         assertThat(riskScoreRow(paymentId)).isZero();
         assertThat(screeningResultCount(paymentId)).isEqualTo(1);
@@ -145,12 +169,20 @@ class ScreeningVerdictPathsTest extends BusinessTest {
 
         // then
         var completed = awaitCompleted(paymentId);
-        assertThat(completed.verdict()).isEqualTo(Verdict.BLOCK);
-        assertThat(completed.riskScore()).isEqualTo(100);
-        assertThat(completed.checks()).anyMatch(check ->
-                check.type() == CheckType.SANCTIONS_OFAC
-                        && check.result() == CheckResult.MATCH
-                        && check.matchScore() == 100);
+        assertThat(completed).usingRecursiveComparison()
+                .ignoringFieldsOfTypes(Instant.class)
+                .ignoringFields("checks")
+                .isEqualTo(ScreeningCompleted.builder()
+                        .paymentId(paymentId)
+                        .agentId(SOME_AGENT_ID)
+                        .verdict(Verdict.BLOCK)
+                        .riskScore(100)
+                        .listVersionId(versionId)
+                        .screenedAt(Instant.EPOCH)
+                        .build());
+        assertThat(completed.checks())
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("details")
+                .containsExactly(check(SANCTIONS_OFAC, MATCH, 100));
         assertThat(listVersionRow(paymentId)).isEqualTo(versionId);
         assertThat(holdReviewState(paymentId)).isNull();
     }
@@ -169,14 +201,35 @@ class ScreeningVerdictPathsTest extends BusinessTest {
 
         // then
         var completed = awaitCompleted(paymentId);
-        assertThat(completed.verdict()).isEqualTo(Verdict.HOLD);
-        assertThat(completed.checks()).anyMatch(check ->
-                check.type() == CheckType.WATCHLIST
-                        && check.result() == CheckResult.MATCH
-                        && check.matchScore() == 100);
+        assertThat(completed).usingRecursiveComparison()
+                .ignoringFieldsOfTypes(Instant.class)
+                .ignoringFields("checks")
+                .isEqualTo(ScreeningCompleted.builder()
+                        .paymentId(paymentId)
+                        .agentId(SOME_AGENT_ID)
+                        .verdict(Verdict.HOLD)
+                        .riskScore(100)
+                        .listVersionId(versionId)
+                        .screenedAt(Instant.EPOCH)
+                        .build());
+        assertThat(completed.checks())
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("details")
+                .containsExactlyInAnyOrderElementsOf(List.of(
+                        check(WATCHLIST, MATCH, 100),
+                        check(ONCHAIN_INTERACTION, CLEAR, 0),
+                        check(ONCHAIN_NOVELTY, CLEAR, 0),
+                        check(ONCHAIN_MIXER, CLEAR, 0)));
         await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofMillis(200))
                 .untilAsserted(() -> assertThat(holdReviewState(paymentId))
                         .isEqualTo(ReviewState.PENDING.name()));
+    }
+
+    private ScreeningCheck check(CheckType type, CheckResult result, int matchScore) {
+        return ScreeningCheck.builder()
+                .type(type)
+                .result(result)
+                .matchScore(matchScore)
+                .build();
     }
 
     private PaymentScreeningRequested requestFor(UUID paymentId, String recipientAddress) {

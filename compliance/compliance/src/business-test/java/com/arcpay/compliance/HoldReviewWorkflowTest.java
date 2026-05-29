@@ -131,8 +131,15 @@ class HoldReviewWorkflowTest extends BusinessTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(holdReviewState(paymentId)).isEqualTo(ReviewState.APPROVED.name());
         assertThat(reviewerRole(paymentId)).isEqualTo("COMPLIANCE_OFFICER");
-        assertThat(awaitEvent(paymentId, ScreeningApproved.TOPIC, ScreeningApproved.class).reviewer())
-                .isEqualTo(SOME_OFFICER_EMAIL);
+        assertThat(awaitEvent(paymentId, ScreeningApproved.TOPIC, ScreeningApproved.class))
+                .usingRecursiveComparison()
+                .ignoringFieldsOfTypes(Instant.class)
+                .isEqualTo(ScreeningApproved.builder()
+                        .paymentId(paymentId)
+                        .reviewer(SOME_OFFICER_EMAIL)
+                        .reason("Counterparty verified via off-chain KYC.")
+                        .decidedAt(Instant.EPOCH)
+                        .build());
         identityServer.verify(0, getRequestedFor(urlPathEqualTo(
                 "/api/v1/internal/agents/" + SOME_AGENT_ID)));
     }
@@ -155,8 +162,15 @@ class HoldReviewWorkflowTest extends BusinessTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(holdReviewState(paymentId)).isEqualTo(ReviewState.APPROVED.name());
         assertThat(reviewerRole(paymentId)).isEqualTo("OWNER");
-        assertThat(awaitEvent(paymentId, ScreeningApproved.TOPIC, ScreeningApproved.class).reviewer())
-                .isEqualTo(SOME_OWNER_EMAIL);
+        assertThat(awaitEvent(paymentId, ScreeningApproved.TOPIC, ScreeningApproved.class))
+                .usingRecursiveComparison()
+                .ignoringFieldsOfTypes(Instant.class)
+                .isEqualTo(ScreeningApproved.builder()
+                        .paymentId(paymentId)
+                        .reviewer(SOME_OWNER_EMAIL)
+                        .reason("Owner confirms this is a legitimate vendor payout.")
+                        .decidedAt(Instant.EPOCH)
+                        .build());
         identityServer.verify(getRequestedFor(urlPathEqualTo(
                 "/api/v1/internal/agents/" + SOME_AGENT_ID)));
     }
@@ -198,8 +212,15 @@ class HoldReviewWorkflowTest extends BusinessTest {
         // then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(holdReviewState(paymentId)).isEqualTo(ReviewState.REJECTED.name());
-        assertThat(awaitEvent(paymentId, ScreeningRejected.TOPIC, ScreeningRejected.class).reviewer())
-                .isEqualTo(SOME_OFFICER_EMAIL);
+        assertThat(awaitEvent(paymentId, ScreeningRejected.TOPIC, ScreeningRejected.class))
+                .usingRecursiveComparison()
+                .ignoringFieldsOfTypes(Instant.class)
+                .isEqualTo(ScreeningRejected.builder()
+                        .paymentId(paymentId)
+                        .reviewer(SOME_OFFICER_EMAIL)
+                        .reason("Recipient linked to flagged mixer.")
+                        .decidedAt(Instant.EPOCH)
+                        .build());
     }
 
     @Test

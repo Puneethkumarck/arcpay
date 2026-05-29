@@ -1,6 +1,7 @@
 package com.arcpay.compliance;
 
 import com.arcpay.compliance.domain.port.SanctionsSetProvider;
+import com.arcpay.compliance.fixtures.SanctionsIngestionFixtures;
 import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
 import com.arcpay.compliance.infrastructure.temporal.SanctionsFeedDownloader;
 import com.arcpay.compliance.infrastructure.temporal.SanctionsIngestionWorkflow;
@@ -70,7 +71,7 @@ class SanctionsIngestionE2ETest extends BusinessTest {
         var versionId = currentPointerVersionId();
         assertThat(versionId).isNotNull();
         var expected = Arrays.stream(SanctionsSource.values())
-                .map(com.arcpay.compliance.fixtures.SanctionsIngestionFixtures::addressFor)
+                .map(SanctionsIngestionFixtures::addressFor)
                 .toList();
         assertThat(addressesForVersion(versionId)).containsExactlyInAnyOrderElementsOf(expected);
         await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
@@ -107,7 +108,7 @@ class SanctionsIngestionE2ETest extends BusinessTest {
     }
 
     @Test
-    void shouldFlipPointerToPersistedVersionAtomically() {
+    void shouldReplacePointerWithSinglePersistedVersionOnIngestion() {
         // given
         for (var source : SanctionsSource.values()) {
             given(downloader.download(source)).willReturn(feedFor(source));

@@ -5,12 +5,12 @@ import com.arcpay.compliance.domain.event.ScreeningCompleted;
 import com.arcpay.compliance.domain.model.CheckResult;
 import com.arcpay.compliance.domain.model.CheckType;
 import com.arcpay.compliance.domain.model.ReviewState;
+import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.model.Verdict;
 import com.arcpay.compliance.domain.port.SanctionsSetProvider;
 import com.arcpay.compliance.test.BusinessTest;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -35,6 +35,12 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.arcpay.compliance.domain.model.CheckResult.CLEAR;
+import static com.arcpay.compliance.domain.model.CheckResult.FLAGGED;
+import static com.arcpay.compliance.domain.model.CheckType.ONCHAIN_INTERACTION;
+import static com.arcpay.compliance.domain.model.CheckType.ONCHAIN_MIXER;
+import static com.arcpay.compliance.domain.model.CheckType.ONCHAIN_NOVELTY;
+import static com.arcpay.compliance.domain.model.CheckType.WATCHLIST;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
@@ -42,6 +48,7 @@ import static com.arcpay.compliance.fixtures.OnChainFixtures.blockNumberJson;
 import static com.arcpay.compliance.fixtures.OnChainFixtures.emptyLogsJson;
 import static com.arcpay.compliance.fixtures.OnChainFixtures.transferLogsJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
@@ -94,12 +101,12 @@ class OnChainScreeningE2ETest extends BusinessTest {
     void resetState() {
         rpcServer.resetAll();
         rpcServer.stubFor(post(urlEqualTo("/"))
-                .withRequestBody(matchingJsonPath("$.method", WireMock.equalTo("eth_blockNumber")))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("eth_blockNumber")))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(blockNumberJson(LATEST_BLOCK))));
         rpcServer.stubFor(post(urlEqualTo("/"))
-                .withRequestBody(matchingJsonPath("$.method", WireMock.equalTo("eth_getLogs")))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("eth_getLogs")))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(emptyLogsJson())));
@@ -117,7 +124,7 @@ class OnChainScreeningE2ETest extends BusinessTest {
         var versionId = seedSanctions(SOME_SANCTIONED_ADDRESS);
         awaitSanctionsLoaded(versionId);
         rpcServer.stubFor(post(urlEqualTo("/"))
-                .withRequestBody(matchingJsonPath("$.method", WireMock.equalTo("eth_getLogs")))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("eth_getLogs")))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(transferLogsJson(SOME_RECIPIENT_ADDRESS, SOME_SANCTIONED_ADDRESS))));
@@ -129,21 +136,41 @@ class OnChainScreeningE2ETest extends BusinessTest {
 
         // then
         var completed = awaitCompleted(paymentId);
-        assertThat(completed.verdict()).isEqualTo(Verdict.HOLD);
-        assertThat(completed.riskScore()).isEqualTo(70);
-        assertThat(completed.checks()).anyMatch(check ->
-                check.type() == CheckType.ONCHAIN_INTERACTION
-                        && check.result() == CheckResult.FLAGGED
-                        && check.matchScore() == 70);
+        assertThat(completed).usingRecursiveComparison()
+                .ignoringFieldsOfTypes(Instant.class)
+                .ignoringFields("checks")
+                .isEqualTo(ScreeningCompleted.builder()
+                        .paymentId(paymentId)
+                        .agentId(SOME_AGENT_ID)
+                        .verdict(Verdict.HOLD)
+                        .riskScore(70)
+                        .listVersionId(versionId)
+                        .screenedAt(Instant.EPOCH)
+                        .build());
+        assertThat(completed.checks())
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("details")
+                .containsExactlyInAnyOrderElementsOf(List.of(
+                        check(WATCHLIST, CLEAR, 0),
+                        check(ONCHAIN_INTERACTION, FLAGGED, 70),
+                        check(ONCHAIN_NOVELTY, CLEAR, 0),
+                        check(ONCHAIN_MIXER, CLEAR, 0)));
         await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofMillis(200))
                 .untilAsserted(() -> assertThat(holdReviewState(paymentId))
                         .isEqualTo(ReviewState.PENDING.name()));
         rpcServer.verify(postRequestedFor(urlEqualTo("/"))
-                .withRequestBody(matchingJsonPath("$.method", WireMock.equalTo("eth_getLogs")))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("eth_getLogs")))
                 .withRequestBody(matchingJsonPath("$.params[0].fromBlock",
-                        WireMock.equalTo("0x" + Long.toHexString(EXPECTED_FROM_BLOCK))))
+                        equalTo("0x" + Long.toHexString(EXPECTED_FROM_BLOCK))))
                 .withRequestBody(matchingJsonPath("$.params[0].toBlock",
-                        WireMock.equalTo("0x" + Long.toHexString(LATEST_BLOCK)))));
+                        equalTo("0x" + Long.toHexString(LATEST_BLOCK)))));
+    }
+
+    private ScreeningCheck check(CheckType type, CheckResult result, int matchScore) {
+        return ScreeningCheck.builder()
+                .type(type)
+                .result(result)
+                .matchScore(matchScore)
+                .build();
     }
 
     private PaymentScreeningRequested requestFor(UUID paymentId, String recipientAddress) {
