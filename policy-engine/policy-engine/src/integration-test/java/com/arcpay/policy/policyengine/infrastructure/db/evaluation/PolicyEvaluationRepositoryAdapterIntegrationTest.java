@@ -25,8 +25,60 @@ class PolicyEvaluationRepositoryAdapterIntegrationTest extends FullContextIntegr
     @Autowired
     private PolicyEvaluationRepository policyEvaluationRepository;
 
+    @Autowired
+    private PolicyEvaluationJpaRepository policyEvaluationJpaRepository;
+
     @Test
-    void shouldSaveAndDeleteOldEvaluations() {
+    void shouldSaveAndReadBackEvaluation() {
+        // given
+        var now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        var evaluationId = UUID.randomUUID();
+        var agentId = UUID.randomUUID();
+        var policyId = UUID.randomUUID();
+        var evaluation = PolicyEvaluationResult.builder()
+                .evaluationId(evaluationId)
+                .agentId(agentId)
+                .policyId(policyId)
+                .verdict(PolicyVerdict.APPROVED)
+                .ruleResults(List.of(
+                        RuleEvaluationResult.builder()
+                                .ruleType("DAILY_LIMIT")
+                                .verdict(RuleVerdict.PASS)
+                                .limit(new BigDecimal("1000.00"))
+                                .current(new BigDecimal("100.00"))
+                                .requested(new BigDecimal("50.00"))
+                                .message("Within daily limit")
+                                .build()
+                ))
+                .requestedAmount(new BigDecimal("50.000000"))
+                .recipientAddress("0x1234567890abcdef1234567890abcdef12345678")
+                .dryRun(false)
+                .evaluatedAt(now)
+                .durationMs(42)
+                .build();
+
+        // when
+        policyEvaluationRepository.save(evaluation);
+        var loaded = policyEvaluationJpaRepository.findById(evaluationId).orElseThrow();
+
+        // then
+        var expected = PolicyEvaluationEntity.builder()
+                .evaluationId(evaluationId)
+                .agentId(agentId)
+                .policyId(policyId)
+                .verdict(PolicyVerdict.APPROVED)
+                .ruleResults(loaded.getRuleResults())
+                .requestedAmount(new BigDecimal("50.000000"))
+                .recipientAddress("0x1234567890abcdef1234567890abcdef12345678")
+                .durationMs(42)
+                .dryRun(false)
+                .evaluatedAt(now)
+                .build();
+        assertThat(loaded).usingRecursiveComparison().isEqualTo(expected);
+    }
+
+    @Test
+    void shouldDeleteOldEvaluations() {
         // given
         var now = Instant.now().truncatedTo(ChronoUnit.MICROS);
         var evaluation = PolicyEvaluationResult.builder()
@@ -44,15 +96,18 @@ class PolicyEvaluationRepositoryAdapterIntegrationTest extends FullContextIntegr
                                 .message("Within daily limit")
                                 .build()
                 ))
+                .requestedAmount(new BigDecimal("50.000000"))
+                .recipientAddress("0x1234567890abcdef1234567890abcdef12345678")
                 .dryRun(false)
                 .evaluatedAt(now.minus(2, ChronoUnit.DAYS))
                 .durationMs(42)
                 .build();
-
         policyEvaluationRepository.save(evaluation);
 
         // when
         var cutoff = now.minus(1, ChronoUnit.DAYS);
+
+        // then
         assertThatCode(() -> policyEvaluationRepository.deleteOlderThan(cutoff))
                 .doesNotThrowAnyException();
     }

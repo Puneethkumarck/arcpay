@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY;
@@ -92,7 +93,9 @@ class PolicyRepositoryAdapterIntegrationTest extends FullContextIntegrationTest 
         var page = policyRepository.findByAgentId(SOME_AGENT_ID, PageRequest.of(0, 10));
 
         // then
-        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent())
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(v2, SOME_ACTIVE_POLICY));
     }
 
     @Test

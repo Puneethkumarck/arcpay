@@ -1,6 +1,7 @@
 package com.arcpay.policy.policyengine.infrastructure.db.spending;
 
 import com.arcpay.policy.policyengine.domain.model.SpendingLedgerEntry;
+import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
 import com.arcpay.policy.policyengine.domain.port.SpendingLedgerRepository;
 import com.arcpay.policy.policyengine.test.FullContextIntegrationTest;
 import org.junit.jupiter.api.Test;
@@ -47,13 +48,14 @@ class SpendingLedgerRepositoryAdapterIntegrationTest extends FullContextIntegrat
         var agentId = UUID.randomUUID();
         var now = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
+        var executedAt = now.minus(1, ChronoUnit.HOURS);
         var recentEntry = SpendingLedgerEntry.builder()
                 .entryId(UUID.randomUUID())
                 .agentId(agentId)
                 .paymentId(UUID.randomUUID())
                 .amount(new BigDecimal("50.000000"))
                 .recipient("0x1234567890abcdef1234567890abcdef12345678")
-                .executedAt(now.minus(1, ChronoUnit.HOURS))
+                .executedAt(executedAt)
                 .createdAt(now)
                 .build();
         spendingLedgerRepository.save(recentEntry);
@@ -62,11 +64,17 @@ class SpendingLedgerRepositoryAdapterIntegrationTest extends FullContextIntegrat
         var summary = spendingLedgerRepository.getSpendingSummary(agentId, 120);
 
         // then
-        assertThat(summary.dailyTotal()).isEqualByComparingTo(new BigDecimal("50.000000"));
-        assertThat(summary.weeklyTotal()).isEqualByComparingTo(new BigDecimal("50.000000"));
-        assertThat(summary.monthlyTotal()).isEqualByComparingTo(new BigDecimal("50.000000"));
-        assertThat(summary.velocityCount()).isEqualTo(1);
-        assertThat(summary.lastTransactionAt()).isNotNull();
+        var expected = SpendingSummary.builder()
+                .dailyTotal(new BigDecimal("50.000000"))
+                .weeklyTotal(new BigDecimal("50.000000"))
+                .monthlyTotal(new BigDecimal("50.000000"))
+                .velocityCount(1)
+                .lastTransactionAt(executedAt)
+                .build();
+        assertThat(summary)
+                .usingRecursiveComparison()
+                .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .isEqualTo(expected);
     }
 
     @Test
@@ -78,10 +86,16 @@ class SpendingLedgerRepositoryAdapterIntegrationTest extends FullContextIntegrat
         var summary = spendingLedgerRepository.getSpendingSummary(agentId, 60);
 
         // then
-        assertThat(summary.dailyTotal()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(summary.weeklyTotal()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(summary.monthlyTotal()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(summary.velocityCount()).isZero();
-        assertThat(summary.lastTransactionAt()).isNull();
+        var expected = SpendingSummary.builder()
+                .dailyTotal(BigDecimal.ZERO)
+                .weeklyTotal(BigDecimal.ZERO)
+                .monthlyTotal(BigDecimal.ZERO)
+                .velocityCount(0)
+                .lastTransactionAt(null)
+                .build();
+        assertThat(summary)
+                .usingRecursiveComparison()
+                .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .isEqualTo(expected);
     }
 }
