@@ -25,14 +25,16 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
@@ -67,6 +69,9 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private JsonMapper jsonMapper;
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -141,8 +146,7 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
                 requestFor(paymentId, SOME_RECIPIENT_ADDRESS));
 
         // then
-        await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
-                .until(() -> drainVerdicts(paymentId).size() >= 2);
+        awaitCompletedCount(paymentId, 2);
         assertThat(screeningResultCount(paymentId)).isEqualTo(1);
     }
 
@@ -176,34 +180,39 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
     }
 
     private Verdict awaitVerdict(UUID paymentId) {
-        var received = new ArrayList<Verdict>();
-        await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
-                .until(() -> {
-                    received.addAll(drainVerdicts(paymentId));
-                    return !received.isEmpty();
-                });
-        return received.getFirst();
-    }
-
-    private List<Verdict> drainVerdicts(UUID paymentId) {
-        var results = new ArrayList<Verdict>();
         try (var consumer = newCompletedConsumer()) {
             consumer.subscribe(List.of(ScreeningCompleted.TOPIC));
-            var records = consumer.poll(Duration.ofSeconds(2));
-            records.forEach(record -> {
-                if (record.value().contains(paymentId.toString())) {
-                    results.add(parseVerdict(record.value()));
-                }
-            });
+            var verdict = new AtomicReference<Verdict>();
+            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+                    .until(() -> {
+                        for (var record : consumer.poll(Duration.ofSeconds(2))) {
+                            var event = jsonMapper.readValue(record.value(), ScreeningCompleted.class);
+                            if (event.paymentId().equals(paymentId)) {
+                                verdict.set(event.verdict());
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+            return verdict.get();
         }
-        return results;
     }
 
-    private Verdict parseVerdict(String json) {
-        if (json.contains("\"BLOCK\"")) {
-            return Verdict.BLOCK;
+    private void awaitCompletedCount(UUID paymentId, int min) {
+        try (var consumer = newCompletedConsumer()) {
+            consumer.subscribe(List.of(ScreeningCompleted.TOPIC));
+            var count = new AtomicInteger();
+            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+                    .until(() -> {
+                        for (var record : consumer.poll(Duration.ofSeconds(2))) {
+                            var event = jsonMapper.readValue(record.value(), ScreeningCompleted.class);
+                            if (event.paymentId().equals(paymentId)) {
+                                count.incrementAndGet();
+                            }
+                        }
+                        return count.get() >= min;
+                    });
         }
-        return json.contains("\"HOLD\"") ? Verdict.HOLD : Verdict.PASS;
     }
 
     private KafkaConsumer<String, String> newCompletedConsumer() {
