@@ -9,7 +9,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.List;
 
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OFFICER_EMAIL;
@@ -77,9 +81,11 @@ class DefaultReviewAuthorizerTest {
     }
 
     @Test
-    void shouldDenyOfficerAndOwnerPaths() {
+    void shouldDenyWhenAuthenticatedPrincipalIsNotOwnerPrincipal() {
         // given
-        authenticate(new OwnerPrincipal(SOME_OTHER_OWNER_ID, SOME_OWNER_EMAIL, Roles.OWNER), "ROLE_" + Roles.OWNER);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("non-owner-principal", null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + Roles.OWNER))));
         given(ownerResolver.resolveOwner(SOME_AGENT_ID)).willReturn(SOME_OWNER_ID);
 
         // when

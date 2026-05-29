@@ -32,7 +32,7 @@ public class HoldReviewController {
             @PathVariable UUID paymentId,
             @RequestBody ReviewDecisionRequest request) {
         var reviewer = currentReviewer();
-        log.info("Approve requested paymentId={} reviewer={}", paymentId, reviewer.principal());
+        log.info("Approve requested paymentId={} reviewerRole={}", paymentId, reviewer.role());
         return HoldReviewResponse.from(holdReviewService.approveHold(
                 paymentId, reviewer.principal(), reviewer.role(), request.reason()));
     }
@@ -42,7 +42,7 @@ public class HoldReviewController {
             @PathVariable UUID paymentId,
             @RequestBody ReviewDecisionRequest request) {
         var reviewer = currentReviewer();
-        log.info("Reject requested paymentId={} reviewer={}", paymentId, reviewer.principal());
+        log.info("Reject requested paymentId={} reviewerRole={}", paymentId, reviewer.role());
         return HoldReviewResponse.from(holdReviewService.rejectHold(
                 paymentId, reviewer.principal(), reviewer.role(), request.reason()));
     }

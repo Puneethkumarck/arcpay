@@ -35,7 +35,7 @@ public class HoldReviewService {
                 .reason(decided.reason())
                 .decidedAt(decided.decidedAt())
                 .build());
-        log.info("Approved hold paymentId={} reviewer={}", decided.paymentId(), decided.reviewerPrincipal());
+        log.info("Approved hold paymentId={} reviewerRole={}", decided.paymentId(), decided.reviewerRole());
         return decided;
     }
 
@@ -50,7 +50,7 @@ public class HoldReviewService {
                 .reason(decided.reason())
                 .decidedAt(decided.decidedAt())
                 .build());
-        log.info("Rejected hold paymentId={} reviewer={}", decided.paymentId(), decided.reviewerPrincipal());
+        log.info("Rejected hold paymentId={} reviewerRole={}", decided.paymentId(), decided.reviewerRole());
         return decided;
     }
 
