@@ -5,6 +5,7 @@ import com.arcpay.compliance.domain.exception.HoldAlreadyDecidedException;
 import com.arcpay.compliance.domain.exception.HoldNotFoundException;
 import com.arcpay.compliance.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.compliance.domain.exception.MalformedAddressException;
+import com.arcpay.compliance.domain.exception.ReviewReasonInvalidException;
 import com.arcpay.compliance.domain.exception.ScreeningNotFoundException;
 import com.arcpay.compliance.domain.exception.UnauthorizedException;
 import com.arcpay.platform.api.ApiError;
@@ -12,6 +13,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -56,12 +58,40 @@ public class GlobalExceptionHandler {
         return toError(ex, ErrorCodes.MALFORMED_ADDRESS, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
+    @ExceptionHandler(ReviewReasonInvalidException.class)
+    public ResponseEntity<ApiError> handleReviewReasonInvalid(ReviewReasonInvalidException ex) {
+        return toError(ex, ErrorCodes.REVIEW_REASON_INVALID, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException ex) {
+        if (hasCause(ex, ReviewReasonInvalidException.class)) {
+            return toError("Review reason missing or < 10 characters",
+                    ErrorCodes.REVIEW_REASON_INVALID, HttpStatus.BAD_REQUEST);
+        }
+        return toError("Malformed request body", ErrorCodes.MALFORMED_ADDRESS,
+                HttpStatus.BAD_REQUEST);
+    }
+
+    private static boolean hasCause(Throwable throwable, Class<? extends Throwable> type) {
+        for (var current = throwable; current != null; current = current.getCause()) {
+            if (type.isInstance(current)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
         var errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.groupingBy(
                         fe -> fe.getField(),
                         Collectors.mapping(fe -> fe.getDefaultMessage(), Collectors.toList())));
+        if (errors.containsKey("reason")) {
+            return toError("Review reason missing or < 10 characters",
+                    ErrorCodes.REVIEW_REASON_INVALID, HttpStatus.BAD_REQUEST);
+        }
         return toErrorWithDetail("Validation failed", ErrorCodes.MALFORMED_ADDRESS,
                 HttpStatus.UNPROCESSABLE_ENTITY, errors);
     }
