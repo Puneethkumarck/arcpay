@@ -5,6 +5,7 @@ import com.arcpay.platform.infrastructure.security.ApiKeyResolver;
 import com.arcpay.platform.infrastructure.security.Roles;
 import com.arcpay.platform.infrastructure.security.ServiceAuthFilter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableConfigurationProperties(IdentitySecurityProperties.class)
 public class SecurityConfig {
 
     private final ApiKeyResolver apiKeyResolver;

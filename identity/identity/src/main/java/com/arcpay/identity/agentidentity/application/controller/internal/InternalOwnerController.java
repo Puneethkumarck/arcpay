@@ -1,6 +1,7 @@
 package com.arcpay.identity.agentidentity.application.controller.internal;
 
 import com.arcpay.identity.agentidentity.api.model.OwnerPrincipalResponse;
+import com.arcpay.identity.agentidentity.application.security.OwnerAuthorities;
 import com.arcpay.identity.agentidentity.domain.exception.OwnerNotFoundException;
 import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class InternalOwnerController {
 
     private final OwnerRepository ownerRepository;
+    private final OwnerAuthorities ownerAuthorities;
 
     @GetMapping("/by-api-key-hash/{hash}")
     public OwnerPrincipalResponse resolveByApiKeyHash(@PathVariable String hash) {
@@ -26,6 +28,7 @@ public class InternalOwnerController {
         return OwnerPrincipalResponse.builder()
                 .ownerId(owner.ownerId())
                 .email(owner.email())
+                .authority(ownerAuthorities.forApiKeyHash(hash))
                 .build();
     }
 }

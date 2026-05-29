@@ -1,6 +1,7 @@
 package com.arcpay.identity.agentidentity.application.security;
 
 import com.arcpay.platform.api.OwnerPrincipal;
+import com.arcpay.platform.infrastructure.security.Roles;
 import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +22,9 @@ class IdentityApiKeyResolverTest {
     @Mock
     private OwnerRepository ownerRepository;
 
+    @Mock
+    private OwnerAuthorities ownerAuthorities;
+
     @InjectMocks
     private IdentityApiKeyResolver identityApiKeyResolver;
 
@@ -28,7 +32,22 @@ class IdentityApiKeyResolverTest {
     void shouldResolveOwnerPrincipalForValidApiKeyHash() {
         // given
         given(ownerRepository.findByApiKeyHash(SOME_API_KEY_HASH)).willReturn(Optional.of(SOME_OWNER));
-        var expected = new OwnerPrincipal(SOME_OWNER.ownerId(), SOME_OWNER.email());
+        given(ownerAuthorities.forApiKeyHash(SOME_API_KEY_HASH)).willReturn(Roles.OWNER);
+        var expected = new OwnerPrincipal(SOME_OWNER.ownerId(), SOME_OWNER.email(), Roles.OWNER);
+
+        // when
+        var result = identityApiKeyResolver.resolve(SOME_API_KEY_HASH);
+
+        // then
+        assertThat(result).isPresent().contains(expected);
+    }
+
+    @Test
+    void shouldResolveComplianceOfficerPrincipalWhenAuthorityIsComplianceOfficer() {
+        // given
+        given(ownerRepository.findByApiKeyHash(SOME_API_KEY_HASH)).willReturn(Optional.of(SOME_OWNER));
+        given(ownerAuthorities.forApiKeyHash(SOME_API_KEY_HASH)).willReturn(Roles.COMPLIANCE_OFFICER);
+        var expected = new OwnerPrincipal(SOME_OWNER.ownerId(), SOME_OWNER.email(), Roles.COMPLIANCE_OFFICER);
 
         // when
         var result = identityApiKeyResolver.resolve(SOME_API_KEY_HASH);

@@ -27,6 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class InternalOwnerControllerIntegrationTest extends RestControllerAbstractTest {
 
+    private static final String OFFICER_API_KEY_HASH = "officer-key-hash";
+
     @MockitoBean
     private OwnerRepository ownerRepository;
 
@@ -63,7 +65,21 @@ class InternalOwnerControllerIntegrationTest extends RestControllerAbstractTest 
                         .with(authentication(serviceAuth())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.ownerId").value(SOME_OWNER.ownerId().toString()))
-                .andExpect(jsonPath("$.email").value(SOME_OWNER.email()));
+                .andExpect(jsonPath("$.email").value(SOME_OWNER.email()))
+                .andExpect(jsonPath("$.authority").value(Roles.OWNER));
+    }
+
+    @Test
+    void shouldResolveComplianceOfficerAuthorityForConfiguredKeyHash() throws Exception {
+        // given
+        given(ownerRepository.findByApiKeyHash(OFFICER_API_KEY_HASH)).willReturn(Optional.of(SOME_OWNER));
+
+        // when / then
+        mockMvc.perform(get("/api/v1/internal/owners/by-api-key-hash/{hash}", OFFICER_API_KEY_HASH)
+                        .with(authentication(serviceAuth())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ownerId").value(SOME_OWNER.ownerId().toString()))
+                .andExpect(jsonPath("$.authority").value(Roles.COMPLIANCE_OFFICER));
     }
 
     @Test

@@ -29,6 +29,9 @@ circle:
     wallet-set-id: test-wallet-set-id
 
 arcpay:
+  security:
+    compliance-officer-key-hashes:
+      - officer-key-hash
   contract:
     agent-registry-address: "0x0000000000000000000000000000000000000000"
   blockchain:
