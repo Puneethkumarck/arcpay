@@ -1,5 +1,7 @@
 package com.arcpay.identity.agentidentity.domain.port;
 
+import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
+
 import java.util.UUID;
 
 public interface BlockchainService {
@@ -15,6 +17,4 @@ public interface BlockchainService {
     String updatePolicy(UUID agentId, String policyHash);
 
     boolean isAgentActive(UUID agentId);
-
-    record RegistrationResult(String txHash, long blockNumber) {}
 }

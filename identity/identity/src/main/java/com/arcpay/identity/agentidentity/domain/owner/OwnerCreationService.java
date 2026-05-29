@@ -2,6 +2,7 @@ package com.arcpay.identity.agentidentity.domain.owner;
 
 import com.arcpay.identity.agentidentity.domain.model.Owner;
 import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
+import com.arcpay.identity.agentidentity.domain.model.OwnerWithApiKey;
 import com.github.f4b6a3.uuid.UuidCreator;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,6 @@ public class OwnerCreationService {
     private static final int API_KEY_RANDOM_LENGTH = 32;
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-
-    public record OwnerWithApiKey(Owner owner, String rawApiKey) {}
 
     public OwnerWithApiKey createOwner(String email, String walletAddress) {
         var ownerId = UuidCreator.getTimeOrderedEpoch();

@@ -1,6 +1,7 @@
 package com.arcpay.identity.agentidentity.domain.owner;
 
 import com.arcpay.identity.agentidentity.domain.event.OwnerRegistered;
+import com.arcpay.identity.agentidentity.domain.model.OwnerWithApiKey;
 import com.arcpay.identity.agentidentity.domain.port.EventPublisher;
 import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class OwnerCommandHandler {
     private final EventPublisher eventPublisher;
 
     @Transactional
-    public OwnerCreationService.OwnerWithApiKey registerOwner(String email, String walletAddress) {
+    public OwnerWithApiKey registerOwner(String email, String walletAddress) {
         ownerValidator.validateRegistration(email, walletAddress);
         var result = ownerCreationService.createOwner(email, walletAddress);
         var savedOwner = ownerRepository.save(result.owner());
@@ -29,6 +30,6 @@ public class OwnerCommandHandler {
                 savedOwner.walletAddress(),
                 savedOwner.createdAt()));
         log.info("Owner registered ownerId={}", savedOwner.ownerId());
-        return new OwnerCreationService.OwnerWithApiKey(savedOwner, result.rawApiKey());
+        return new OwnerWithApiKey(savedOwner, result.rawApiKey());
     }
 }

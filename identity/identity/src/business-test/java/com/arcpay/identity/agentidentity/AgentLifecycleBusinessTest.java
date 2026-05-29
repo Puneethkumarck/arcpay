@@ -1,9 +1,9 @@
 package com.arcpay.identity.agentidentity;
 
+import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
+import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
-import com.arcpay.identity.agentidentity.domain.port.BlockchainService.RegistrationResult;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
-import com.arcpay.identity.agentidentity.domain.port.CircleWalletService.WalletCreationResult;
 import com.arcpay.identity.agentidentity.test.BusinessTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

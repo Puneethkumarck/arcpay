@@ -7,8 +7,8 @@ import com.arcpay.identity.agentidentity.domain.exception.InvalidEmailException;
 import com.arcpay.identity.agentidentity.domain.exception.OwnerEmailAlreadyExistsException;
 import com.arcpay.identity.agentidentity.domain.model.Owner;
 import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
+import com.arcpay.identity.agentidentity.domain.model.OwnerWithApiKey;
 import com.arcpay.identity.agentidentity.domain.owner.OwnerCommandHandler;
-import com.arcpay.identity.agentidentity.domain.owner.OwnerCreationService;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.test.RestControllerAbstractTest;
 import org.junit.jupiter.api.Test;
@@ -57,7 +57,7 @@ class OwnerControllerIntegrationTest extends RestControllerAbstractTest {
                 .build();
         var rawApiKey = "ak_test_secretkey123";
         given(ownerCommandHandler.registerOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678"))
-                .willReturn(new OwnerCreationService.OwnerWithApiKey(owner, rawApiKey));
+                .willReturn(new OwnerWithApiKey(owner, rawApiKey));
 
         // when / then
         mockMvc.perform(post("/api/v1/owners/register")

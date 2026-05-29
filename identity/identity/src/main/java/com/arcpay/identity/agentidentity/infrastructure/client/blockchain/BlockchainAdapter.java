@@ -3,6 +3,7 @@ package com.arcpay.identity.agentidentity.infrastructure.client.blockchain;
 import com.arcpay.identity.agentidentity.domain.agent.UuidConversionUtil;
 import com.arcpay.identity.agentidentity.domain.exception.BlockchainRegistrationException;
 import com.arcpay.identity.agentidentity.domain.model.GasUsage;
+import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.GasUsageRepository;
 import com.github.f4b6a3.uuid.UuidCreator;

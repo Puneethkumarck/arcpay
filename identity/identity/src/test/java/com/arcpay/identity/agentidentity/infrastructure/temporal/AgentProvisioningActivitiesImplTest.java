@@ -1,11 +1,11 @@
 package com.arcpay.identity.agentidentity.infrastructure.temporal;
 
 import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningService;
+import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
+import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
-import com.arcpay.identity.agentidentity.domain.port.BlockchainService.RegistrationResult;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
-import com.arcpay.identity.agentidentity.domain.port.CircleWalletService.WalletCreationResult;
 import io.temporal.failure.ApplicationFailure;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

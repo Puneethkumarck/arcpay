@@ -2,7 +2,7 @@ package com.arcpay.identity.agentidentity.application.controller.owner.mapper;
 
 import com.arcpay.identity.agentidentity.api.model.OwnerResponse;
 import com.arcpay.identity.agentidentity.api.model.OwnerStatusEnum;
-import com.arcpay.identity.agentidentity.domain.owner.OwnerCreationService;
+import com.arcpay.identity.agentidentity.domain.model.OwnerWithApiKey;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -15,7 +15,7 @@ public interface OwnerResponseMapper {
     @Mapping(source = "rawApiKey", target = "apiKey")
     @Mapping(source = "owner.status", target = "status")
     @Mapping(source = "owner.createdAt", target = "createdAt")
-    OwnerResponse toApi(OwnerCreationService.OwnerWithApiKey result);
+    OwnerResponse toApi(OwnerWithApiKey result);
 
     default OwnerStatusEnum map(com.arcpay.identity.agentidentity.domain.model.OwnerStatus status) {
         return OwnerStatusEnum.valueOf(status.name());
