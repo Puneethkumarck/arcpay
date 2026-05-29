@@ -1,12 +1,13 @@
 package com.arcpay.compliance;
 
 import com.arcpay.compliance.api.ErrorCodes;
-import com.arcpay.compliance.application.controller.ScreeningCheckResponse;
-import com.arcpay.compliance.application.controller.ScreeningQueryResponse;
 import com.arcpay.compliance.application.dto.HoldReviewResponse;
+import com.arcpay.compliance.application.dto.ScreeningCheckResponse;
+import com.arcpay.compliance.application.dto.ScreeningQueryResponse;
 import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
 import com.arcpay.compliance.domain.event.ScreeningCompleted;
 import com.arcpay.compliance.domain.model.ReviewState;
+import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.model.Verdict;
 import com.arcpay.compliance.domain.port.SanctionsSetProvider;
 import com.arcpay.compliance.domain.port.WatchlistStore;
@@ -32,6 +33,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.HttpClientErrorException;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
@@ -49,10 +51,12 @@ import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_A
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_WATCHLIST_ADDRESS;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OFFICER_EMAIL;
+import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_EMAIL;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
 import static com.arcpay.compliance.fixtures.OnChainFixtures.blockNumberJson;
 import static com.arcpay.compliance.fixtures.OnChainFixtures.transferLogsJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -66,6 +70,7 @@ import static org.awaitility.Awaitility.await;
 class ScreeningReadAPITest extends BusinessTest {
 
     private static final String OFFICER_API_KEY = "officer-read-key";
+    private static final String OWNER_API_KEY = "owner-read-key";
     private static final long LATEST_BLOCK = 100000;
 
     private static WireMockServer identityServer;
@@ -113,26 +118,16 @@ class ScreeningReadAPITest extends BusinessTest {
     @BeforeEach
     void resetState() {
         identityServer.resetAll();
-        var hash = ApiKeyAuthFilter.hashApiKey(OFFICER_API_KEY);
-        identityServer.stubFor(get(urlPathEqualTo("/api/v1/internal/owners/by-api-key-hash/" + hash))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "ownerId": "%s",
-                                  "email": "%s",
-                                  "authority": "COMPLIANCE_OFFICER"
-                                }
-                                """.formatted(SOME_OWNER_ID, SOME_OFFICER_EMAIL))));
+        stubPrincipal(OFFICER_API_KEY, SOME_OFFICER_EMAIL, "COMPLIANCE_OFFICER");
+        stubPrincipal(OWNER_API_KEY, SOME_OWNER_EMAIL, "OWNER");
         rpcServer.resetAll();
         rpcServer.stubFor(post(urlEqualTo("/"))
-                .withRequestBody(matchingJsonPath("$.method", com.github.tomakehurst.wiremock.client.WireMock.equalTo("eth_blockNumber")))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("eth_blockNumber")))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(blockNumberJson(LATEST_BLOCK))));
         rpcServer.stubFor(post(urlEqualTo("/"))
-                .withRequestBody(matchingJsonPath("$.method", com.github.tomakehurst.wiremock.client.WireMock.equalTo("eth_getLogs")))
+                .withRequestBody(matchingJsonPath("$.method", equalTo("eth_getLogs")))
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody(transferLogsJson(SOME_RECIPIENT_ADDRESS, SOME_CLEAN_COUNTERPARTY))));
@@ -175,6 +170,30 @@ class ScreeningReadAPITest extends BusinessTest {
     }
 
     @Test
+    void shouldRejectReadEndpointsForNonOfficerPrincipal() {
+        // given
+        var paymentId = UuidCreator.getTimeOrderedEpoch();
+
+        // when
+        var holdsError = catchThrowableOfType(HttpClientErrorException.class, () -> restClient().get()
+                .uri("/compliance/holds")
+                .header("Authorization", "Bearer " + OWNER_API_KEY)
+                .retrieve()
+                .toBodilessEntity());
+        var screeningError = catchThrowableOfType(HttpClientErrorException.class, () -> restClient().get()
+                .uri("/compliance/screenings/{paymentId}", paymentId)
+                .header("Authorization", "Bearer " + OWNER_API_KEY)
+                .retrieve()
+                .toBodilessEntity());
+
+        // then
+        assertThat(holdsError.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(apiError(holdsError).code()).isEqualTo(ErrorCodes.NOT_AUTHORIZED);
+        assertThat(screeningError.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(apiError(screeningError).code()).isEqualTo(ErrorCodes.NOT_AUTHORIZED);
+    }
+
+    @Test
     void shouldReturnNotFoundWhenScreeningAbsent() {
         // given
         var missing = UuidCreator.getTimeOrderedEpoch();
@@ -197,12 +216,9 @@ class ScreeningReadAPITest extends BusinessTest {
         var versionId = seedSanctions();
         awaitSanctionsLoaded(versionId);
         watchlistStore.addAddress(SOME_WATCHLIST_ADDRESS, "operator-flagged", "officer@arcpay.io");
-        for (var i = 0; i < 3; i++) {
-            var paymentId = UuidCreator.getTimeOrderedEpoch();
-            publishScreening(paymentId, SOME_WATCHLIST_ADDRESS);
-            awaitVerdict(paymentId, Verdict.HOLD);
-            awaitHoldPending(paymentId);
-        }
+        var first = createPendingHold();
+        var second = createPendingHold();
+        var third = createPendingHold();
 
         // when
         var pending = restClient().get()
@@ -217,8 +233,19 @@ class ScreeningReadAPITest extends BusinessTest {
                 .body(new ParameterizedTypeReference<List<HoldReviewResponse>>() {});
 
         // then
-        assertThat(pending).hasSize(3).allMatch(hold -> hold.state() == ReviewState.PENDING);
+        assertThat(pending).hasSize(3)
+                .allMatch(hold -> hold.state() == ReviewState.PENDING)
+                .extracting(HoldReviewResponse::paymentId)
+                .containsExactly(third, second, first);
         assertThat(approved).isEmpty();
+    }
+
+    private UUID createPendingHold() {
+        var paymentId = UuidCreator.getTimeOrderedEpoch();
+        publishScreening(paymentId, SOME_WATCHLIST_ADDRESS);
+        awaitVerdict(paymentId, Verdict.HOLD);
+        awaitHoldPending(paymentId);
+        return paymentId;
     }
 
     @Test
@@ -270,13 +297,13 @@ class ScreeningReadAPITest extends BusinessTest {
         assertThat(apiError(error).code()).isEqualTo(ErrorCodes.HOLD_NOT_FOUND);
     }
 
-    private ScreeningCheckResponse toCheckResponse(com.arcpay.compliance.domain.model.ScreeningCheck check) {
+    private ScreeningCheckResponse toCheckResponse(ScreeningCheck check) {
         return ScreeningCheckResponse.builder()
                 .type(check.type().name())
                 .result(check.result().name())
                 .matchScore(check.matchScore())
                 .details(jsonMapper.convertValue(check.details(),
-                        new tools.jackson.core.type.TypeReference<Map<String, Object>>() {}))
+                        new TypeReference<Map<String, Object>>() {}))
                 .build();
     }
 
@@ -324,6 +351,21 @@ class ScreeningReadAPITest extends BusinessTest {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         return new KafkaConsumer<>(props);
+    }
+
+    private void stubPrincipal(String rawApiKey, String email, String authority) {
+        var hash = ApiKeyAuthFilter.hashApiKey(rawApiKey);
+        identityServer.stubFor(get(urlPathEqualTo("/api/v1/internal/owners/by-api-key-hash/" + hash))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {
+                                  "ownerId": "%s",
+                                  "email": "%s",
+                                  "authority": "%s"
+                                }
+                                """.formatted(SOME_OWNER_ID, email, authority))));
     }
 
     private ApiError apiError(HttpClientErrorException error) {
