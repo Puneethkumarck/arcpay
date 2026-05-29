@@ -1,6 +1,7 @@
 package com.arcpay.compliance.domain.model;
 
 import com.arcpay.compliance.domain.exception.HoldAlreadyDecidedException;
+import com.arcpay.compliance.domain.exception.ReviewReasonInvalidException;
 import org.junit.jupiter.api.Test;
 
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_DECISION_REASON;
@@ -72,7 +73,7 @@ class HoldReviewTest {
 
         // when / then
         assertThatThrownBy(() -> review.approve(SOME_REVIEWER_PRINCIPAL, SOME_REVIEWER_ROLE, "short"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ReviewReasonInvalidException.class)
                 .hasMessageContaining("10");
     }
 

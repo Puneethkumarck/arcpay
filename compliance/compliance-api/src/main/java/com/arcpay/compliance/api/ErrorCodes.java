@@ -11,6 +11,7 @@ public final class ErrorCodes {
     public static final String REVIEW_REASON_INVALID = code(5);
     public static final String IDENTITY_UNAVAILABLE = code(6);
     public static final String MALFORMED_ADDRESS = code(7);
+    public static final String MALFORMED_REQUEST = code(8);
     public static final String INTERNAL_ERROR = code(50);
 
     private ErrorCodes() {}

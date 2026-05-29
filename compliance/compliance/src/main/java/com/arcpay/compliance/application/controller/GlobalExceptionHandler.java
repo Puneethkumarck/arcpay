@@ -65,21 +65,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException ex) {
-        if (hasCause(ex, ReviewReasonInvalidException.class)) {
-            return toError("Review reason missing or < 10 characters",
-                    ErrorCodes.REVIEW_REASON_INVALID, HttpStatus.BAD_REQUEST);
-        }
-        return toError("Malformed request body", ErrorCodes.MALFORMED_ADDRESS,
+        return toError("Malformed request body", ErrorCodes.MALFORMED_REQUEST,
                 HttpStatus.BAD_REQUEST);
-    }
-
-    private static boolean hasCause(Throwable throwable, Class<? extends Throwable> type) {
-        for (var current = throwable; current != null; current = current.getCause()) {
-            if (type.isInstance(current)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -88,10 +75,6 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.groupingBy(
                         fe -> fe.getField(),
                         Collectors.mapping(fe -> fe.getDefaultMessage(), Collectors.toList())));
-        if (errors.containsKey("reason")) {
-            return toError("Review reason missing or < 10 characters",
-                    ErrorCodes.REVIEW_REASON_INVALID, HttpStatus.BAD_REQUEST);
-        }
         return toErrorWithDetail("Validation failed", ErrorCodes.MALFORMED_ADDRESS,
                 HttpStatus.UNPROCESSABLE_ENTITY, errors);
     }

@@ -96,6 +96,7 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
 
         // then
         var actual = jsonMapper.readValue(response, HoldReviewResponse.class);
+        assertThat(actual.decidedAt()).isNotNull();
         assertThat(actual).usingRecursiveComparison().ignoringFields("decidedAt").isEqualTo(
                 HoldReviewResponse.from(SOME_HOLD_REVIEW_PENDING).toBuilder()
                         .state(ReviewState.APPROVED)
@@ -125,6 +126,7 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
 
         // then
         var actual = jsonMapper.readValue(response, HoldReviewResponse.class);
+        assertThat(actual.decidedAt()).isNotNull();
         assertThat(actual).usingRecursiveComparison().ignoringFields("decidedAt").isEqualTo(
                 HoldReviewResponse.from(SOME_HOLD_REVIEW_PENDING).toBuilder()
                         .state(ReviewState.REJECTED)
@@ -171,6 +173,24 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
 
         // then
         assertReasonInvalid(response);
+    }
+
+    @Test
+    void shouldReturnBadRequestForMalformedBody() throws Exception {
+        // given
+        holdReviewStore.insert(SOME_HOLD_REVIEW_PENDING);
+        var body = "{not valid json";
+
+        // when
+        var response = mockMvc.perform(post("/compliance/holds/{paymentId}/approve", SOME_PAYMENT_ID)
+                        .with(authentication(officerAuth()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        assertCode(response, ErrorCodes.MALFORMED_REQUEST, HttpStatus.BAD_REQUEST);
     }
 
     @Test
