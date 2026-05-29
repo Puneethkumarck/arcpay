@@ -16,7 +16,13 @@ dependencies {
     implementation(project(":policy-engine:policy-engine-api"))
     testFixturesImplementation(project(":policy-engine:policy-engine-api"))
 
-    // identity:identity-client will be added in #51 (Feign Client integration)
+    implementation(project(":identity:identity-client"))
+    // Identity types + Feign exceptions for shared test fixtures
+    testFixturesImplementation(project(":identity:identity-client"))
+    testFixturesImplementation("io.github.openfeign:feign-core")
+
+    // OpenFeign for Feign clients and @EnableFeignClients
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
     // RFC 8785 canonical JSON
     implementation(libs.jcs)
@@ -28,8 +34,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation(libs.caffeine)
 
-    // Resilience4j circuit breaker (programmatic, no Spring Boot starter yet for Boot 4)
+    // Resilience4j circuit breaker + time limiter (programmatic, no Spring Boot starter yet for Boot 4)
     implementation(libs.resilience4j.circuitbreaker)
+    implementation(libs.resilience4j.timelimiter)
 
     // ShedLock for scheduled cleanup
     implementation(libs.shedlock.spring)

@@ -12,6 +12,10 @@ dependencies {
     implementation("org.springframework.kafka:spring-kafka")
     implementation("io.namastack:namastack-outbox-starter-jdbc:$namastackVersion")
 
+    // Feign core for the outbound ServiceAuthFeignInterceptor (RequestInterceptor type).
+    // compileOnly: consumers that register the interceptor already bring OpenFeign on the classpath.
+    compileOnly("io.github.openfeign:feign-core")
+
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 

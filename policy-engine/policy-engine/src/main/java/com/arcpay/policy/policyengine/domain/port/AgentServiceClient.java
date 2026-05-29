@@ -5,8 +5,6 @@ import java.util.UUID;
 
 public interface AgentServiceClient {
 
-    Optional<AgentInfo> resolveApiKey(String apiKeyHash);
-
     Optional<AgentInfo> getAgent(UUID agentId);
 
     void updatePolicy(UUID agentId, String policyHash);
