@@ -2,6 +2,8 @@ package com.arcpay.compliance.application.controller;
 
 import com.arcpay.compliance.api.ErrorCodes;
 import com.arcpay.compliance.application.dto.HoldReviewResponse;
+import com.arcpay.compliance.application.dto.ScreeningCheckResponse;
+import com.arcpay.compliance.application.dto.ScreeningQueryResponse;
 import com.arcpay.compliance.domain.port.HoldReviewStore;
 import com.arcpay.compliance.domain.port.ScreeningStore;
 import com.arcpay.compliance.test.RestControllerAbstractTest;
@@ -28,9 +30,11 @@ import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_HOLD_REVIEW
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SCREENED_AT;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SCREENING_RESULT_HOLD;
 import static com.arcpay.compliance.fixtures.SecurityContextFixtures.officerAuth;
+import static com.arcpay.compliance.fixtures.SecurityContextFixtures.ownerAuth;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class ScreeningQueryControllerIntegrationTest extends RestControllerAbstractTest {
@@ -66,6 +70,8 @@ class ScreeningQueryControllerIntegrationTest extends RestControllerAbstractTest
         var response = mockMvc.perform(get("/compliance/screenings/{paymentId}", SOME_PAYMENT_ID)
                         .with(authentication(officerAuth())))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.verdict").value("HOLD"))
+                .andExpect(jsonPath("$.checks[0].result").value("FLAGGED"))
                 .andReturn().getResponse().getContentAsString();
 
         // then
@@ -115,6 +121,7 @@ class ScreeningQueryControllerIntegrationTest extends RestControllerAbstractTest
         var response = mockMvc.perform(get("/compliance/holds")
                         .with(authentication(officerAuth())))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].state").value("PENDING"))
                 .andReturn().getResponse().getContentAsString();
 
         // then
@@ -175,6 +182,62 @@ class ScreeningQueryControllerIntegrationTest extends RestControllerAbstractTest
 
         // then
         assertCode(response, ErrorCodes.HOLD_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenStateIsInvalid() throws Exception {
+        // given
+        var invalidState = "FOO";
+
+        // when
+        var response = mockMvc.perform(get("/compliance/holds").param("state", invalidState)
+                        .with(authentication(officerAuth())))
+                .andExpect(status().isBadRequest())
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        assertCode(response, ErrorCodes.MALFORMED_REQUEST, HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void shouldRejectNonOfficerScreeningQuery() throws Exception {
+        // given
+        screeningStore.insert(SOME_SCREENING_RESULT_HOLD, SOME_SCREENING_RESULT_HOLD.checks());
+
+        // when
+        // then
+        mockMvc.perform(get("/compliance/screenings/{paymentId}", SOME_PAYMENT_ID)
+                        .with(authentication(ownerAuth())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldRejectNonOfficerHoldQueueQuery() throws Exception {
+        // given
+        // when
+        // then
+        mockMvc.perform(get("/compliance/holds")
+                        .with(authentication(ownerAuth())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldRejectNonOfficerHoldQuery() throws Exception {
+        // given
+        // when
+        // then
+        mockMvc.perform(get("/compliance/holds/{paymentId}", SOME_PAYMENT_ID)
+                        .with(authentication(ownerAuth())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldRejectUnauthenticatedHoldQueueQuery() throws Exception {
+        // given
+        // when
+        // then
+        mockMvc.perform(get("/compliance/holds"))
+                .andExpect(status().isUnauthorized());
     }
 
     private void assertCode(String response, String code, HttpStatus status) {

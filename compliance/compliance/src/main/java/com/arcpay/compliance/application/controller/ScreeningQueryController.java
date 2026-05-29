@@ -1,6 +1,7 @@
 package com.arcpay.compliance.application.controller;
 
 import com.arcpay.compliance.application.dto.HoldReviewResponse;
+import com.arcpay.compliance.application.dto.ScreeningQueryResponse;
 import com.arcpay.compliance.domain.exception.HoldNotFoundException;
 import com.arcpay.compliance.domain.exception.ScreeningNotFoundException;
 import com.arcpay.compliance.domain.model.ReviewState;

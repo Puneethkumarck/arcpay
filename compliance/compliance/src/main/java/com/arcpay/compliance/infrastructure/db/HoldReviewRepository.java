@@ -1,6 +1,7 @@
 package com.arcpay.compliance.infrastructure.db;
 
 import com.arcpay.compliance.domain.model.ReviewState;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -13,5 +14,5 @@ interface HoldReviewRepository extends JpaRepository<HoldReviewEntity, UUID> {
 
     List<HoldReviewEntity> findByStateOrderByCreatedAtAsc(ReviewState state);
 
-    List<HoldReviewEntity> findByStateOrderByCreatedAtDesc(ReviewState state);
+    List<HoldReviewEntity> findByState(ReviewState state, Pageable pageable);
 }
