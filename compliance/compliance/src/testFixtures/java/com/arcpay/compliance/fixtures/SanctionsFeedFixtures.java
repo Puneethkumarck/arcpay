@@ -22,6 +22,11 @@ public final class SanctionsFeedFixtures {
 
     public static final String SOME_OTHER_CHAIN_BTC_ADDRESS = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa";
 
+    public static String uniqueEvmAddress() {
+        var hex = Long.toHexString(System.nanoTime());
+        return ("0x" + "0".repeat(40 - hex.length()) + hex).toLowerCase();
+    }
+
     private static String load(String resource) {
         try (var stream = SanctionsFeedFixtures.class.getClassLoader().getResourceAsStream(resource)) {
             if (stream == null) {

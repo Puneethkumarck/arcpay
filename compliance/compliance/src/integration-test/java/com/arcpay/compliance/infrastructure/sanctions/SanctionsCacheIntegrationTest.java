@@ -11,6 +11,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.time.Duration;
 import java.util.UUID;
 
+import static com.arcpay.compliance.fixtures.SanctionsFeedFixtures.uniqueEvmAddress;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -56,11 +57,6 @@ class SanctionsCacheIntegrationTest extends FullContextIntegrationTest {
 
         // then
         assertThat(allReadsConsistent).isTrue();
-    }
-
-    private String uniqueEvmAddress() {
-        var hex = Long.toHexString(System.nanoTime());
-        return ("0x" + "0".repeat(40 - hex.length()) + hex).toLowerCase();
     }
 
     private void seedSanctionsVersion(UUID versionId, String address) {

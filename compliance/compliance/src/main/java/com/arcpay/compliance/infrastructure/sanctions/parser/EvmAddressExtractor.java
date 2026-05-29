@@ -6,8 +6,6 @@ import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class EvmAddressExtractor {
@@ -34,13 +32,5 @@ final class EvmAddressExtractor {
             }
         }
         return List.copyOf(records);
-    }
-
-    static Set<String> normalizedAddresses(List<SanctionedAddressRecord> records) {
-        var addresses = new LinkedHashSet<String>();
-        for (var record : records) {
-            addresses.add(record.address());
-        }
-        return Set.copyOf(addresses);
     }
 }
