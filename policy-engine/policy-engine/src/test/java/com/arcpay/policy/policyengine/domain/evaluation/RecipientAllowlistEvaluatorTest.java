@@ -6,8 +6,6 @@ import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -15,7 +13,6 @@ import java.util.Set;
 import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextWith;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class RecipientAllowlistEvaluatorTest {
 
     private final RecipientAllowlistEvaluator evaluator = new RecipientAllowlistEvaluator();

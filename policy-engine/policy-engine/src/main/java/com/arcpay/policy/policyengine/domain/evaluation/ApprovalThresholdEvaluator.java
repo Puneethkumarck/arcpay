@@ -4,11 +4,9 @@ import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class ApprovalThresholdEvaluator implements RuleEvaluator<PolicyRule.ApprovalThreshold> {
 
     private static final String RULE_TYPE = "APPROVAL_THRESHOLD";

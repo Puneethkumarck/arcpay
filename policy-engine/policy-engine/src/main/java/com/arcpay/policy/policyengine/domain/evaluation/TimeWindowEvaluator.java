@@ -4,14 +4,12 @@ import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 @Component
-@RequiredArgsConstructor
 public class TimeWindowEvaluator implements RuleEvaluator<PolicyRule.TimeWindow> {
 
     private static final String RULE_TYPE = "TIME_WINDOW";

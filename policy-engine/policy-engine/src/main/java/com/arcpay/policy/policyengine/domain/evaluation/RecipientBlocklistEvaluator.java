@@ -4,13 +4,12 @@ import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class RecipientBlocklistEvaluator implements RuleEvaluator<PolicyRule.RecipientBlocklist> {
 
     private static final String RULE_TYPE = "RECIPIENT_BLOCKLIST";
@@ -22,9 +21,9 @@ public class RecipientBlocklistEvaluator implements RuleEvaluator<PolicyRule.Rec
 
     @Override
     public RuleEvaluationResult evaluate(PolicyRule.RecipientBlocklist rule, EvaluationContext context) {
-        var recipient = context.recipientAddress().toLowerCase();
+        var recipient = context.recipientAddress().toLowerCase(Locale.ROOT);
         var blockedAddresses = rule.addresses().stream()
-                .map(String::toLowerCase)
+                .map(address -> address.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toSet());
 
         if (!blockedAddresses.contains(recipient)) {

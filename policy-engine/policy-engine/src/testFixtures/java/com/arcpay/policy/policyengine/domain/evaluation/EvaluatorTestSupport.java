@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-final class EvaluatorTestSupport {
+public final class EvaluatorTestSupport {
 
     private EvaluatorTestSupport() {}
 
@@ -16,7 +16,7 @@ final class EvaluatorTestSupport {
     private static final UUID SOME_POLICY_ID = UUID.fromString("019576a0-0000-7000-8000-000000000003");
     private static final Instant SOME_REQUESTED_AT = Instant.parse("2026-01-07T10:00:00Z");
 
-    static EvaluationContext contextWith(BigDecimal amount, String recipientAddress) {
+    public static EvaluationContext contextWith(BigDecimal amount, String recipientAddress) {
         return EvaluationContext.builder()
                 .agentId(SOME_AGENT_ID)
                 .ownerId(SOME_OWNER_ID)

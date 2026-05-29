@@ -6,15 +6,12 @@ import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 
 import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextWith;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class ApprovalThresholdEvaluatorTest {
 
     private final ApprovalThresholdEvaluator evaluator = new ApprovalThresholdEvaluator();
@@ -67,7 +64,7 @@ class ApprovalThresholdEvaluatorTest {
         }
 
         @Test
-        void shouldRequireApprovalWhenAmountExceedsThreshold() {
+        void shouldIndicateApprovalRequiredWhenAmountExceedsThreshold() {
             // given
             var rule = new PolicyRule.ApprovalThreshold(new BigDecimal("500.00"));
             var context = contextWith(new BigDecimal("750.00"), "0xrecipient");
