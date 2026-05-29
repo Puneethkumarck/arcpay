@@ -29,4 +29,5 @@ dependencies {
 
     testImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
     integrationTestImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
+    "businessTestImplementation"("org.wiremock:wiremock-standalone:$wiremockVersion")
 }
