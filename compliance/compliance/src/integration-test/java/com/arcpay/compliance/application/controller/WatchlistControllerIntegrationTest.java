@@ -1,18 +1,24 @@
 package com.arcpay.compliance.application.controller;
 
+import com.arcpay.compliance.api.ErrorCodes;
+import com.arcpay.compliance.api.model.WatchlistEntryRequest;
 import com.arcpay.compliance.api.model.WatchlistEntryResponse;
 import com.arcpay.compliance.domain.port.WatchlistStore;
 import com.arcpay.compliance.test.RestControllerAbstractTest;
 import com.arcpay.platform.api.ApiError;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_BLANK_ADDRESS;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_MALFORMED_ADDRESS;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_WATCHLIST_ADDRESS;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_WATCHLIST_ADDRESS_MIXED_CASE;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_WATCHLIST_LABEL;
@@ -20,8 +26,8 @@ import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OFFICER_EMAIL
 import static com.arcpay.compliance.fixtures.SecurityContextFixtures.officerAuth;
 import static com.arcpay.compliance.fixtures.SecurityContextFixtures.ownerAuth;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -40,9 +46,10 @@ class WatchlistControllerIntegrationTest extends RestControllerAbstractTest {
     void shouldAddValidAddressAndReturn201() throws Exception {
         // given
         var body = jsonMapper.writeValueAsString(
-                new java.util.HashMap<>(java.util.Map.of(
-                        "address", SOME_WATCHLIST_ADDRESS_MIXED_CASE,
-                        "label", SOME_WATCHLIST_LABEL)));
+                WatchlistEntryRequest.builder()
+                        .address(SOME_WATCHLIST_ADDRESS_MIXED_CASE)
+                        .label(SOME_WATCHLIST_LABEL)
+                        .build());
 
         // when
         var response = mockMvc.perform(post("/compliance/watchlist")
@@ -64,7 +71,8 @@ class WatchlistControllerIntegrationTest extends RestControllerAbstractTest {
     @Test
     void shouldRejectMalformedAddressWith422() throws Exception {
         // given
-        var body = "{\"address\": \"not-an-address\"}";
+        var body = jsonMapper.writeValueAsString(
+                WatchlistEntryRequest.builder().address(SOME_MALFORMED_ADDRESS).build());
 
         // when
         var response = mockMvc.perform(post("/compliance/watchlist")
@@ -76,14 +84,18 @@ class WatchlistControllerIntegrationTest extends RestControllerAbstractTest {
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
-        assertThat(actual.code()).isEqualTo("ARCPAY-COMPLIANCE-0007");
+        assertThat(actual).usingRecursiveComparison().ignoringFields("message").isEqualTo(ApiError.builder()
+                .code(ErrorCodes.MALFORMED_ADDRESS)
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
+                .build());
         then(watchlistStore).shouldHaveNoInteractions();
     }
 
     @Test
     void shouldRejectBlankAddressWith422() throws Exception {
         // given
-        var body = "{\"address\": \"   \"}";
+        var body = jsonMapper.writeValueAsString(
+                WatchlistEntryRequest.builder().address(SOME_BLANK_ADDRESS).build());
 
         // when
         var response = mockMvc.perform(post("/compliance/watchlist")
@@ -95,14 +107,23 @@ class WatchlistControllerIntegrationTest extends RestControllerAbstractTest {
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
-        assertThat(actual.code()).isEqualTo("ARCPAY-COMPLIANCE-0007");
+        assertThat(actual).usingRecursiveComparison().ignoringFields("message").isEqualTo(ApiError.builder()
+                .code(ErrorCodes.MALFORMED_ADDRESS)
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
+                .details(ApiError.Detail.builder()
+                        .errors(Map.of("address", List.of("Address is required")))
+                        .build())
+                .build());
     }
 
     @Test
     void shouldRejectNonOfficerWith403() throws Exception {
         // given
         var body = jsonMapper.writeValueAsString(
-                java.util.Map.of("address", SOME_WATCHLIST_ADDRESS, "label", SOME_WATCHLIST_LABEL));
+                WatchlistEntryRequest.builder()
+                        .address(SOME_WATCHLIST_ADDRESS)
+                        .label(SOME_WATCHLIST_LABEL)
+                        .build());
 
         // when
         var response = mockMvc.perform(post("/compliance/watchlist")
@@ -114,7 +135,10 @@ class WatchlistControllerIntegrationTest extends RestControllerAbstractTest {
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
-        assertThat(actual.code()).isEqualTo("ARCPAY-COMPLIANCE-0003");
+        assertThat(actual).usingRecursiveComparison().ignoringFields("message").isEqualTo(ApiError.builder()
+                .code(ErrorCodes.NOT_AUTHORIZED)
+                .status(HttpStatus.FORBIDDEN.getReasonPhrase())
+                .build());
         then(watchlistStore).shouldHaveNoInteractions();
     }
 
@@ -167,6 +191,9 @@ class WatchlistControllerIntegrationTest extends RestControllerAbstractTest {
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
-        assertThat(actual.code()).isEqualTo("ARCPAY-COMPLIANCE-0003");
+        assertThat(actual).usingRecursiveComparison().ignoringFields("message").isEqualTo(ApiError.builder()
+                .code(ErrorCodes.NOT_AUTHORIZED)
+                .status(HttpStatus.FORBIDDEN.getReasonPhrase())
+                .build());
     }
 }

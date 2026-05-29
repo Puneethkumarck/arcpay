@@ -29,6 +29,7 @@ public final class ComplianceFixtures {
     public static final String SOME_WATCHLIST_ADDRESS_MIXED_CASE = "0xABCabcABCabcABCabcABCabcABCabcABCabcABCa";
     public static final String SOME_WATCHLIST_LABEL = "operator-flagged mixer";
     public static final String SOME_MALFORMED_ADDRESS = "not-an-address";
+    public static final String SOME_BLANK_ADDRESS = "   ";
 
     public static final Instant SOME_SCREENED_AT = Instant.parse("2026-06-01T10:05:00Z");
     public static final Instant SOME_CREATED_AT = Instant.parse("2026-06-01T10:05:00Z");
