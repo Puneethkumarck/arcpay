@@ -69,9 +69,11 @@ compliance:
       EU: ${SANCTIONS_EU_URL:https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1/content}
       UK_HMT: ${SANCTIONS_UK_HMT_URL:https://ofsistorage.blob.core.windows.net/publishlive/2022format/ConList.csv}
   onchain:
+    rpc-url: ${ARC_RPC_URL:}
     usdc-contract: ${ARC_USDC_ADDRESS}
     scan-block-window: 50000
     mixer-addresses: []
+    mixer-score: 50
 
 resilience4j:
   circuitbreaker:
