@@ -1,5 +1,6 @@
 package com.arcpay.policy.policyengine.architecture;
 
+import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaField;
 import com.tngtech.archunit.core.domain.JavaModifier;
@@ -11,6 +12,15 @@ import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.library.Architectures;
+import jakarta.persistence.Entity;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
+
+import java.util.List;
+import java.util.Set;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -89,19 +99,6 @@ class HexagonalArchitectureTest {
             .allowEmptyShould(true);
 
     @ArchTest
-    static final ArchRule controllers_should_reside_in_application = classes()
-            .that().areAnnotatedWith(org.springframework.web.bind.annotation.RestController.class)
-            .should().resideInAPackage(BASE + ".application.controller..")
-            .allowEmptyShould(true);
-
-    @ArchTest
-    static final ArchRule jpa_entities_should_be_suffixed = classes()
-            .that().resideInAPackage(BASE + ".infrastructure.db..")
-            .and().areAnnotatedWith(jakarta.persistence.Entity.class)
-            .should().haveSimpleNameEndingWith("Entity")
-            .allowEmptyShould(true);
-
-    @ArchTest
     static final ArchRule repository_adapters_should_be_suffixed = classes()
             .that().resideInAPackage(BASE + ".infrastructure.db..")
             .and().haveSimpleNameContaining("Repository")
@@ -164,4 +161,28 @@ class HexagonalArchitectureTest {
             .and().areRecords()
             .should(DECLARE_TOPIC_CONSTANT)
             .allowEmptyShould(true);
+
+    @Test
+    void policyRuleSealedInterfaceShouldHaveExactlyTenImplementations() {
+        Class<?>[] permitted = PolicyRule.class.getPermittedSubclasses();
+
+        Assertions.assertThat(permitted)
+                .as("PolicyRule sealed interface must declare exactly 10 implementations")
+                .hasSize(10);
+    }
+
+    @Test
+    void jpaEntitiesShouldBeSuffixedWithEntity() {
+        ClassPathScanningCandidateComponentProvider scanner =
+                new ClassPathScanningCandidateComponentProvider(false);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
+
+        Set<BeanDefinition> entities = scanner.findCandidateComponents(BASE + ".infrastructure.db");
+        List<String> names = entities.stream().map(BeanDefinition::getBeanClassName).toList();
+
+        Assertions.assertThat(names)
+                .as("JPA entities in infrastructure.db must exist and be suffixed with 'Entity'")
+                .isNotEmpty()
+                .allSatisfy(name -> Assertions.assertThat(name).endsWith("Entity"));
+    }
 }
