@@ -23,6 +23,10 @@ public final class ComplianceFixtures {
     public static final UUID SOME_REVIEW_ID = UUID.fromString("0197aa00-4444-7def-8000-444444444444");
     public static final UUID SOME_LIST_VERSION_ID = UUID.fromString("0197aa00-5555-7def-8000-555555555555");
 
+    public static final UUID SOME_OTHER_SCREENING_ID = UUID.fromString("0197aa00-6666-7def-8000-666666666666");
+    public static final UUID SOME_OTHER_PAYMENT_ID = UUID.fromString("0197aa00-7777-7def-8000-777777777777");
+    public static final UUID SOME_OTHER_REVIEW_ID = UUID.fromString("0197aa00-8888-7def-8000-888888888888");
+
     public static final String SOME_RECIPIENT_ADDRESS = "0xabcdef1234567890abcdef1234567890abcdef12";
     public static final String SOME_RECIPIENT_ADDRESS_CHECKSUMMED = "0xABCDEF1234567890abcdef1234567890ABCDEF12";
     public static final String SOME_RECIPIENT_ADDRESS_PADDED = "   0xabcdef1234567890abcdef1234567890abcdef12   ";
@@ -37,6 +41,7 @@ public final class ComplianceFixtures {
 
     public static final Instant SOME_SCREENED_AT = Instant.parse("2026-06-01T10:05:00Z");
     public static final Instant SOME_CREATED_AT = Instant.parse("2026-06-01T10:05:00Z");
+    public static final Instant SOME_LATER_CREATED_AT = Instant.parse("2026-06-01T11:30:00Z");
 
     public static final String SOME_REVIEWER_PRINCIPAL = "officer@arcpay.io";
     public static final String SOME_REVIEWER_ROLE = "COMPLIANCE_OFFICER";
@@ -92,6 +97,45 @@ public final class ComplianceFixtures {
             .reviewerRole(null)
             .reason(null)
             .createdAt(SOME_CREATED_AT)
+            .decidedAt(null)
+            .build();
+
+    public static final ScreeningResult SOME_OTHER_SCREENING_RESULT_HOLD = ScreeningResult.builder()
+            .screeningId(SOME_OTHER_SCREENING_ID)
+            .paymentId(SOME_OTHER_PAYMENT_ID)
+            .agentId(SOME_AGENT_ID)
+            .recipientAddress(SOME_RECIPIENT_ADDRESS)
+            .verdict(Verdict.HOLD)
+            .riskScore(100)
+            .checks(List.of(SOME_WATCHLIST_MATCH_CHECK))
+            .listVersionId(SOME_LIST_VERSION_ID)
+            .screenedAt(SOME_SCREENED_AT)
+            .durationMs(61L)
+            .build();
+
+    public static final HoldReview SOME_OTHER_HOLD_REVIEW_APPROVED = HoldReview.builder()
+            .reviewId(SOME_OTHER_REVIEW_ID)
+            .screeningId(SOME_OTHER_SCREENING_ID)
+            .paymentId(SOME_OTHER_PAYMENT_ID)
+            .agentId(SOME_AGENT_ID)
+            .state(ReviewState.APPROVED)
+            .reviewerPrincipal(SOME_REVIEWER_PRINCIPAL)
+            .reviewerRole(SOME_REVIEWER_ROLE)
+            .reason(SOME_DECISION_REASON)
+            .createdAt(SOME_LATER_CREATED_AT)
+            .decidedAt(SOME_LATER_CREATED_AT)
+            .build();
+
+    public static final HoldReview SOME_OTHER_HOLD_REVIEW_PENDING = HoldReview.builder()
+            .reviewId(SOME_OTHER_REVIEW_ID)
+            .screeningId(SOME_OTHER_SCREENING_ID)
+            .paymentId(SOME_OTHER_PAYMENT_ID)
+            .agentId(SOME_AGENT_ID)
+            .state(ReviewState.PENDING)
+            .reviewerPrincipal(null)
+            .reviewerRole(null)
+            .reason(null)
+            .createdAt(SOME_LATER_CREATED_AT)
             .decidedAt(null)
             .build();
 
