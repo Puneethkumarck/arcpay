@@ -20,6 +20,7 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("io.temporal:temporal-spring-boot-starter:$temporalVersion")
     implementation("org.web3j:core:$web3jVersion")
+    testFixturesImplementation("org.web3j:core:$web3jVersion")
 
     implementation(libs.spring.cloud.circuitbreaker.resilience4j)
 

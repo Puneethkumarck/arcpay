@@ -61,9 +61,11 @@ compliance:
     staleness-critical-hours: 24
     sources: [OFAC_SDN, OFAC_NONSDN, UN, EU, UK_HMT]
   onchain:
+    rpc-url: ${ARC_RPC_URL:}
     usdc-contract: ${ARC_USDC_ADDRESS}
     scan-block-window: 50000
     mixer-addresses: []
+    mixer-score: 50
 
 resilience4j:
   circuitbreaker:

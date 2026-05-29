@@ -24,9 +24,13 @@ public final class ComplianceFixtures {
     public static final UUID SOME_LIST_VERSION_ID = UUID.fromString("0197aa00-5555-7def-8000-555555555555");
 
     public static final String SOME_RECIPIENT_ADDRESS = "0xabcdef1234567890abcdef1234567890abcdef12";
+    public static final String SOME_RECIPIENT_ADDRESS_CHECKSUMMED = "0xABCDEF1234567890abcdef1234567890ABCDEF12";
+    public static final String SOME_RECIPIENT_ADDRESS_PADDED = "   0xabcdef1234567890abcdef1234567890abcdef12   ";
     public static final String SOME_SANCTIONED_ADDRESS = "0x1111111111111111111111111111111111111111";
     public static final String SOME_WATCHLIST_ADDRESS = "0xabcabcabcabcabcabcabcabcabcabcabcabcabca";
     public static final String SOME_WATCHLIST_ADDRESS_MIXED_CASE = "0xABCabcABCabcABCabcABCabcABCabcABCabcABCa";
+    public static final String SOME_MIXER_ADDRESS = "0x2222222222222222222222222222222222222222";
+    public static final String SOME_CLEAN_COUNTERPARTY = "0x3333333333333333333333333333333333333333";
     public static final String SOME_WATCHLIST_LABEL = "operator-flagged mixer";
     public static final String SOME_MALFORMED_ADDRESS = "not-an-address";
     public static final String SOME_BLANK_ADDRESS = "   ";
