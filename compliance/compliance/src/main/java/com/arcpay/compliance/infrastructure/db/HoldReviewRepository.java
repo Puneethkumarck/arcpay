@@ -12,4 +12,6 @@ interface HoldReviewRepository extends JpaRepository<HoldReviewEntity, UUID> {
     Optional<HoldReviewEntity> findByPaymentId(UUID paymentId);
 
     List<HoldReviewEntity> findByStateOrderByCreatedAtAsc(ReviewState state);
+
+    List<HoldReviewEntity> findByStateOrderByCreatedAtDesc(ReviewState state);
 }

@@ -43,4 +43,12 @@ class HoldReviewStoreAdapter implements HoldReviewStore {
                 .map(holdReviewMapper::mapToDomain)
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HoldReview> findByStateOrderByCreatedAtDesc(ReviewState state) {
+        return holdReviewRepository.findByStateOrderByCreatedAtDesc(state).stream()
+                .map(holdReviewMapper::mapToDomain)
+                .toList();
+    }
 }
