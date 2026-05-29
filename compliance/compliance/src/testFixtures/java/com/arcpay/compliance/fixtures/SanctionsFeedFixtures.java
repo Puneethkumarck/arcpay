@@ -22,6 +22,16 @@ public final class SanctionsFeedFixtures {
 
     public static final String SOME_OTHER_CHAIN_BTC_ADDRESS = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa";
 
+    public static final String FEED_WITH_EVM_ADDRESS = """
+            Name: SANCTIONED PERSON
+            DOB: 1970-01-01
+            Digital Currency Address - ETH 0xABCDEF0123456789abcdef0123456789ABCDEF01
+            Digital Currency Address - ETH 0xABCDEF0123456789abcdef0123456789ABCDEF01
+            Digital Currency Address - XBT 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
+            """;
+
+    public static final String EXPECTED_NORMALIZED_EVM_ADDRESS = "0xabcdef0123456789abcdef0123456789abcdef01";
+
     public static String uniqueEvmAddress() {
         var hex = Long.toHexString(System.nanoTime());
         return ("0x" + "0".repeat(40 - hex.length()) + hex).toLowerCase();

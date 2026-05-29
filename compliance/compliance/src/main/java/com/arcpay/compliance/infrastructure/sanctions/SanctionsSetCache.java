@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -26,6 +27,7 @@ class SanctionsSetCache implements SanctionsSetProvider {
 
     @PostConstruct
     void initialize() {
+        cache.set(emptySnapshot());
         refresh();
     }
 
@@ -40,12 +42,21 @@ class SanctionsSetCache implements SanctionsSetProvider {
 
     @Scheduled(fixedDelayString = "${compliance.sanctions.poll-interval-ms}")
     void refresh() {
-        var latest = snapshotSource.getCurrentSanctionsSet();
-        var current = cache.get();
-        if (current == null || !Objects.equals(current.versionId(), latest.versionId())) {
-            cache.set(latest);
-            log.info("Sanctions set swapped to version {} with {} addresses",
-                    latest.versionId(), latest.addresses().size());
+        try {
+            var latest = snapshotSource.getCurrentSanctionsSet();
+            var current = cache.get();
+            if (!Objects.equals(current.versionId(), latest.versionId())) {
+                cache.set(latest);
+                log.info("Sanctions set swapped to version {} with {} addresses",
+                        latest.versionId(), latest.addresses().size());
+            }
+        } catch (RuntimeException ex) {
+            log.error("Sanctions set refresh failed; retaining previous snapshot version {}",
+                    cache.get().versionId(), ex);
         }
+    }
+
+    private static SanctionsSet emptySnapshot() {
+        return SanctionsSet.builder().addresses(Set.of()).build();
     }
 }
