@@ -1,10 +1,15 @@
 package com.arcpay.policy.policyengine.domain.spending;
 
+import com.arcpay.policy.policyengine.domain.model.SpendingLedgerEntry;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
 import com.arcpay.policy.policyengine.test.FullContextIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,6 +25,12 @@ class SpendingLedgerIntegrationTest extends FullContextIntegrationTest {
 
     @Autowired
     private SpendingLedgerService spendingLedgerService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void shouldRecordAndQuerySpendingSummary() {
@@ -120,7 +131,62 @@ class SpendingLedgerIntegrationTest extends FullContextIntegrationTest {
         // then
         assertThat(second).usingRecursiveComparison().isEqualTo(first);
         var summary = spendingLedgerService.getSpendingSummary(agentId, 120);
-        assertThat(summary.dailyTotal()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("50.000000"));
-        assertThat(summary.velocityCount()).isEqualTo(1);
+        var expectedSummary = SpendingSummary.builder()
+                .dailyTotal(new BigDecimal("50.000000"))
+                .weeklyTotal(new BigDecimal("50.000000"))
+                .monthlyTotal(new BigDecimal("50.000000"))
+                .velocityCount(1)
+                .lastTransactionAt(executedAt)
+                .build();
+        assertThat(summary)
+                .usingRecursiveComparison()
+                .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .isEqualTo(expectedSummary);
+    }
+
+    @Test
+    void shouldNoOpDuplicatePaymentIdAcrossSeparateTransactions() {
+        // given
+        var agentId = UUID.randomUUID();
+        var paymentId = UUID.randomUUID();
+        var executedAt = Instant.now().minus(1, ChronoUnit.HOURS).truncatedTo(ChronoUnit.MICROS);
+        var transactionTemplate = new TransactionTemplate(transactionManager);
+        // REQUIRES_NEW so each call commits independently of the surrounding
+        // class-level @Transactional test transaction, exercising the real cross-tx path
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
+        // when — each call commits in its own transaction, so the second call's
+        // findByPaymentId observes the first row committed by the UNIQUE-constrained
+        // payment_id and must idempotently no-op to that single row
+        SpendingLedgerEntry first = transactionTemplate.execute(status ->
+                spendingLedgerService.recordSpending(agentId, paymentId,
+                        new BigDecimal("50.000000"), SOME_RECIPIENT, executedAt));
+        SpendingLedgerEntry second = transactionTemplate.execute(status ->
+                spendingLedgerService.recordSpending(agentId, paymentId,
+                        new BigDecimal("999.000000"), SOME_RECIPIENT, executedAt));
+
+        try {
+            // then — second returns the same persisted entry, never the second amount
+            assertThat(second).usingRecursiveComparison().isEqualTo(first);
+
+            var summary = transactionTemplate.execute(status ->
+                    spendingLedgerService.getSpendingSummary(agentId, 120));
+            var expectedSummary = SpendingSummary.builder()
+                    .dailyTotal(new BigDecimal("50.000000"))
+                    .weeklyTotal(new BigDecimal("50.000000"))
+                    .monthlyTotal(new BigDecimal("50.000000"))
+                    .velocityCount(1)
+                    .lastTransactionAt(executedAt)
+                    .build();
+            assertThat(summary)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(expectedSummary);
+        } finally {
+            // committed rows escape the class-level @Transactional rollback; clean up
+            // in its own committed transaction too
+            transactionTemplate.executeWithoutResult(status ->
+                    jdbcTemplate.update("DELETE FROM spending_ledger WHERE payment_id = ?", paymentId));
+        }
     }
 }
