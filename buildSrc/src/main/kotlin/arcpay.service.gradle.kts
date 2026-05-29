@@ -85,10 +85,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
-    // Kafka via Spring Cloud Stream
+    // Kafka
     implementation("org.springframework.boot:spring-boot-starter-kafka")
-    implementation("org.springframework.cloud:spring-cloud-stream")
-    implementation("org.springframework.cloud:spring-cloud-stream-binder-kafka")
 
     // MapStruct
     implementation("org.mapstruct:mapstruct:$mapstructVersion")

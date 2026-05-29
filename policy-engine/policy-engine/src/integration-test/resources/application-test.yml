@@ -4,13 +4,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-  autoconfigure:
-    exclude:
-      - org.springframework.cloud.stream.config.BindingServiceConfiguration
-      - org.springframework.cloud.stream.function.FunctionConfiguration
-      - org.springframework.cloud.stream.config.BindersHealthIndicatorAutoConfiguration
-      - org.springframework.cloud.stream.config.BindingsEndpointAutoConfiguration
-      - org.springframework.cloud.stream.config.ChannelsEndpointAutoConfiguration
   kafka:
     consumer:
       group-id: policy-engine-test-${random.uuid}

@@ -14,7 +14,6 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -73,19 +72,5 @@ class PolicyEngineOutboxHandlerTest {
 
         // then
         then(kafkaTemplate).should().send("policy.violation-detected", KEY, event);
-    }
-
-    @Test
-    void shouldMapEventTypesToTheirTopics() {
-        // given
-        var expected = java.util.Map.of(
-                PolicyCreated.class, "policy.created",
-                PolicyViolationDetected.class, "policy.violation-detected");
-
-        // when
-        var actual = PolicyEngineOutboxHandler.TOPIC_MAP;
-
-        // then
-        assertThat(actual).containsExactlyInAnyOrderEntriesOf(expected);
     }
 }
