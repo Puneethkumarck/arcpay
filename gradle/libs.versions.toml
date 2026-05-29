@@ -21,7 +21,7 @@ resilience4j = "2.4.0"
 caffeine = "3.2.4"
 jcs = "1.1"
 shedlock = "6.8.0"
-flyway = "11.9.1"
+flyway = "11.20.3"
 
 [libraries]
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakarta-validation" }
