@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,6 +54,79 @@ class PolicyHashUtilTest {
 
             // then
             assertThat(hash1).isEqualTo(hash2);
+        }
+
+        @Test
+        @SneakyThrows
+        void shouldProduceSameHashRegardlessOfAddressSetOrder() {
+            // given — same logical addresses inserted in different iteration orders
+            Set<String> orderA = new LinkedHashSet<>();
+            orderA.add("0xAAAA000000000000000000000000000000000001");
+            orderA.add("0xBBBB000000000000000000000000000000000002");
+            orderA.add("0xCCCC000000000000000000000000000000000003");
+
+            Set<String> orderB = new LinkedHashSet<>();
+            orderB.add("0xCCCC000000000000000000000000000000000003");
+            orderB.add("0xAAAA000000000000000000000000000000000001");
+            orderB.add("0xBBBB000000000000000000000000000000000002");
+
+            var rulesA = List.<PolicyRule>of(new PolicyRule.RecipientAllowlist(orderA));
+            var rulesB = List.<PolicyRule>of(new PolicyRule.RecipientAllowlist(orderB));
+
+            // when
+            var hashA = PolicyHashUtil.computePolicyHash(rulesA);
+            var hashB = PolicyHashUtil.computePolicyHash(rulesB);
+
+            // then
+            assertThat(hashA).isEqualTo(hashB);
+        }
+
+        @Test
+        @SneakyThrows
+        void shouldProduceSameHashRegardlessOfBlocklistSetOrder() {
+            // given — same logical addresses, mixed casing, different iteration orders
+            Set<String> orderA = new LinkedHashSet<>();
+            orderA.add("0xABCDEF0000000000000000000000000000000001");
+            orderA.add("0x1234560000000000000000000000000000000002");
+
+            Set<String> orderB = new LinkedHashSet<>();
+            orderB.add("0x1234560000000000000000000000000000000002");
+            orderB.add("0xabcdef0000000000000000000000000000000001");
+
+            var rulesA = List.<PolicyRule>of(new PolicyRule.RecipientBlocklist(orderA));
+            var rulesB = List.<PolicyRule>of(new PolicyRule.RecipientBlocklist(orderB));
+
+            // when
+            var hashA = PolicyHashUtil.computePolicyHash(rulesA);
+            var hashB = PolicyHashUtil.computePolicyHash(rulesB);
+
+            // then
+            assertThat(hashA).isEqualTo(hashB);
+        }
+
+        @Test
+        @SneakyThrows
+        void shouldProduceSameHashRegardlessOfDaysOfWeekSetOrder() {
+            // given — same days inserted in different iteration orders
+            Set<DayOfWeek> orderA = new LinkedHashSet<>();
+            orderA.add(DayOfWeek.WEDNESDAY);
+            orderA.add(DayOfWeek.MONDAY);
+            orderA.add(DayOfWeek.FRIDAY);
+
+            Set<DayOfWeek> orderB = new LinkedHashSet<>();
+            orderB.add(DayOfWeek.FRIDAY);
+            orderB.add(DayOfWeek.WEDNESDAY);
+            orderB.add(DayOfWeek.MONDAY);
+
+            var rulesA = List.<PolicyRule>of(new PolicyRule.TimeWindow(9, 17, orderA));
+            var rulesB = List.<PolicyRule>of(new PolicyRule.TimeWindow(9, 17, orderB));
+
+            // when
+            var hashA = PolicyHashUtil.computePolicyHash(rulesA);
+            var hashB = PolicyHashUtil.computePolicyHash(rulesB);
+
+            // then
+            assertThat(hashA).isEqualTo(hashB);
         }
     }
 

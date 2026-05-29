@@ -4,9 +4,6 @@ import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.exception.InvalidPolicyException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -18,11 +15,9 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@ExtendWith(MockitoExtension.class)
 class PolicyValidatorTest {
 
-    @InjectMocks
-    private PolicyValidator policyValidator;
+    private final PolicyValidator policyValidator = new PolicyValidator();
 
     @Nested
     class ValidPolicies {

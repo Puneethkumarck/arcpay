@@ -42,15 +42,16 @@ public class PolicyValidator {
         var weekly = findAmount(rules, PolicyRule.WeeklyLimit.class);
         var monthly = findAmount(rules, PolicyRule.MonthlyLimit.class);
 
-        if (daily.isPresent() && weekly.isPresent() && daily.get().compareTo(weekly.get()) > 0) {
-            throw new InvalidPolicyException("DAILY_LIMIT amount must be <= WEEKLY_LIMIT amount");
-        }
-        if (weekly.isPresent() && monthly.isPresent() && weekly.get().compareTo(monthly.get()) > 0) {
-            throw new InvalidPolicyException("WEEKLY_LIMIT amount must be <= MONTHLY_LIMIT amount");
-        }
-        if (daily.isPresent() && monthly.isPresent() && daily.get().compareTo(monthly.get()) > 0) {
-            throw new InvalidPolicyException("DAILY_LIMIT amount must be <= MONTHLY_LIMIT amount");
-        }
+        requireOrdered(daily, weekly, "DAILY_LIMIT amount must be <= WEEKLY_LIMIT amount");
+        requireOrdered(weekly, monthly, "WEEKLY_LIMIT amount must be <= MONTHLY_LIMIT amount");
+        requireOrdered(daily, monthly, "DAILY_LIMIT amount must be <= MONTHLY_LIMIT amount");
+    }
+
+    private void requireOrdered(Optional<BigDecimal> lower, Optional<BigDecimal> upper, String message) {
+        lower.flatMap(low -> upper.filter(high -> low.compareTo(high) > 0))
+                .ifPresent(violation -> {
+                    throw new InvalidPolicyException(message);
+                });
     }
 
     private Optional<BigDecimal> findAmount(List<PolicyRule> rules, Class<? extends PolicyRule> type) {
