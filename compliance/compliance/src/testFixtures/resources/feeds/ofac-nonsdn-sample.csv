@@ -1,0 +1,4 @@
+uid,name,sdnType,program,digitalCurrencyAddress,addressType
+20001,SAMPLE CORP,Entity,FSE,0x1122334455667788990011223344556677889900,Digital Currency Address - ETH
+20002,Jane Roe,Individual,FSE,,
+20003,OTHER CHAIN ENTITY,Entity,FSE,LdP8Qox1VAhCzLJNqrr74YovaWYyNBUWvL,Digital Currency Address - LTC

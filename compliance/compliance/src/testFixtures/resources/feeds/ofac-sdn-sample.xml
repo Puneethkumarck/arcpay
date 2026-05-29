@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdnList xmlns="https://www.treasury.gov/ofac/downloads/sdn.xml">
+  <sdnEntry>
+    <uid>10001</uid>
+    <lastName>LAZARUS GROUP</lastName>
+    <sdnType>Entity</sdnType>
+    <idList>
+      <id>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0xA1B2C3D4E5F60718293A4B5C6D7E8F9001122334</idNumber>
+      </id>
+      <id>
+        <idType>Digital Currency Address - XBT</idType>
+        <idNumber>1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa</idNumber>
+      </id>
+    </idList>
+  </sdnEntry>
+  <sdnEntry>
+    <uid>10002</uid>
+    <firstName>John</firstName>
+    <lastName>DOE</lastName>
+    <sdnType>Individual</sdnType>
+    <dateOfBirthList>
+      <dateOfBirthItem>
+        <dateOfBirth>01 Jan 1980</dateOfBirth>
+      </dateOfBirthItem>
+    </dateOfBirthList>
+    <idList>
+      <id>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0xfFfFfFFfFFfFFFfFFfFFFFFffFFFffffFfFFFfFf</idNumber>
+      </id>
+    </idList>
+  </sdnEntry>
+  <sdnEntry>
+    <uid>10003</uid>
+    <lastName>NAME ONLY ENTITY</lastName>
+    <sdnType>Entity</sdnType>
+  </sdnEntry>
+</sdnList>

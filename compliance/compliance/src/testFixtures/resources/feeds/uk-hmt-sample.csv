@@ -1,0 +1,3 @@
+GroupID,Name,GroupType,DateOfBirth,Nationality,RegimeName
+50001,SAMPLE UK PERSON,Individual,1972-03-04,Unknown,Cyber
+50002,SAMPLE UK ORGANISATION,Entity,,,Cyber
