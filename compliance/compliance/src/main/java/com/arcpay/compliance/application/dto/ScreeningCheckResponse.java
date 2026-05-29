@@ -1,4 +1,4 @@
-package com.arcpay.compliance.application.controller;
+package com.arcpay.compliance.application.dto;
 
 import lombok.Builder;
 

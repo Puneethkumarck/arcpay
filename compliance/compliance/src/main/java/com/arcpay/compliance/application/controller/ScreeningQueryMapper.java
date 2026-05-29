@@ -1,5 +1,7 @@
 package com.arcpay.compliance.application.controller;
 
+import com.arcpay.compliance.application.dto.ScreeningCheckResponse;
+import com.arcpay.compliance.application.dto.ScreeningQueryResponse;
 import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.model.ScreeningResult;
 import org.mapstruct.Mapper;

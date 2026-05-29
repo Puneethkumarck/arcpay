@@ -4,6 +4,8 @@ import com.arcpay.compliance.domain.model.HoldReview;
 import com.arcpay.compliance.domain.model.ReviewState;
 import com.arcpay.compliance.domain.port.HoldReviewStore;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,9 +13,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.springframework.data.domain.Sort.Direction.DESC;
+
 @Component
 @RequiredArgsConstructor
 class HoldReviewStoreAdapter implements HoldReviewStore {
+
+    private static final int MAX_QUEUE_SIZE = 200;
 
     private final HoldReviewRepository holdReviewRepository;
     private final HoldReviewMapper holdReviewMapper;
@@ -47,7 +53,8 @@ class HoldReviewStoreAdapter implements HoldReviewStore {
     @Override
     @Transactional(readOnly = true)
     public List<HoldReview> findByStateOrderByCreatedAtDesc(ReviewState state) {
-        return holdReviewRepository.findByStateOrderByCreatedAtDesc(state).stream()
+        var page = PageRequest.of(0, MAX_QUEUE_SIZE, Sort.by(DESC, "createdAt"));
+        return holdReviewRepository.findByState(state, page).stream()
                 .map(holdReviewMapper::mapToDomain)
                 .toList();
     }

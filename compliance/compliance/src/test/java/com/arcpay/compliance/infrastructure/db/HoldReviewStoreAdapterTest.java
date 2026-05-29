@@ -7,9 +7,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
+
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_HOLD_REVIEW_PENDING;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_PAYMENT_ID;
@@ -83,6 +87,21 @@ class HoldReviewStoreAdapterTest {
         var result = adapter.findPending();
 
         // then
+        assertThat(result).usingRecursiveComparison().isEqualTo(List.of(SOME_HOLD_REVIEW_PENDING));
+    }
+
+    @Test
+    void shouldReturnQueueBoundedToTwoHundredOrderedByCreatedAtDesc() {
+        // given
+        var entity = holdReviewMapper.mapToEntity(SOME_HOLD_REVIEW_PENDING);
+        var boundedPage = PageRequest.of(0, 200, Sort.by(DESC, "createdAt"));
+        given(holdReviewRepository.findByState(ReviewState.PENDING, boundedPage)).willReturn(List.of(entity));
+
+        // when
+        var result = adapter.findByStateOrderByCreatedAtDesc(ReviewState.PENDING);
+
+        // then
+        then(holdReviewRepository).should().findByState(ReviewState.PENDING, boundedPage);
         assertThat(result).usingRecursiveComparison().isEqualTo(List.of(SOME_HOLD_REVIEW_PENDING));
     }
 
