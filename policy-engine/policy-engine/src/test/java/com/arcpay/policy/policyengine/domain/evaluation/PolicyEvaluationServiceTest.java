@@ -1,7 +1,9 @@
 package com.arcpay.policy.policyengine.domain.evaluation;
 
 import com.arcpay.policy.policyengine.api.PolicyRule;
+import com.arcpay.policy.policyengine.domain.agent.AgentAuthorization;
 import com.arcpay.policy.policyengine.domain.event.PolicyViolationDetected;
+import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyHashMismatchException;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.Policy;
@@ -44,6 +46,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class PolicyEvaluationServiceTest {
@@ -62,6 +65,9 @@ class PolicyEvaluationServiceTest {
             new PolicyRule.ApprovalThreshold(new BigDecimal("20.00"));
 
     private static final AgentInfo SOME_AGENT = new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", SOME_HASH);
+
+    @Mock
+    private AgentAuthorization agentAuthorization;
 
     @Mock
     private PolicyRepository policyRepository;
@@ -97,7 +103,7 @@ class PolicyEvaluationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PolicyEvaluationService(policyRepository, policyEvaluationRepository,
+        service = new PolicyEvaluationService(agentAuthorization, policyRepository, policyEvaluationRepository,
                 spendingLockService, spendingLedgerService,
                 ruleEvaluatorRegistry, eventPublisher);
     }
@@ -522,6 +528,44 @@ class PolicyEvaluationServiceTest {
             assertThatThrownBy(() -> invoke(mismatchedAgent, false))
                     .isInstanceOf(PolicyHashMismatchException.class);
             then(spendingLockService).shouldHaveNoInteractions();
+        }
+    }
+
+    @Nested
+    class DryRunForOwner {
+
+        @Test
+        void shouldAuthorizeThenEvaluateAsDryRun() {
+            // given
+            given(agentAuthorization.verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID)).willReturn(SOME_AGENT);
+            givenActivePolicy(policyWith(SOME_PER_TX));
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX),
+                    eqIgnoring(context(true), "spendingSummary", "requestedAt")))
+                    .willReturn(PASS_PER_TX);
+
+            // when
+            var result = service.evaluateDryRunForOwner(SOME_OWNER_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
+
+            // then
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .ignoringFields("evaluationId", "evaluatedAt", "durationMs")
+                    .isEqualTo(expectedResult(PolicyVerdict.APPROVED, true, List.of(PASS_PER_TX)));
+            then(agentAuthorization).should().verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
+        }
+
+        @Test
+        void shouldPropagateAuthorizationFailureWithoutEvaluating() {
+            // given
+            willThrow(new AgentOwnershipException(SOME_AGENT_ID, SOME_OWNER_ID))
+                    .given(agentAuthorization).verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
+
+            // when / then
+            assertThatThrownBy(() ->
+                    service.evaluateDryRunForOwner(SOME_OWNER_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT))
+                    .isInstanceOf(AgentOwnershipException.class);
+            then(policyRepository).shouldHaveNoInteractions();
         }
     }
 }
