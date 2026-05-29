@@ -5,6 +5,7 @@ import com.arcpay.compliance.domain.exception.HoldAlreadyDecidedException;
 import com.arcpay.compliance.domain.exception.HoldNotFoundException;
 import com.arcpay.compliance.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.compliance.domain.exception.MalformedAddressException;
+import com.arcpay.compliance.domain.exception.ReviewReasonInvalidException;
 import com.arcpay.compliance.domain.exception.ScreeningNotFoundException;
 import com.arcpay.compliance.domain.exception.UnauthorizedException;
 import com.arcpay.platform.api.ApiError;
@@ -12,6 +13,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -54,6 +56,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MalformedAddressException.class)
     public ResponseEntity<ApiError> handleMalformedAddress(MalformedAddressException ex) {
         return toError(ex, ErrorCodes.MALFORMED_ADDRESS, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler(ReviewReasonInvalidException.class)
+    public ResponseEntity<ApiError> handleReviewReasonInvalid(ReviewReasonInvalidException ex) {
+        return toError(ex, ErrorCodes.REVIEW_REASON_INVALID, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException ex) {
+        return toError("Malformed request body", ErrorCodes.MALFORMED_REQUEST,
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

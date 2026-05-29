@@ -1,6 +1,7 @@
 package com.arcpay.compliance.domain.model;
 
 import com.arcpay.compliance.domain.exception.HoldAlreadyDecidedException;
+import com.arcpay.compliance.domain.exception.ReviewReasonInvalidException;
 import lombok.Builder;
 
 import java.time.Instant;
@@ -44,10 +45,8 @@ public record HoldReview(
         }
         Objects.requireNonNull(principal, "principal must not be null");
         Objects.requireNonNull(role, "role must not be null");
-        Objects.requireNonNull(reason, "reason must not be null");
-        if (reason.strip().length() < MINIMUM_REASON_LENGTH) {
-            throw new IllegalArgumentException(
-                    "reason must be at least " + MINIMUM_REASON_LENGTH + " characters");
+        if (reason == null || reason.strip().length() < MINIMUM_REASON_LENGTH) {
+            throw new ReviewReasonInvalidException("Review reason missing or < 10 characters");
         }
         return toBuilder()
                 .state(target)
