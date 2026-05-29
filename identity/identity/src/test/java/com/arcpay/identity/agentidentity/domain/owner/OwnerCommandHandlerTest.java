@@ -7,6 +7,7 @@ import com.arcpay.identity.agentidentity.domain.exception.OwnerEmailAlreadyExist
 import com.arcpay.identity.agentidentity.domain.exception.OwnerWalletAlreadyExistsException;
 import com.arcpay.identity.agentidentity.domain.model.Owner;
 import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
+import com.arcpay.identity.agentidentity.domain.model.OwnerWithApiKey;
 import com.arcpay.identity.agentidentity.domain.port.EventPublisher;
 import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
 import org.junit.jupiter.api.Test;
@@ -62,7 +63,7 @@ class OwnerCommandHandlerTest {
                 .updatedAt(now)
                 .build();
         var rawApiKey = "ak_test_abc123";
-        var creationResult = new OwnerCreationService.OwnerWithApiKey(owner, rawApiKey);
+        var creationResult = new OwnerWithApiKey(owner, rawApiKey);
 
         given(ownerCreationService.createOwner(VALID_EMAIL, VALID_WALLET)).willReturn(creationResult);
         given(ownerRepository.save(eqIgnoringTimestamps(owner))).willReturn(owner);
@@ -96,14 +97,14 @@ class OwnerCommandHandlerTest {
                 .build();
         var rawApiKey = "ak_test_secretkey123";
         given(ownerCreationService.createOwner(VALID_EMAIL, VALID_WALLET))
-                .willReturn(new OwnerCreationService.OwnerWithApiKey(owner, rawApiKey));
+                .willReturn(new OwnerWithApiKey(owner, rawApiKey));
         given(ownerRepository.save(eqIgnoringTimestamps(owner))).willReturn(owner);
 
         // when
         var result = ownerCommandHandler.registerOwner(VALID_EMAIL, VALID_WALLET);
 
         // then
-        var expected = new OwnerCreationService.OwnerWithApiKey(owner, rawApiKey);
+        var expected = new OwnerWithApiKey(owner, rawApiKey);
         assertThat(result).usingRecursiveComparison()
                 .ignoringFields("owner.createdAt", "owner.updatedAt")
                 .isEqualTo(expected);

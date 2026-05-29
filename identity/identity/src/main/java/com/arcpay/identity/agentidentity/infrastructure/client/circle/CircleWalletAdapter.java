@@ -1,5 +1,6 @@
 package com.arcpay.identity.agentidentity.infrastructure.client.circle;
 
+import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
