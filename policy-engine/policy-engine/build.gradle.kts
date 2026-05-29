@@ -16,7 +16,10 @@ dependencies {
     implementation(project(":policy-engine:policy-engine-api"))
     testFixturesImplementation(project(":policy-engine:policy-engine-api"))
 
-    // identity:identity-client will be added in #51 (Feign Client integration)
+    implementation(project(":identity:identity-client"))
+
+    // OpenFeign for Feign clients and @EnableFeignClients
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
     // RFC 8785 canonical JSON
     implementation(libs.jcs)

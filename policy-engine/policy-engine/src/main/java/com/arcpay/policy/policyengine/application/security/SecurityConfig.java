@@ -1,5 +1,7 @@
 package com.arcpay.policy.policyengine.application.security;
 
+import com.arcpay.platform.infrastructure.security.ApiKeyAuthFilter;
+import com.arcpay.platform.infrastructure.security.ApiKeyResolver;
 import com.arcpay.platform.infrastructure.security.Roles;
 import com.arcpay.platform.infrastructure.security.ServiceAuthFilter;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,10 +17,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final ApiKeyResolver apiKeyResolver;
     private final String serviceToken;
 
     public SecurityConfig(
+            ApiKeyResolver apiKeyResolver,
             @Value("${arcpay.security.service-token:}") String serviceToken) {
+        this.apiKeyResolver = apiKeyResolver;
         this.serviceToken = serviceToken;
     }
 
@@ -31,8 +36,14 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/v1/internal/**").hasRole(Roles.SERVICE)
                         .anyRequest().authenticated())
-                .addFilterBefore(serviceAuthFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(apiKeyAuthFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(serviceAuthFilter(), ApiKeyAuthFilter.class)
                 .build();
+    }
+
+    @Bean
+    public ApiKeyAuthFilter apiKeyAuthFilter() {
+        return new ApiKeyAuthFilter(apiKeyResolver);
     }
 
     @Bean
