@@ -18,3 +18,8 @@ include("identity:identity")
 include("policy-engine:policy-engine-api")
 include("policy-engine:policy-engine-client")
 include("policy-engine:policy-engine")
+
+// Compliance Service
+include("compliance:compliance-api")
+include("compliance:compliance-client")
+include("compliance:compliance")
