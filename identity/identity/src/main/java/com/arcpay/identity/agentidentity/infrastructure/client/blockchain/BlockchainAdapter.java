@@ -6,14 +6,10 @@ import com.arcpay.identity.agentidentity.domain.model.GasUsage;
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.GasUsageRepository;
 import com.github.f4b6a3.uuid.UuidCreator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
-import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.http.HttpService;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -23,32 +19,12 @@ import java.util.UUID;
 
 @Slf4j
 @Component
-@EnableConfigurationProperties(BlockchainProperties.class)
-@ConditionalOnProperty(prefix = "arcpay.blockchain", name = "rpc-url")
+@RequiredArgsConstructor
 class BlockchainAdapter implements BlockchainService {
 
     private final Web3j web3j;
-    private final Credentials credentials;
-    private final String contractAddress;
     private final GasUsageRepository gasUsageRepository;
-
-    @org.springframework.beans.factory.annotation.Autowired
-    BlockchainAdapter(
-            BlockchainProperties properties,
-            GasUsageRepository gasUsageRepository,
-            @Value("${arcpay.contract.agent-registry-address}") String contractAddress) {
-        this.web3j = Web3j.build(new HttpService(properties.rpcUrl()));
-        this.credentials = Credentials.create(properties.platformWalletPrivateKey());
-        this.contractAddress = contractAddress;
-        this.gasUsageRepository = gasUsageRepository;
-    }
-
-    BlockchainAdapter(Web3j web3j, GasUsageRepository gasUsageRepository, String contractAddress) {
-        this.web3j = web3j;
-        this.credentials = null;
-        this.contractAddress = contractAddress;
-        this.gasUsageRepository = gasUsageRepository;
-    }
+    private final String contractAddress;
 
     @Override
     public RegistrationResult registerAgent(UUID agentId, UUID ownerId, String metadataHash) {
