@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -15,6 +16,9 @@ import java.util.stream.Collectors;
 public class PolicyValidator {
 
     public void validate(List<PolicyRule> rules) {
+        if (rules == null) {
+            throw new InvalidPolicyException("Rules list must not be null");
+        }
         validateNotEmpty(rules);
         validateNoDuplicateTypes(rules);
         validateLimitHierarchy(rules);
@@ -71,14 +75,14 @@ public class PolicyValidator {
                 .filter(PolicyRule.RecipientAllowlist.class::isInstance)
                 .map(PolicyRule.RecipientAllowlist.class::cast)
                 .flatMap(r -> r.addresses().stream())
-                .map(String::toLowerCase)
+                .map(address -> address.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toSet());
 
         var blocklist = rules.stream()
                 .filter(PolicyRule.RecipientBlocklist.class::isInstance)
                 .map(PolicyRule.RecipientBlocklist.class::cast)
                 .flatMap(r -> r.addresses().stream())
-                .map(String::toLowerCase)
+                .map(address -> address.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toSet());
 
         var overlap = new HashSet<>(allowlist);

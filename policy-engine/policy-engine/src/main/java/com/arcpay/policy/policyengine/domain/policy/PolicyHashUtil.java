@@ -9,6 +9,7 @@ import org.erdtman.jcs.JsonCanonicalizer;
 import org.web3j.crypto.Hash;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -72,11 +73,11 @@ public final class PolicyHashUtil {
     private static Map<String, Object> normalize(PolicyRule rule) {
         var type = typeName(rule);
         return switch (rule) {
-            case PolicyRule.DailyLimit r -> Map.of("type", type, "amount", r.amount());
-            case PolicyRule.WeeklyLimit r -> Map.of("type", type, "amount", r.amount());
-            case PolicyRule.MonthlyLimit r -> Map.of("type", type, "amount", r.amount());
-            case PolicyRule.PerTransactionLimit r -> Map.of("type", type, "amount", r.amount());
-            case PolicyRule.ApprovalThreshold r -> Map.of("type", type, "amount", r.amount());
+            case PolicyRule.DailyLimit r -> Map.of("type", type, "amount", amount(r.amount()));
+            case PolicyRule.WeeklyLimit r -> Map.of("type", type, "amount", amount(r.amount()));
+            case PolicyRule.MonthlyLimit r -> Map.of("type", type, "amount", amount(r.amount()));
+            case PolicyRule.PerTransactionLimit r -> Map.of("type", type, "amount", amount(r.amount()));
+            case PolicyRule.ApprovalThreshold r -> Map.of("type", type, "amount", amount(r.amount()));
             case PolicyRule.RecipientAllowlist r -> Map.of("type", type, "addresses", sortAddresses(r.addresses()));
             case PolicyRule.RecipientBlocklist r -> Map.of("type", type, "addresses", sortAddresses(r.addresses()));
             case PolicyRule.TimeWindow r -> Map.of(
@@ -90,6 +91,18 @@ public final class PolicyHashUtil {
                     "periodMinutes", r.periodMinutes());
             case PolicyRule.Cooldown r -> Map.of("type", type, "seconds", r.seconds());
         };
+    }
+
+    /**
+     * Renders a monetary amount as its exact decimal text for hashing. JCS (RFC 8785) normalizes
+     * JSON <em>numbers</em> through IEEE-754 double / ECMAScript formatting, which drops trailing
+     * zeros ({@code 1000.00} → {@code 1000}) and cannot represent every high-scale/large
+     * {@code BigDecimal} exactly — risking hash drift and collisions. Emitting the amount as a JSON
+     * string preserves the exact value; {@code stripTrailingZeros} keeps logically-equal amounts
+     * (e.g. {@code 1000.00} and {@code 1000}) hashing identically for idempotency.
+     */
+    private static String amount(BigDecimal value) {
+        return value.stripTrailingZeros().toPlainString();
     }
 
     private static List<String> sortAddresses(Set<String> addresses) {

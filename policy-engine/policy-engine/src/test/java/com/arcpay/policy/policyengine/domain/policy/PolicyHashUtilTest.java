@@ -151,6 +151,56 @@ class PolicyHashUtilTest {
             // then
             assertThat(hash1).isNotEqualTo(hash2);
         }
+
+        @Test
+        @SneakyThrows
+        void shouldProduceDifferentHashForSameAmountButDifferentRuleType() {
+            // given — same amount, different limit types must not collide (type discriminator)
+            var daily = List.<PolicyRule>of(new PolicyRule.DailyLimit(new BigDecimal("1000.00")));
+            var weekly = List.<PolicyRule>of(new PolicyRule.WeeklyLimit(new BigDecimal("1000.00")));
+
+            // when
+            var dailyHash = PolicyHashUtil.computePolicyHash(daily);
+            var weeklyHash = PolicyHashUtil.computePolicyHash(weekly);
+
+            // then
+            assertThat(dailyHash).isNotEqualTo(weeklyHash);
+        }
+
+        @Test
+        @SneakyThrows
+        void shouldDistinguishHighScaleAmountsBeyondDoublePrecision() {
+            // given — amounts differing only in the 18th significant digit; serialized as JSON
+            // numbers they would round to the same IEEE-754 double and collide
+            var rulesA = List.<PolicyRule>of(new PolicyRule.DailyLimit(new BigDecimal("999999999999.000001")));
+            var rulesB = List.<PolicyRule>of(new PolicyRule.DailyLimit(new BigDecimal("999999999999.000002")));
+
+            // when
+            var hashA = PolicyHashUtil.computePolicyHash(rulesA);
+            var hashB = PolicyHashUtil.computePolicyHash(rulesB);
+
+            // then
+            assertThat(hashA).isNotEqualTo(hashB);
+        }
+    }
+
+    @Nested
+    class AmountScale {
+
+        @Test
+        @SneakyThrows
+        void shouldProduceSameHashForAmountsDifferingOnlyInTrailingZeros() {
+            // given — 1000.00 and 1000 are the same monetary amount and must hash identically
+            var rulesScaled = List.<PolicyRule>of(new PolicyRule.DailyLimit(new BigDecimal("1000.00")));
+            var rulesPlain = List.<PolicyRule>of(new PolicyRule.DailyLimit(new BigDecimal("1000")));
+
+            // when
+            var scaledHash = PolicyHashUtil.computePolicyHash(rulesScaled);
+            var plainHash = PolicyHashUtil.computePolicyHash(rulesPlain);
+
+            // then
+            assertThat(scaledHash).isEqualTo(plainHash);
+        }
     }
 
     @Nested

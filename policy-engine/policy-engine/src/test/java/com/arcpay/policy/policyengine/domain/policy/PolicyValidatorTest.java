@@ -64,6 +64,14 @@ class PolicyValidatorTest {
                     .isInstanceOf(InvalidPolicyException.class)
                     .hasMessageContaining("must not be empty");
         }
+
+        @Test
+        void shouldRejectNullRulesList() {
+            // when / then
+            assertThatThrownBy(() -> policyValidator.validate(null))
+                    .isInstanceOf(InvalidPolicyException.class)
+                    .hasMessageContaining("must not be null");
+        }
     }
 
     @Nested
@@ -254,6 +262,19 @@ class PolicyValidatorTest {
         }
 
         @Test
+        void shouldRejectEndHourAboveRange() {
+            // given
+            var rules = List.<PolicyRule>of(
+                    new PolicyRule.TimeWindow(9, 24, Set.of(DayOfWeek.MONDAY))
+            );
+
+            // when / then
+            assertThatThrownBy(() -> policyValidator.validate(rules))
+                    .isInstanceOf(InvalidPolicyException.class)
+                    .hasMessageContaining("endHour must be in [0, 23]");
+        }
+
+        @Test
         void shouldRejectEmptyDaysOfWeek() {
             // given
             var rules = List.<PolicyRule>of(
@@ -295,6 +316,32 @@ class PolicyValidatorTest {
                     .isInstanceOf(InvalidPolicyException.class)
                     .hasMessageContaining("periodMinutes must be greater than 0");
         }
+
+        @Test
+        void shouldRejectNegativeMaxTransactions() {
+            // given
+            var rules = List.<PolicyRule>of(
+                    new PolicyRule.Velocity(-1, 60)
+            );
+
+            // when / then
+            assertThatThrownBy(() -> policyValidator.validate(rules))
+                    .isInstanceOf(InvalidPolicyException.class)
+                    .hasMessageContaining("maxTransactions must be greater than 0");
+        }
+
+        @Test
+        void shouldRejectNegativePeriodMinutes() {
+            // given
+            var rules = List.<PolicyRule>of(
+                    new PolicyRule.Velocity(10, -1)
+            );
+
+            // when / then
+            assertThatThrownBy(() -> policyValidator.validate(rules))
+                    .isInstanceOf(InvalidPolicyException.class)
+                    .hasMessageContaining("periodMinutes must be greater than 0");
+        }
     }
 
     @Nested
@@ -305,6 +352,19 @@ class PolicyValidatorTest {
             // given
             var rules = List.<PolicyRule>of(
                     new PolicyRule.Cooldown(0)
+            );
+
+            // when / then
+            assertThatThrownBy(() -> policyValidator.validate(rules))
+                    .isInstanceOf(InvalidPolicyException.class)
+                    .hasMessageContaining("seconds must be greater than 0");
+        }
+
+        @Test
+        void shouldRejectNegativeCooldownSeconds() {
+            // given
+            var rules = List.<PolicyRule>of(
+                    new PolicyRule.Cooldown(-1)
             );
 
             // when / then
