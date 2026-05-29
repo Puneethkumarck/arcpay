@@ -29,6 +29,10 @@ arcpay:
     url: http://localhost:8080
   security:
     service-token: ${SERVICE_AUTH_TOKEN:}
+  policy:
+    evaluation:
+      retention-days: ${POLICY_EVALUATION_RETENTION_DAYS:90}
+      cleanup-cron: ${POLICY_EVALUATION_CLEANUP_CRON:0 0 2 * * *}
 
 namastack:
   outbox:
