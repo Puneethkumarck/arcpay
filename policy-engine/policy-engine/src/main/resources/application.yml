@@ -4,6 +4,15 @@ server:
 spring:
   application:
     name: policy-engine
+  cloud:
+    openfeign:
+      circuitbreaker:
+        # Wraps every Feign call in a Resilience4j circuit breaker + time limiter. The
+        # breaker id is derived per Feign method (e.g. IdentityServiceClientgetAgent); the
+        # shared resilience4j `default` config below applies to all of them.
+        enabled: true
+        alphanumeric-ids:
+          enabled: true
   datasource:
     url: jdbc:postgresql://localhost:5432/arcpay_policy
     username: ${DB_USERNAME:arcpay}
@@ -23,6 +32,24 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: com.arcpay.policy.policyengine.domain.event
+
+# Spring Cloud OpenFeign derives the circuit-breaker id from the Feign client name + method
+# signature (e.g. IdentityServiceClientgetAgentUUID), so we configure the shared `default`
+# config that applies to every Resilience4j instance rather than naming each one.
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        minimum-number-of-calls: 10
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+        cancel-running-future: true
 
 arcpay:
   identity-service:

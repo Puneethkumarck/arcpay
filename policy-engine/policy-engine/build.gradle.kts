@@ -34,9 +34,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation(libs.caffeine)
 
-    // Resilience4j circuit breaker + time limiter (programmatic, no Spring Boot starter yet for Boot 4)
-    implementation(libs.resilience4j.circuitbreaker)
-    implementation(libs.resilience4j.timelimiter)
+    // Spring Cloud Circuit Breaker (Resilience4j) — wires circuit breaker + time limiter into
+    // OpenFeign out of the box; transitively provides resilience4j-circuitbreaker/-timelimiter
+    implementation(libs.spring.cloud.circuitbreaker.resilience4j)
 
     // ShedLock for scheduled cleanup
     implementation(libs.shedlock.spring)

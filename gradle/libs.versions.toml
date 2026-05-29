@@ -38,6 +38,7 @@ spring-cloud-stream = { module = "org.springframework.cloud:spring-cloud-stream"
 spring-cloud-stream-binder-kafka = { module = "org.springframework.cloud:spring-cloud-stream-binder-kafka" }
 spring-cloud-stream-test-binder = { module = "org.springframework.cloud:spring-cloud-stream-test-binder" }
 spring-cloud-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
+spring-cloud-circuitbreaker-resilience4j = { module = "org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j" }
 
 mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }

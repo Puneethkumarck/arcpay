@@ -8,6 +8,7 @@ import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cloud.client.circuitbreaker.NoFallbackAvailableException;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -23,8 +24,12 @@ public class FeignApiKeyResolver implements ApiKeyResolver {
      * Resolves an API-key hash to an {@link OwnerPrincipal} via the Identity Service.
      *
      * <p>Fail-closed: any inability to positively resolve the key (404, circuit open,
-     * server error) yields {@link Optional#empty()}, which the {@code ApiKeyAuthFilter}
+     * timeout, server error) yields {@link Optional#empty()}, which the {@code ApiKeyAuthFilter}
      * treats as an authentication failure (→ 401). No raw exception is allowed to escape.
+     *
+     * <p>Because the call is wrapped by the Spring Cloud OpenFeign circuit-breaker integration
+     * (and no Feign fallback is configured), failures arrive wrapped in
+     * {@link NoFallbackAvailableException}; we unwrap to log the underlying cause but still fail closed.
      */
     @Cacheable(value = "apiKeyResolution", key = "#apiKeyHash")
     @Override
@@ -32,16 +37,25 @@ public class FeignApiKeyResolver implements ApiKeyResolver {
         try {
             return identityClient.resolveApiKey(apiKeyHash)
                     .map(r -> new OwnerPrincipal(r.ownerId(), r.email()));
-        } catch (FeignException.NotFound e) {
-            log.debug("API key hash did not resolve to any owner");
-            return Optional.empty();
-        } catch (CallNotPermittedException e) {
-            log.warn("Identity Service circuit breaker open — failing API key resolution closed");
-            return Optional.empty();
-        } catch (FeignException e) {
-            log.warn("Identity Service call failed during API key resolution — failing closed (status={})",
-                    e.status());
-            return Optional.empty();
+        } catch (NoFallbackAvailableException e) {
+            return failClosed(e.getCause() != null ? e.getCause() : e);
+        } catch (CallNotPermittedException | FeignException e) {
+            return failClosed(e);
         }
+    }
+
+    private Optional<OwnerPrincipal> failClosed(Throwable cause) {
+        switch (cause) {
+            case FeignException.NotFound ignored ->
+                    log.debug("API key hash did not resolve to any owner");
+            case CallNotPermittedException ignored ->
+                    log.warn("Identity Service circuit breaker open — failing API key resolution closed");
+            case FeignException feign ->
+                    log.warn("Identity Service call failed during API key resolution — failing closed (status={})",
+                            feign.status());
+            default ->
+                    log.warn("Identity Service call failed during API key resolution — failing closed", cause);
+        }
+        return Optional.empty();
     }
 }
