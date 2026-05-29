@@ -13,7 +13,7 @@ class ScreeningRequestedListener {
 
     private final ScreeningRequestHandler screeningRequestHandler;
 
-    @KafkaListener(topics = PaymentScreeningRequested.TOPIC, groupId = "compliance")
+    @KafkaListener(topics = PaymentScreeningRequested.TOPIC)
     void onScreeningRequested(PaymentScreeningRequested event) {
         log.info("Received screening request paymentId={} agentId={}", event.paymentId(), event.agentId());
         screeningRequestHandler.handle(event);
