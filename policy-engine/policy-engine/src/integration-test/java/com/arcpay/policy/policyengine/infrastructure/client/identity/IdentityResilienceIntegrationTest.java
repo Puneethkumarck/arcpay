@@ -100,7 +100,7 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
 
         assertThatThrownBy(() -> agentServiceClient.getAgent(SOME_AGENT_ID))
                 .isInstanceOf(IdentityServiceUnavailableException.class)
-                .hasMessageContaining("Identity service call failed");
+                .hasMessageContaining("circuit breaker is open");
     }
 
     @Test
@@ -116,7 +116,7 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
         // when / then
         assertThatThrownBy(() -> agentServiceClient.getAgent(SOME_AGENT_ID))
                 .isInstanceOf(IdentityServiceUnavailableException.class)
-                .hasMessageContaining("Identity service call failed");
+                .hasMessageContaining("timed out");
     }
 
     @Test

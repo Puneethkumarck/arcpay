@@ -6,6 +6,8 @@ import com.arcpay.identity.client.IdentityServiceClient;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,11 +16,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_AGENT_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_AGENT_RESPONSE;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_OWNER_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_POLICY_HASH;
+import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.clientCallFailedWithCause;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.clientUnavailable;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.feignNotFound;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -80,6 +84,31 @@ class IdentityServiceAdapterTest {
         assertThatThrownBy(() -> adapter.getAgent(SOME_AGENT_ID))
                 .isInstanceOf(IdentityServiceUnavailableException.class)
                 .hasMessageContaining("Identity service call failed");
+    }
+
+    @Test
+    void shouldThrowCircuitOpenMessageWhenClientCircuitOpenOnGetAgent() {
+        // given
+        var callNotPermitted = CallNotPermittedException.createCallNotPermittedException(
+                CircuitBreaker.ofDefaults("IdentityServiceClient"));
+        given(identityClient.getAgent(SOME_AGENT_ID)).willThrow(clientCallFailedWithCause(callNotPermitted));
+
+        // when / then
+        assertThatThrownBy(() -> adapter.getAgent(SOME_AGENT_ID))
+                .isInstanceOf(IdentityServiceUnavailableException.class)
+                .hasMessageContaining("circuit breaker is open");
+    }
+
+    @Test
+    void shouldThrowTimedOutMessageWhenClientTimedOutOnGetAgent() {
+        // given
+        given(identityClient.getAgent(SOME_AGENT_ID))
+                .willThrow(clientCallFailedWithCause(new TimeoutException()));
+
+        // when / then
+        assertThatThrownBy(() -> adapter.getAgent(SOME_AGENT_ID))
+                .isInstanceOf(IdentityServiceUnavailableException.class)
+                .hasMessageContaining("timed out");
     }
 
     @Test

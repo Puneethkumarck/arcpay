@@ -3,7 +3,7 @@ package com.arcpay.policy.policyengine.test.fixtures;
 import com.arcpay.identity.agentidentity.api.model.AgentResponse;
 import com.arcpay.identity.agentidentity.api.model.AgentStatusEnum;
 import com.arcpay.identity.agentidentity.api.model.OwnerPrincipalResponse;
-import com.arcpay.identity.client.IdentityServiceUnavailableException;
+import com.arcpay.identity.client.IdentityServiceCallException;
 import feign.FeignException;
 import feign.Request;
 
@@ -45,8 +45,12 @@ public final class IdentityFixtures {
                 someRequest(), null, Collections.emptyMap());
     }
 
-    public static IdentityServiceUnavailableException clientUnavailable() {
-        return new IdentityServiceUnavailableException("Identity service call failed", feignServerError());
+    public static IdentityServiceCallException clientUnavailable() {
+        return new IdentityServiceCallException("Identity service call failed", feignServerError());
+    }
+
+    public static IdentityServiceCallException clientCallFailedWithCause(Throwable cause) {
+        return new IdentityServiceCallException("Identity service call failed", cause);
     }
 
     private static Request someRequest() {

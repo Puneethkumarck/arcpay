@@ -37,7 +37,7 @@ public class IdentityClientFallbackFactory implements FallbackFactory<IdentitySe
             if (cause instanceof FeignException.NotFound notFound) {
                 return notFound;
             }
-            return new IdentityServiceUnavailableException("Identity service call failed", cause);
+            return new IdentityServiceCallException("Identity service call failed", cause);
         }
     }
 }

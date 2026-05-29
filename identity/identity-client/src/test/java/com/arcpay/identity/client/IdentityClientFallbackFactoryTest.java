@@ -39,7 +39,7 @@ class IdentityClientFallbackFactoryTest {
 
         // when / then
         assertThatThrownBy(() -> fallback.getAgent(SOME_AGENT_ID))
-                .isInstanceOf(IdentityServiceUnavailableException.class)
+                .isInstanceOf(IdentityServiceCallException.class)
                 .hasCause(cause);
     }
 
@@ -52,7 +52,7 @@ class IdentityClientFallbackFactoryTest {
 
         // when / then
         assertThatThrownBy(() -> fallback.updatePolicy(SOME_AGENT_ID, request))
-                .isInstanceOf(IdentityServiceUnavailableException.class)
+                .isInstanceOf(IdentityServiceCallException.class)
                 .hasCause(cause);
     }
 
