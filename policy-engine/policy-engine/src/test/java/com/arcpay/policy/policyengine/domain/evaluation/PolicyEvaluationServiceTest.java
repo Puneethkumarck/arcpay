@@ -3,13 +3,13 @@ package com.arcpay.policy.policyengine.domain.evaluation;
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.event.PolicyViolationDetected;
 import com.arcpay.policy.policyengine.domain.exception.PolicyHashMismatchException;
-import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.Policy;
 import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
+import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
 import com.arcpay.policy.policyengine.domain.port.EventPublisher;
 import com.arcpay.policy.policyengine.domain.port.PolicyEvaluationRepository;
@@ -51,6 +51,7 @@ class PolicyEvaluationServiceTest {
     private static final UUID SOME_AGENT_ID = UUID.fromString("019576a0-0000-7000-8000-0000000000a1");
     private static final UUID SOME_OWNER_ID = UUID.fromString("019576a0-0000-7000-8000-0000000000a2");
     private static final UUID SOME_POLICY_ID = UUID.fromString("019576a0-0000-7000-8000-0000000000a3");
+    private static final UUID NO_POLICY_ID = new UUID(0L, 0L);
     private static final String SOME_HASH = "0xhash";
 
     private static final PolicyRule.PerTransactionLimit SOME_PER_TX =
@@ -151,6 +152,25 @@ class PolicyEvaluationServiceTest {
                 .policyId(SOME_POLICY_ID)
                 .verdict(verdict)
                 .ruleResults(ruleResults)
+                .requestedAmount(SOME_AMOUNT)
+                .recipientAddress(SOME_RECIPIENT)
+                .dryRun(dryRun)
+                .evaluatedAt(Instant.parse("2026-01-01T00:00:00Z"))
+                .durationMs(0)
+                .build();
+    }
+
+    private PolicyEvaluationResult noPolicyResult(boolean dryRun) {
+        return PolicyEvaluationResult.builder()
+                .evaluationId(UUID.fromString("00000000-0000-0000-0000-000000000000"))
+                .agentId(SOME_AGENT_ID)
+                .policyId(NO_POLICY_ID)
+                .verdict(PolicyVerdict.REJECTED)
+                .ruleResults(List.of(RuleEvaluationResult.builder()
+                        .ruleType("NO_ACTIVE_POLICY")
+                        .verdict(RuleVerdict.FAIL)
+                        .message("no active policy configured")
+                        .build()))
                 .requestedAmount(SOME_AMOUNT)
                 .recipientAddress(SOME_RECIPIENT)
                 .dryRun(dryRun)
@@ -420,15 +440,75 @@ class PolicyEvaluationServiceTest {
     class FailureModes {
 
         @Test
-        void shouldRejectWhenNoPolicyConfigured() {
+        void shouldRejectWhenNoActivePolicyOnRealPath() {
             // given
             given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
 
             // when
+            var result = invoke(false);
+
             // then
-            assertThatThrownBy(() -> invoke(false))
-                    .isInstanceOf(PolicyNotFoundException.class)
-                    .hasMessageContaining("no policy configured");
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .ignoringFields("evaluationId", "evaluatedAt", "durationMs")
+                    .isEqualTo(noPolicyResult(false));
+        }
+
+        @Test
+        void shouldRejectWhenNoActivePolicyOnDryRunPath() {
+            // given
+            given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
+
+            // when
+            var result = invoke(true);
+
+            // then
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .ignoringFields("evaluationId", "evaluatedAt", "durationMs")
+                    .isEqualTo(noPolicyResult(true));
+        }
+
+        @Test
+        void shouldPersistNoActivePolicyRejection() {
+            // given
+            given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
+
+            // when
+            invoke(false);
+
+            // then
+            then(policyEvaluationRepository).should().save(eqIgnoring(
+                    noPolicyResult(false), "evaluationId", "evaluatedAt", "durationMs"));
+        }
+
+        @Test
+        void shouldPublishViolationEventOnNoActivePolicyRealRejection() {
+            // given
+            given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
+
+            // when
+            invoke(false);
+
+            // then
+            then(eventPublisher).should().publish(eqIgnoring(
+                    new PolicyViolationDetected(
+                            UUID.fromString("00000000-0000-0000-0000-000000000000"),
+                            SOME_AGENT_ID, NO_POLICY_ID, "NO_ACTIVE_POLICY", "no active policy configured",
+                            SOME_AMOUNT, Instant.parse("2026-01-01T00:00:00Z")),
+                    "evaluationId", "detectedAt"));
+        }
+
+        @Test
+        void shouldNotPublishViolationEventOnNoActivePolicyDryRun() {
+            // given
+            given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.empty());
+
+            // when
+            invoke(true);
+
+            // then
+            then(eventPublisher).shouldHaveNoInteractions();
         }
 
         @Test

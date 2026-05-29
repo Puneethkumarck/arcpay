@@ -3,7 +3,6 @@ package com.arcpay.policy.policyengine.domain.evaluation;
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.event.PolicyViolationDetected;
 import com.arcpay.policy.policyengine.domain.exception.PolicyHashMismatchException;
-import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.Policy;
 import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
@@ -41,6 +40,10 @@ public class PolicyEvaluationService {
             PolicyRule.TimeWindow.class,
             PolicyRule.ApprovalThreshold.class);
 
+    private static final UUID NO_POLICY_ID = new UUID(0L, 0L);
+    private static final String NO_POLICY_RULE_TYPE = "NO_ACTIVE_POLICY";
+    private static final String NO_POLICY_MESSAGE = "no active policy configured";
+
     private final PolicyRepository policyRepository;
     private final PolicyEvaluationRepository policyEvaluationRepository;
     private final SpendingLockService spendingLockService;
@@ -53,8 +56,11 @@ public class PolicyEvaluationService {
             BigDecimal amount, Instant requestedAt, boolean dryRun) {
         var startNanos = System.nanoTime();
 
-        var policy = policyRepository.findActiveByAgentId(agentId)
-                .orElseThrow(() -> new PolicyNotFoundException(agentId, "no policy configured"));
+        var activePolicy = policyRepository.findActiveByAgentId(agentId);
+        if (activePolicy.isEmpty()) {
+            return rejectNoActivePolicy(agentId, recipientAddress, amount, dryRun, startNanos);
+        }
+        var policy = activePolicy.get();
 
         if (!policy.policyHash().equals(agent.policyHash())) {
             throw new PolicyHashMismatchException(agentId, policy.policyHash(), agent.policyHash());
@@ -95,12 +101,37 @@ public class PolicyEvaluationService {
         return complete(context, policy, results, startNanos);
     }
 
+    private PolicyEvaluationResult rejectNoActivePolicy(UUID agentId, String recipientAddress,
+            BigDecimal amount, boolean dryRun, long startNanos) {
+        var noPolicyRule = RuleEvaluationResult.builder()
+                .ruleType(NO_POLICY_RULE_TYPE)
+                .verdict(RuleVerdict.FAIL)
+                .message(NO_POLICY_MESSAGE)
+                .build();
+        var results = List.of(noPolicyRule);
+        var evalResult = PolicyEvaluationResult.builder()
+                .evaluationId(UuidCreator.getTimeOrderedEpoch())
+                .agentId(agentId)
+                .policyId(NO_POLICY_ID)
+                .verdict(PolicyVerdict.REJECTED)
+                .ruleResults(results)
+                .requestedAmount(amount)
+                .recipientAddress(recipientAddress)
+                .dryRun(dryRun)
+                .evaluatedAt(Instant.now())
+                .durationMs((System.nanoTime() - startNanos) / 1_000_000)
+                .build();
+        return persistAndPublish(evalResult, results);
+    }
+
     private PolicyEvaluationResult complete(EvaluationContext context, Policy policy,
             List<RuleEvaluationResult> results, long startNanos) {
         var evalResult = buildResult(context, policy, results, startNanos);
+        return persistAndPublish(evalResult, results);
+    }
 
-        // Persist rejections, requires-approval, and all dry-runs; approved real
-        // evaluations are transient (captured downstream by the Audit Ledger).
+    private PolicyEvaluationResult persistAndPublish(PolicyEvaluationResult evalResult,
+            List<RuleEvaluationResult> results) {
         if (evalResult.verdict() != PolicyVerdict.APPROVED || evalResult.dryRun()) {
             policyEvaluationRepository.save(evalResult);
         }
