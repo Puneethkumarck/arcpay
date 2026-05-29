@@ -23,6 +23,12 @@ namastack:
   outbox:
     enabled: true
 
+arcpay:
+  identity-service:
+    url: http://localhost:8080
+  security:
+    service-token: test-service-token
+
 compliance:
   onchain:
     usdc-contract: "0x0000000000000000000000000000000000000000"

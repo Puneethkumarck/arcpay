@@ -18,11 +18,11 @@ dependencies {
     implementation("io.temporal:temporal-spring-boot-starter:$temporalVersion")
     implementation("org.web3j:core:$web3jVersion")
 
-    implementation(libs.resilience4j.circuitbreaker)
-    implementation(libs.resilience4j.timelimiter)
+    implementation(libs.spring.cloud.circuitbreaker.resilience4j)
 
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation(libs.caffeine)
 
     testImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
+    integrationTestImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
 }
