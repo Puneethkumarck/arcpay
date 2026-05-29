@@ -40,13 +40,13 @@ public class PolicyEvaluationController {
             @AuthenticationPrincipal OwnerPrincipal principal,
             @Valid @RequestBody DryRunEvaluateRequest request) {
         log.info("Dry-run evaluation requested agentId={} ownerId={}", request.agentId(), principal.ownerId());
-        verifyOwnershipAndActive(request.agentId(), principal.ownerId());
+        var agent = verifyOwnershipAndActive(request.agentId(), principal.ownerId());
         var result = policyEvaluationService.evaluate(
-                request.agentId(), request.recipientAddress(), request.amount(), Instant.now(), true);
+                request.agentId(), agent, request.recipientAddress(), request.amount(), Instant.now(), true);
         return evaluationResponseMapper.toApi(result);
     }
 
-    private void verifyOwnershipAndActive(UUID agentId, UUID ownerId) {
+    private AgentServiceClient.AgentInfo verifyOwnershipAndActive(UUID agentId, UUID ownerId) {
         var agent = agentServiceClient.getAgent(agentId)
                 .orElseThrow(() -> new AgentNotFoundException(agentId));
         if (!agent.ownerId().equals(ownerId)) {
@@ -55,5 +55,6 @@ public class PolicyEvaluationController {
         if (!ACTIVE_STATUS.equals(agent.status())) {
             throw new AgentNotActiveException(agentId, agent.status());
         }
+        return agent;
     }
 }

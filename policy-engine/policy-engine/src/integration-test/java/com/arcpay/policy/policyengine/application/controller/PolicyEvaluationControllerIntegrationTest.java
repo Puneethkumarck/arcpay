@@ -6,6 +6,7 @@ import com.arcpay.platform.infrastructure.security.Roles;
 import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
 import com.arcpay.policy.policyengine.api.model.RuleResultResponse;
 import com.arcpay.policy.policyengine.domain.evaluation.PolicyEvaluationService;
+import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
 import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
@@ -197,7 +198,7 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
 
     @Test
     void shouldReturn400WhenAmountTooSmall() throws Exception {
-        // given — amount below @DecimalMin
+        // given
 
         // when
         var response = mockMvc.perform(post("/api/v1/policies/evaluate")
@@ -219,8 +220,28 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
     }
 
     @Test
+    void shouldReturn503WhenIdentityServiceUnavailable() throws Exception {
+        // given
+        given(agentServiceClient.getAgent(SOME_AGENT_ID))
+                .willThrow(new IdentityServiceUnavailableException("Identity Service unavailable"));
+
+        // when
+        var response = mockMvc.perform(post("/api/v1/policies/evaluate")
+                        .with(authentication(ownerAuth()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(EVALUATE_BODY))
+                .andExpect(status().isServiceUnavailable())
+                .andReturn().getResponse().getContentAsString();
+
+        // then
+        var actual = jsonMapper.readValue(response, ApiError.class);
+        assertThat(actual.code()).isEqualTo("ARCPAY-POLICY-0008");
+    }
+
+    @Test
     void shouldReturn401WhenUnauthenticated() throws Exception {
-        // when / then
+        // when
+        // then
         mockMvc.perform(post("/api/v1/policies/evaluate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(EVALUATE_BODY))
@@ -230,6 +251,7 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
     private PolicyEvaluationResult dryRunEvaluate() {
         return policyEvaluationService.evaluate(
                 eqIgnoringTimestamps(SOME_AGENT_ID),
+                eqIgnoringTimestamps(SOME_ACTIVE_AGENT),
                 eqIgnoringTimestamps(SOME_RECIPIENT),
                 eqIgnoringTimestamps(AMOUNT),
                 eqIgnoringTimestamps(Instant.now()),

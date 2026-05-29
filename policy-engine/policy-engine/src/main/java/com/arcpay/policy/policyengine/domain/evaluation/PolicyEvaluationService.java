@@ -10,7 +10,6 @@ import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
 import com.arcpay.policy.policyengine.domain.port.EventPublisher;
 import com.arcpay.policy.policyengine.domain.port.PolicyEvaluationRepository;
@@ -44,22 +43,19 @@ public class PolicyEvaluationService {
 
     private final PolicyRepository policyRepository;
     private final PolicyEvaluationRepository policyEvaluationRepository;
-    private final AgentServiceClient agentServiceClient;
     private final SpendingLockService spendingLockService;
     private final SpendingLedgerService spendingLedgerService;
     private final RuleEvaluatorRegistry ruleEvaluatorRegistry;
     private final EventPublisher eventPublisher;
 
     @Transactional
-    public PolicyEvaluationResult evaluate(UUID agentId, String recipientAddress,
+    public PolicyEvaluationResult evaluate(UUID agentId, AgentInfo agent, String recipientAddress,
             BigDecimal amount, Instant requestedAt, boolean dryRun) {
         var startNanos = System.nanoTime();
 
         var policy = policyRepository.findActiveByAgentId(agentId)
                 .orElseThrow(() -> new PolicyNotFoundException(agentId, "no policy configured"));
 
-        var agent = agentServiceClient.getAgent(agentId)
-                .orElseThrow(() -> new PolicyNotFoundException(agentId, "agent not found in Identity Service"));
         if (!policy.policyHash().equals(agent.policyHash())) {
             throw new PolicyHashMismatchException(agentId, policy.policyHash(), agent.policyHash());
         }

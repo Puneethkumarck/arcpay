@@ -102,7 +102,7 @@ class PolicyControllerIntegrationTest extends RestControllerAbstractTest {
 
     @Test
     void shouldReturn400WhenRulesEmpty() throws Exception {
-        // given — request body with empty rules list violates @Size(min = 1)
+        // given
 
         // when
         var response = mockMvc.perform(post("/api/v1/agents/{agentId}/policies", SOME_AGENT_ID)
@@ -272,7 +272,8 @@ class PolicyControllerIntegrationTest extends RestControllerAbstractTest {
 
     @Test
     void shouldReturn401WhenUnauthenticated() throws Exception {
-        // when / then
+        // when
+        // then
         mockMvc.perform(get("/api/v1/agents/{agentId}/policies/active", SOME_AGENT_ID))
                 .andExpect(status().isUnauthorized());
     }
