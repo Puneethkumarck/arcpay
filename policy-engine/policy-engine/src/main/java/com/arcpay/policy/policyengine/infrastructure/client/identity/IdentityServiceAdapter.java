@@ -5,6 +5,7 @@ import com.arcpay.identity.client.IdentityServiceCallException;
 import com.arcpay.identity.client.IdentityServiceClient;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
+import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;

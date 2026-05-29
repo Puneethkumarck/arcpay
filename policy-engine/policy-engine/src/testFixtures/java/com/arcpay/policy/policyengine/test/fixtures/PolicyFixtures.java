@@ -2,10 +2,10 @@ package com.arcpay.policy.policyengine.test.fixtures;
 
 import com.arcpay.platform.api.OwnerPrincipal;
 import com.arcpay.policy.policyengine.api.PolicyRule;
+import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.model.Policy;
 import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
 import com.arcpay.policy.policyengine.domain.policy.PolicyHashUtil;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
 
 import java.math.BigDecimal;
 import java.time.Instant;

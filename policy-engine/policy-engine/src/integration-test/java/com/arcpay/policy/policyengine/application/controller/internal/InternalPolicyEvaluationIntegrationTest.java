@@ -2,11 +2,11 @@ package com.arcpay.policy.policyengine.application.controller.internal;
 
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.api.model.InternalEvaluateRequest;
+import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.model.Policy;
 import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
 import com.arcpay.policy.policyengine.domain.policy.PolicyHashUtil;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient.AgentInfo;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
 import com.arcpay.policy.policyengine.test.RestControllerAbstractTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
