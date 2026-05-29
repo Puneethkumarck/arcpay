@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.arcpay.compliance.test.stubs.IdentityStubs.stubResolveApiKey;
 import static com.arcpay.platform.infrastructure.security.ApiKeyAuthFilter.hashApiKey;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
@@ -91,7 +92,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldAuthenticateWithValidApiKey() throws Exception {
         // given
-        stubResolveApiKey(hashApiKey(VALID_API_KEY));
+        stubResolveApiKey(identityServer, hashApiKey(VALID_API_KEY));
 
         // when / then
         mockMvc.perform(get("/compliance/test/ping")
@@ -125,27 +126,12 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldRejectInternalEndpointWithOwnerApiKey() throws Exception {
         // given
-        stubResolveApiKey(hashApiKey(VALID_API_KEY));
+        stubResolveApiKey(identityServer, hashApiKey(VALID_API_KEY));
 
         // when / then
         mockMvc.perform(get("/api/v1/internal/test/ping")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_API_KEY))
                 .andExpect(status().is(HttpStatus.FORBIDDEN.value()));
-    }
-
-    private static void stubResolveApiKey(String hash) {
-        identityServer.stubFor(WireMock.get(urlPathEqualTo(
-                        "/api/v1/internal/owners/by-api-key-hash/" + hash))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
-                                {
-                                  "ownerId": "0197aa00-6666-7def-8000-666666666666",
-                                  "email": "owner@arcpay.io",
-                                  "authority": "OWNER"
-                                }
-                                """)));
     }
 
     @TestConfiguration

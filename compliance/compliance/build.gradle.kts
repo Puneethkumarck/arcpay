@@ -15,6 +15,7 @@ dependencies {
     testFixturesImplementation("io.github.openfeign:feign-core")
     testFixturesImplementation("org.springframework.boot:spring-boot-starter-security")
     testFixturesImplementation(libs.resilience4j.circuitbreaker)
+    testFixturesImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
 
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("io.temporal:temporal-spring-boot-starter:$temporalVersion")
