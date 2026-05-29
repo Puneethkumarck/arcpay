@@ -17,24 +17,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
-/**
- * Adapter onto the Identity Service Feign client.
- *
- * <p>Resilience (circuit breaker + 3s time limiter) is applied transparently by the
- * Spring Cloud OpenFeign circuit-breaker integration — see the
- * {@code spring.cloud.openfeign.circuitbreaker} and {@code resilience4j.*} configuration.
- * This adapter only translates the resulting failures into domain exceptions.
- *
- * <p>Because no Feign fallback is configured, the integration surfaces circuit-breaker
- * failures wrapped in {@link NoFallbackAvailableException}; this adapter unwraps and maps:
- *
- * <ul>
- *   <li>{@link FeignException.NotFound} (getAgent only) → {@link AgentNotFoundException}</li>
- *   <li>{@link CallNotPermittedException} (circuit OPEN) → {@link IdentityServiceUnavailableException}</li>
- *   <li>{@link TimeoutException} (time limiter, >3s) → {@link IdentityServiceUnavailableException}</li>
- *   <li>Any other {@link FeignException} (e.g. server errors) → {@link IdentityServiceUnavailableException}</li>
- * </ul>
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -60,11 +42,6 @@ class IdentityServiceAdapter implements AgentServiceClient {
         guard(() -> identityClient.updatePolicy(agentId, request));
     }
 
-    /**
-     * Invokes an Identity Service call and maps circuit-breaker/transport failures to
-     * {@link IdentityServiceUnavailableException}. {@link FeignException.NotFound} is
-     * rethrown so callers can apply their own 404 semantics.
-     */
     private <T> T guard(Supplier<T> call) {
         try {
             return call.get();

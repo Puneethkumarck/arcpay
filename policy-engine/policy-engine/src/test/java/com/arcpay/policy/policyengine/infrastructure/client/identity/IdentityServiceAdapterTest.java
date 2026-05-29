@@ -29,14 +29,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
-/**
- * Unit test for {@link IdentityServiceAdapter}.
- *
- * <p>The circuit breaker + time limiter are now wired by the Spring Cloud OpenFeign
- * integration (verified end-to-end in {@code IdentityResilienceIntegrationTest}). These
- * tests cover only the adapter's exception-mapping contract by feeding it the exceptions
- * the integration surfaces from the mocked {@link IdentityServiceClient}.
- */
 @ExtendWith(MockitoExtension.class)
 class IdentityServiceAdapterTest {
 

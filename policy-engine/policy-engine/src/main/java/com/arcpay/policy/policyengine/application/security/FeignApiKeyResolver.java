@@ -20,17 +20,6 @@ public class FeignApiKeyResolver implements ApiKeyResolver {
 
     private final IdentityServiceClient identityClient;
 
-    /**
-     * Resolves an API-key hash to an {@link OwnerPrincipal} via the Identity Service.
-     *
-     * <p>Fail-closed: any inability to positively resolve the key (404, circuit open,
-     * timeout, server error) yields {@link Optional#empty()}, which the {@code ApiKeyAuthFilter}
-     * treats as an authentication failure (→ 401). No raw exception is allowed to escape.
-     *
-     * <p>Because the call is wrapped by the Spring Cloud OpenFeign circuit-breaker integration
-     * (and no Feign fallback is configured), failures arrive wrapped in
-     * {@link NoFallbackAvailableException}; we unwrap to log the underlying cause but still fail closed.
-     */
     @Cacheable(value = "apiKeyResolution", key = "#apiKeyHash")
     @Override
     public Optional<OwnerPrincipal> resolve(String apiKeyHash) {

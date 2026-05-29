@@ -22,26 +22,13 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Proves the Spring Cloud OpenFeign circuit-breaker + time-limiter integration actually
- * engages on Spring Boot 4 — i.e. that the YAML config and
- * {@code spring-cloud-starter-circuitbreaker-resilience4j} wire real Resilience4j beans
- * around the Feign client, with no hand-rolled decoration.
- *
- * <p>The breaker id is derived per Feign method (e.g. {@code IdentityServiceClientgetAgent}),
- * so the production config uses the shared {@code resilience4j.*.configs.default}. Here we
- * override that shared default via {@link TestPropertySource} to lower thresholds for speed
- * (3-call window, 1s timeout), then assert against the real wired beans — we locate the
- * actual breaker the integration created rather than assuming its name.
- */
 @TestPropertySource(properties = {
-        // Override the shared `default` config so the breaker opens after 3 calls instead of 10.
         "resilience4j.circuitbreaker.configs.default.sliding-window-size=3",
         "resilience4j.circuitbreaker.configs.default.minimum-number-of-calls=3",
         "resilience4j.circuitbreaker.configs.default.failure-rate-threshold=50",
         "resilience4j.circuitbreaker.configs.default.wait-duration-in-open-state=30s",
         // Lower the time limiter so the timeout test does not have to wait the full 3s.
-        "resilience4j.timelimiter.configs.default.timeout-duration=1s",
+        "resilience4j.timelimiter.configs.default.timeout-duration=1s", // shorter than the 3s prod limit for test speed
         "resilience4j.timelimiter.configs.default.cancel-running-future=true"
 })
 class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
@@ -134,7 +121,6 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
                 .hasMessageContaining("timed out");
     }
 
-    /** Locates the breaker the OpenFeign integration created for the getAgent call. */
     private CircuitBreaker identityBreaker() {
         return circuitBreakerRegistry.getAllCircuitBreakers().stream()
                 .filter(b -> b.getName().startsWith("IdentityServiceClient")
