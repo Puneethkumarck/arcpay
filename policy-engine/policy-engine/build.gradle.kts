@@ -40,4 +40,7 @@ dependencies {
 
     // WireMock for adapter tests
     testImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
+
+    // WireMock in shared fixtures so the BusinessTest base class can stub the Identity Service
+    testFixturesImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
 }
