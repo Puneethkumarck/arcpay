@@ -12,8 +12,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 public final class SettlementServiceStubs {
 
     public static final String TRANSFERS_PATH = "/api/v1/internal/transfers";
+    public static final String RECEIPTS_PATH = "/api/v1/internal/receipts";
 
     private SettlementServiceStubs() {}
+
+    public static void stubReceiptAccepted(WireMockServer server) {
+        server.stubFor(post(urlPathEqualTo(RECEIPTS_PATH))
+                .willReturn(aResponse().withStatus(200)));
+    }
 
     public static String balancePath(UUID agentId) {
         return "/api/v1/internal/wallets/" + agentId + "/balance";
