@@ -1,0 +1,47 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.cloud.stream.config.BindingServiceConfiguration
+      - org.springframework.cloud.stream.function.FunctionConfiguration
+      - org.springframework.cloud.stream.config.BindersHealthIndicatorAutoConfiguration
+      - org.springframework.cloud.stream.config.BindingsEndpointAutoConfiguration
+      - org.springframework.cloud.stream.config.ChannelsEndpointAutoConfiguration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  kafka:
+    consumer:
+      group-id: settlement-biz-${random.uuid}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.arcpay.settlement.domain.event
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+namastack:
+  outbox:
+    enabled: true
+
+circle:
+  api:
+    base-url: http://localhost:8089
+    api-key: test-circle-api-key
+    wallet-set-id: test-wallet-set
+    usdc-token-address: "0x3600000000000000000000000000000000000000"
+    entity-secret: test-entity-secret
+
+web3j:
+  client-address: http://localhost:8545
+
+arcpay:
+  contract:
+    payment-receipts-address: "0x0000000000000000000000000000000000000001"
+  gas-wallet:
+    private-key: "0x0000000000000000000000000000000000000000000000000000000000000001"
+  security:
+    service-token: test-service-token
