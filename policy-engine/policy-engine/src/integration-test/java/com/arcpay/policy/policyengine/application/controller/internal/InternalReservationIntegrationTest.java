@@ -1,7 +1,6 @@
 package com.arcpay.policy.policyengine.application.controller.internal;
 
 import com.arcpay.policy.policyengine.api.PolicyRule;
-import com.arcpay.policy.policyengine.api.model.ReserveRequest;
 import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.model.Policy;
 import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.reserveRequest;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class InternalReservationIntegrationTest extends RestControllerAbstractTest {
 
     private static final String SERVICE_TOKEN = "test-service-token";
-    private static final String SOME_RECIPIENT = "0x1234567890abcdef1234567890abcdef12345678";
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -46,7 +45,7 @@ class InternalReservationIntegrationTest extends RestControllerAbstractTest {
     @Test
     void shouldRejectReserveWithoutServiceAuth() throws Exception {
         // given
-        var request = reserveRequest(UUID.randomUUID(), new BigDecimal("10.00"));
+        var request = reserveRequest(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("10.00"));
 
         // when
         // then
@@ -60,7 +59,7 @@ class InternalReservationIntegrationTest extends RestControllerAbstractTest {
     void shouldReserveHoldAndReturnApproved() throws Exception {
         // given
         var agentId = persistDailyLimitPolicy("1000.00");
-        var request = reserveRequest(agentId, new BigDecimal("30.00"));
+        var request = reserveRequest(agentId, UUID.randomUUID(), new BigDecimal("30.00"));
 
         // when
         // then
@@ -125,19 +124,5 @@ class InternalReservationIntegrationTest extends RestControllerAbstractTest {
         given(agentServiceClient.getAgent(agentId))
                 .willReturn(Optional.of(new AgentInfo(agentId, ownerId, "ACTIVE", hash)));
         return agentId;
-    }
-
-    private ReserveRequest reserveRequest(UUID agentId, BigDecimal amount) {
-        return reserveRequest(agentId, UUID.randomUUID(), amount);
-    }
-
-    private ReserveRequest reserveRequest(UUID agentId, UUID paymentId, BigDecimal amount) {
-        return ReserveRequest.builder()
-                .paymentId(paymentId)
-                .agentId(agentId)
-                .recipientAddress(SOME_RECIPIENT)
-                .amount(amount)
-                .requestedAt(Instant.now())
-                .build();
     }
 }
