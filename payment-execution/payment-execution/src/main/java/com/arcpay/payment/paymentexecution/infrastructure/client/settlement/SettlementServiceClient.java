@@ -1,6 +1,7 @@
 package com.arcpay.payment.paymentexecution.infrastructure.client.settlement;
 
 import com.arcpay.settlement.api.model.BalanceResponse;
+import com.arcpay.settlement.api.model.ReceiptRequest;
 import com.arcpay.settlement.api.model.TransferRequest;
 import com.arcpay.settlement.api.model.TransferStatusResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -22,5 +23,5 @@ public interface SettlementServiceClient {
     BalanceResponse balance(@PathVariable String agentId);
 
     @PostMapping("/api/v1/internal/receipts")
-    void recordReceipt(@RequestBody ReceiptSubmissionRequest request);
+    void recordReceipt(@RequestBody ReceiptRequest request);
 }

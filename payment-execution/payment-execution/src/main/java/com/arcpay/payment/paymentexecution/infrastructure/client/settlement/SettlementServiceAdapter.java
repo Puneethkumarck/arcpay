@@ -2,7 +2,9 @@ package com.arcpay.payment.paymentexecution.infrastructure.client.settlement;
 
 import com.arcpay.payment.paymentexecution.api.model.PaymentReceipt;
 import com.arcpay.payment.paymentexecution.domain.exception.SettlementServiceUnavailableException;
+import com.arcpay.payment.paymentexecution.domain.model.Payment;
 import com.arcpay.payment.paymentexecution.domain.port.SettlementPort;
+import com.arcpay.settlement.api.model.ReceiptRequest;
 import com.arcpay.settlement.api.model.TransferRequest;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
@@ -22,11 +23,11 @@ class SettlementServiceAdapter implements SettlementPort {
     private final SettlementServiceClient settlementClient;
 
     @Override
-    public String transfer(UUID paymentId, UUID agentId, String recipientAddress, BigDecimal amount) {
+    public String transfer(UUID paymentId, String walletId, String recipientAddress, BigDecimal amount) {
         try {
             var request = TransferRequest.builder()
                     .paymentId(paymentId)
-                    .walletId(agentId.toString())
+                    .walletId(walletId)
                     .recipientAddress(recipientAddress)
                     .amount(amount)
                     .build();
@@ -47,14 +48,18 @@ class SettlementServiceAdapter implements SettlementPort {
     }
 
     @Override
-    public PaymentReceipt writeReceipt(UUID paymentId) {
+    public PaymentReceipt writeReceipt(Payment payment) {
         try {
-            settlementClient.recordReceipt(ReceiptSubmissionRequest.builder().paymentId(paymentId).build());
-            return PaymentReceipt.builder()
-                    .timestamp(Instant.now())
-                    .build();
+            settlementClient.recordReceipt(ReceiptRequest.builder()
+                    .paymentId(payment.paymentId())
+                    .payerAgent(payment.agentId().toString())
+                    .payee(payment.recipientAddress())
+                    .amount(payment.amount())
+                    .memo(payment.memo())
+                    .build());
+            return PaymentReceipt.builder().build();
         } catch (SettlementServiceCallException e) {
-            throw toUnavailable("writeReceipt", paymentId, e);
+            throw toUnavailable("writeReceipt", payment.paymentId(), e);
         }
     }
 

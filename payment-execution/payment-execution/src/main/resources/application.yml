@@ -65,7 +65,13 @@ resilience4j:
         wait-duration-in-open-state: 30s
         permitted-number-of-calls-in-half-open-state: 3
         ignore-exceptions:
+          - feign.FeignException$BadRequest
+          - feign.FeignException$Unauthorized
+          - feign.FeignException$Forbidden
           - feign.FeignException$NotFound
+          - feign.FeignException$MethodNotAllowed
+          - feign.FeignException$Conflict
+          - feign.FeignException$UnprocessableEntity
   timelimiter:
     configs:
       default:
@@ -74,8 +80,6 @@ resilience4j:
 
 arcpay:
   policy-service:
-    url: ${POLICY_SERVICE_URL:http://localhost:8081}
-  policy-engine:
     url: ${POLICY_SERVICE_URL:http://localhost:8081}
   identity-service:
     url: ${IDENTITY_SERVICE_URL:http://localhost:8080}

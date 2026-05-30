@@ -1,8 +1,10 @@
 package com.arcpay.payment.paymentexecution.infrastructure.client.settlement;
 
 import com.arcpay.settlement.api.model.BalanceResponse;
+import com.arcpay.settlement.api.model.ReceiptRequest;
 import com.arcpay.settlement.api.model.TransferRequest;
 import com.arcpay.settlement.api.model.TransferStatusResponse;
+import feign.FeignException;
 import org.springframework.cloud.openfeign.FallbackFactory;
 
 public class SettlementClientFallbackFactory implements FallbackFactory<SettlementServiceClient> {
@@ -25,12 +27,19 @@ public class SettlementClientFallbackFactory implements FallbackFactory<Settleme
         }
 
         @Override
-        public void recordReceipt(ReceiptSubmissionRequest request) {
+        public void recordReceipt(ReceiptRequest request) {
             throw mapFailure();
         }
 
         private RuntimeException mapFailure() {
+            if (cause instanceof FeignException feignException && isClientError(feignException)) {
+                return feignException;
+            }
             return new SettlementServiceCallException("Settlement service call failed", cause);
+        }
+
+        private boolean isClientError(FeignException feignException) {
+            return feignException.status() >= 400 && feignException.status() < 500;
         }
     }
 }

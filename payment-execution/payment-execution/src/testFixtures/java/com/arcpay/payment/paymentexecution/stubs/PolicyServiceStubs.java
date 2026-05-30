@@ -35,6 +35,11 @@ public final class PolicyServiceStubs {
                 .willReturn(aResponse().withStatus(500)));
     }
 
+    public static void stubReserveClientError(WireMockServer server) {
+        server.stubFor(post(urlPathEqualTo(RESERVE_PATH))
+                .willReturn(aResponse().withStatus(422)));
+    }
+
     public static String reserveApprovedJson() {
         return "{"
                 + "\"verdict\":\"APPROVED\","

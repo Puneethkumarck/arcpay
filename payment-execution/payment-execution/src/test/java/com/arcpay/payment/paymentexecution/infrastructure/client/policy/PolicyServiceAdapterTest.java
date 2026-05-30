@@ -5,6 +5,10 @@ import com.arcpay.payment.paymentexecution.domain.exception.PolicyServiceUnavail
 import com.arcpay.policy.client.PolicyEngineCallException;
 import com.arcpay.policy.client.PolicyEngineClient;
 import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
+import com.arcpay.policy.policyengine.api.model.ReserveRequest;
+import feign.FeignException;
+import feign.Request;
+import feign.RequestTemplate;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -16,8 +20,11 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.UUID;
 
+import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -43,9 +50,13 @@ class PolicyServiceAdapterTest {
     @Test
     void shouldMapReserveResponseToPolicyResult() {
         // given
-        given(policyClient.reserve(org.mockito.ArgumentMatchers.argThat(
-                req -> req.paymentId().equals(SOME_PAYMENT_ID)
-                        && req.agentId().equals(SOME_AGENT_ID))))
+        var expectedRequest = ReserveRequest.builder()
+                .paymentId(SOME_PAYMENT_ID)
+                .agentId(SOME_AGENT_ID)
+                .recipientAddress(SOME_RECIPIENT)
+                .amount(SOME_AMOUNT)
+                .build();
+        given(policyClient.reserve(eqIgnoringTimestamps(expectedRequest)))
                 .willReturn(PolicyEvaluationResponse.builder().verdict("APPROVED").build());
 
         // when
@@ -61,7 +72,13 @@ class PolicyServiceAdapterTest {
         // given
         var openCircuit = CallNotPermittedException.createCallNotPermittedException(
                 CircuitBreaker.of("policy", CircuitBreakerConfig.ofDefaults()));
-        given(policyClient.reserve(org.mockito.ArgumentMatchers.any()))
+        var expectedRequest = ReserveRequest.builder()
+                .paymentId(SOME_PAYMENT_ID)
+                .agentId(SOME_AGENT_ID)
+                .recipientAddress(SOME_RECIPIENT)
+                .amount(SOME_AMOUNT)
+                .build();
+        given(policyClient.reserve(eqIgnoringTimestamps(expectedRequest)))
                 .willThrow(new PolicyEngineCallException("Policy service call failed", openCircuit));
 
         // when / then
@@ -69,6 +86,24 @@ class PolicyServiceAdapterTest {
                 .isInstanceOf(PolicyServiceUnavailableException.class)
                 .hasMessageContaining("circuit breaker is open")
                 .hasMessageContaining(SOME_PAYMENT_ID.toString());
+    }
+
+    @Test
+    void shouldPropagateClientErrorWithoutTreatingAsUnavailableOnReserve() {
+        // given
+        var expectedRequest = ReserveRequest.builder()
+                .paymentId(SOME_PAYMENT_ID)
+                .agentId(SOME_AGENT_ID)
+                .recipientAddress(SOME_RECIPIENT)
+                .amount(SOME_AMOUNT)
+                .build();
+        given(policyClient.reserve(eqIgnoringTimestamps(expectedRequest)))
+                .willThrow(unprocessableEntity());
+
+        // when / then
+        assertThatThrownBy(() -> adapter.reserve(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT))
+                .isInstanceOf(FeignException.UnprocessableEntity.class)
+                .isNotInstanceOf(PolicyServiceUnavailableException.class);
     }
 
     @Test
@@ -102,5 +137,11 @@ class PolicyServiceAdapterTest {
 
         // then
         then(policyClient).should().commit(SOME_PAYMENT_ID);
+    }
+
+    private FeignException.UnprocessableEntity unprocessableEntity() {
+        var request = Request.create(Request.HttpMethod.POST, "/api/v1/internal/policies/reservations",
+                Map.of(), new byte[0], StandardCharsets.UTF_8, new RequestTemplate());
+        return new FeignException.UnprocessableEntity("policy rejected", request, new byte[0], Map.of());
     }
 }

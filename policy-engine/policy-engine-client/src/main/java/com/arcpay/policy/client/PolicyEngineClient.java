@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @FeignClient(
         name = "policy-engine",
-        url = "${arcpay.policy-engine.url}",
+        url = "${arcpay.policy-service.url}",
         fallbackFactory = PolicyEngineClientFallbackFactory.class)
 public interface PolicyEngineClient {
 

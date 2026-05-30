@@ -5,6 +5,7 @@ import com.arcpay.payment.paymentexecution.domain.exception.PolicyServiceUnavail
 import com.arcpay.payment.paymentexecution.domain.port.PolicyPort;
 import com.arcpay.payment.paymentexecution.test.FullContextIntegrationTest;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.AfterAll;
@@ -21,6 +22,7 @@ import java.util.UUID;
 
 import static com.arcpay.payment.paymentexecution.stubs.PolicyServiceStubs.RESERVE_PATH;
 import static com.arcpay.payment.paymentexecution.stubs.PolicyServiceStubs.stubReserveApproved;
+import static com.arcpay.payment.paymentexecution.stubs.PolicyServiceStubs.stubReserveClientError;
 import static com.arcpay.payment.paymentexecution.stubs.PolicyServiceStubs.stubReserveServerError;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
@@ -65,7 +67,7 @@ class PolicyResilienceIntegrationTest extends FullContextIntegrationTest {
 
     @DynamicPropertySource
     static void policyProperties(DynamicPropertyRegistry registry) {
-        registry.add("arcpay.policy-engine.url", () -> "http://localhost:" + policyServer.port());
+        registry.add("arcpay.policy-service.url", () -> "http://localhost:" + policyServer.port());
     }
 
     @BeforeEach
@@ -105,6 +107,25 @@ class PolicyResilienceIntegrationTest extends FullContextIntegrationTest {
         assertThatThrownBy(() -> policyPort.reserve(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT))
                 .isInstanceOf(PolicyServiceUnavailableException.class)
                 .hasMessageContaining("circuit breaker is open");
+    }
+
+    @Test
+    void shouldPropagateClientErrorWithoutTrippingBreaker() {
+        // given
+        stubReserveClientError(policyServer);
+
+        // when
+        for (int i = 0; i < 5; i++) {
+            assertThatThrownBy(() -> policyPort.reserve(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT))
+                    .isInstanceOf(FeignException.class)
+                    .isNotInstanceOf(PolicyServiceUnavailableException.class);
+        }
+
+        // then
+        var anyReserveBreakerOpen = circuitBreakerRegistry.getAllCircuitBreakers().stream()
+                .filter(b -> b.getName().startsWith("PolicyEngineClient"))
+                .anyMatch(b -> b.getState() == CircuitBreaker.State.OPEN);
+        assertThat(anyReserveBreakerOpen).isFalse();
     }
 
     private CircuitBreaker reserveBreaker() {

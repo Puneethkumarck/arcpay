@@ -12,7 +12,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 public final class SettlementServiceStubs {
 
     public static final String TRANSFERS_PATH = "/api/v1/internal/transfers";
-    public static final String RECEIPTS_PATH = "/api/v1/internal/receipts";
 
     private SettlementServiceStubs() {}
 
@@ -33,6 +32,11 @@ public final class SettlementServiceStubs {
                 .willReturn(aResponse().withStatus(500)));
     }
 
+    public static void stubTransferClientError(WireMockServer server) {
+        server.stubFor(post(urlPathEqualTo(TRANSFERS_PATH))
+                .willReturn(aResponse().withStatus(422)));
+    }
+
     public static void stubBalance(WireMockServer server, UUID agentId, String amount) {
         server.stubFor(get(urlPathEqualTo(balancePath(agentId)))
                 .willReturn(aResponse()
@@ -45,7 +49,7 @@ public final class SettlementServiceStubs {
         return "{"
                 + "\"paymentId\":\"" + paymentId + "\","
                 + "\"circleTxId\":\"ctx-abc-123\","
-                + "\"state\":\"PENDING\""
+                + "\"state\":\"INITIATED\""
                 + "}";
     }
 
