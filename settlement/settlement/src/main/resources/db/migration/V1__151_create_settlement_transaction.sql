@@ -3,7 +3,7 @@ CREATE TABLE settlement_transaction (
     circle_tx_id  VARCHAR(64),
     tx_hash       VARCHAR(66),
     state         VARCHAR(20)    NOT NULL,
-    network_fee   NUMERIC(38,6),
+    network_fee   NUMERIC(18,6),
     error_reason  VARCHAR(255),
     created_at    TIMESTAMPTZ    NOT NULL,
     updated_at    TIMESTAMPTZ    NOT NULL
