@@ -36,6 +36,10 @@ public final class PaymentFixtures {
                 .build();
     }
 
+    public static final UUID SOME_OTHER_AGENT_ID = UUID.fromString("0197aa00-4444-7def-8000-444444444444");
+    public static final String SOME_OTHER_IDEMPOTENCY_KEY = "invoice-2026-0043";
+    public static final String SOME_OTHER_FINGERPRINT = "0xotherfingerprint";
+
     public static Payment somePayment(PaymentStatus status) {
         return Payment.builder()
                 .paymentId(SOME_PAYMENT_ID)
@@ -50,6 +54,14 @@ public final class PaymentFixtures {
                 .status(status)
                 .createdAt(SOME_CREATED_AT)
                 .updatedAt(SOME_CREATED_AT)
+                .build();
+    }
+
+    public static Payment somePaymentWith(UUID paymentId, UUID agentId, String idempotencyKey, PaymentStatus status) {
+        return somePayment(status).toBuilder()
+                .paymentId(paymentId)
+                .agentId(agentId)
+                .idempotencyKey(idempotencyKey)
                 .build();
     }
 }
