@@ -1,6 +1,7 @@
 package com.arcpay.settlement.fixtures;
 
 import com.arcpay.settlement.domain.model.SettlementTransaction;
+import com.arcpay.settlement.domain.model.TransferCommand;
 import com.arcpay.settlement.domain.model.TransferState;
 
 import java.math.BigDecimal;
@@ -10,6 +11,9 @@ import java.util.UUID;
 public final class SettlementTransactionFixtures {
 
     public static final UUID SOME_PAYMENT_ID = UUID.fromString("019718a0-5678-7def-8000-abcdef111111");
+    public static final String SOME_WALLET_ID = "wallet-abc-123";
+    public static final String SOME_RECIPIENT_ADDRESS = "0x000000000000000000000000000000000000dead";
+    public static final BigDecimal SOME_TRANSFER_AMOUNT = new BigDecimal("25.00");
     public static final String SOME_CIRCLE_TX_ID = "circle-tx-abc123";
     public static final String SOME_TX_HASH = "0xdeadbeef1234567890deadbeef1234567890deadbeef1234567890deadbeef12";
     public static final BigDecimal SOME_NETWORK_FEE = new BigDecimal("0.010000");
@@ -42,6 +46,16 @@ public final class SettlementTransactionFixtures {
     public static SettlementTransaction someTransactionWith(UUID paymentId, TransferState state) {
         return someSettlementTransaction(state).toBuilder()
                 .paymentId(paymentId)
+                .build();
+    }
+
+    public static TransferCommand someTransferCommand() {
+        return TransferCommand.builder()
+                .paymentId(SOME_PAYMENT_ID)
+                .walletId(SOME_WALLET_ID)
+                .recipientAddress(SOME_RECIPIENT_ADDRESS)
+                .amount(SOME_TRANSFER_AMOUNT)
+                .memo("invoice-42")
                 .build();
     }
 }
