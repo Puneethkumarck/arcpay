@@ -49,6 +49,9 @@ circle:
       connect: 5000
       read: 15000
 
+settlement:
+  gas-buffer-usdc: ${SETTLEMENT_GAS_BUFFER_USDC:0.50}
+
 web3j:
   client-address: ${ARC_TESTNET_RPC_URL}
 

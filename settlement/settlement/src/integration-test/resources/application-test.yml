@@ -32,8 +32,15 @@ circle:
     base-url: http://localhost:8089
     api-key: test-circle-api-key
     wallet-set-id: test-wallet-set
+    blockchain: ARC-TESTNET
     usdc-token-address: "0x3600000000000000000000000000000000000000"
-    entity-secret: test-entity-secret
+    entity-secret: "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
+    timeout:
+      connect: 5000
+      read: 15000
+
+settlement:
+  gas-buffer-usdc: 0.50
 
 web3j:
   client-address: http://localhost:8545

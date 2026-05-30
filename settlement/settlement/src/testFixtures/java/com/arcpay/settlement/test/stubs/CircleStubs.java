@@ -43,6 +43,20 @@ public final class CircleStubs {
                                 """.formatted(circleTxId, state))));
     }
 
+    public static void stubEntityPublicKey(WireMockServer circleServer, String pemPublicKey) {
+        circleServer.stubFor(get(urlPathEqualTo("/v1/w3s/config/entity/publicKey"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {
+                                  "data": {
+                                    "publicKey": "%s"
+                                  }
+                                }
+                                """.formatted(pemPublicKey.replace("\n", "\\n")))));
+    }
+
     public static void stubNotificationPublicKey(WireMockServer circleServer, String keyId, String publicKey) {
         circleServer.stubFor(get(urlPathMatching("/v2/notifications/publicKey/" + keyId))
                 .willReturn(aResponse()
