@@ -12,6 +12,8 @@ public final class ErrorCodes {
     public static final String AGENT_OWNERSHIP = code(6);
     public static final String POLICY_HASH_MISMATCH = code(7);
     public static final String IDENTITY_UNAVAILABLE = code(8);
+    public static final String RESERVATION_NOT_FOUND = code(9);
+    public static final String ILLEGAL_RESERVATION_STATE = code(10);
     public static final String INTERNAL_ERROR = code(50);
 
     private ErrorCodes() {}

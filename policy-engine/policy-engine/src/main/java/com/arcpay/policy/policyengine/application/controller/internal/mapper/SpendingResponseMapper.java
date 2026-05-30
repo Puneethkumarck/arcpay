@@ -1,8 +1,6 @@
 package com.arcpay.policy.policyengine.application.controller.internal.mapper;
 
-import com.arcpay.policy.policyengine.api.model.SpendingLedgerResponse;
 import com.arcpay.policy.policyengine.api.model.SpendingSummaryResponse;
-import com.arcpay.policy.policyengine.domain.model.SpendingLedgerEntry;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
 import org.mapstruct.Mapper;
 
@@ -10,8 +8,6 @@ import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface SpendingResponseMapper {
-
-    SpendingLedgerResponse toApi(SpendingLedgerEntry entry);
 
     default SpendingSummaryResponse toApi(UUID agentId, SpendingSummary summary) {
         return SpendingSummaryResponse.builder()

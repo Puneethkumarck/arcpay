@@ -10,10 +10,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Builder
-public record RecordSpendingRequest(
-        @NotNull UUID agentId,
+public record ReserveRequest(
         @NotNull UUID paymentId,
+        @NotNull UUID agentId,
+        @NotNull @Pattern(regexp = "^0x[a-fA-F0-9]{40}$") String recipientAddress,
         @NotNull @DecimalMin("0.000001") BigDecimal amount,
-        @NotNull @Pattern(regexp = "^0x[a-fA-F0-9]{40}$") String recipient,
-        @NotNull Instant executedAt
+        @NotNull Instant requestedAt
 ) {}

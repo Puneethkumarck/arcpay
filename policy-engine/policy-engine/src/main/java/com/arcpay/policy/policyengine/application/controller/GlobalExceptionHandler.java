@@ -6,10 +6,12 @@ import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
+import com.arcpay.policy.policyengine.domain.exception.IllegalReservationStateException;
 import com.arcpay.policy.policyengine.domain.exception.InvalidPolicyException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyHashMismatchException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyViolationException;
+import com.arcpay.policy.policyengine.domain.exception.ReservationNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -57,6 +59,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PolicyHashMismatchException.class)
     public ResponseEntity<ApiError> handlePolicyHashMismatch(PolicyHashMismatchException ex) {
         return toError(ex, ErrorCodes.POLICY_HASH_MISMATCH, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(ReservationNotFoundException.class)
+    public ResponseEntity<ApiError> handleReservationNotFound(ReservationNotFoundException ex) {
+        return toError(ex, ErrorCodes.RESERVATION_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(IllegalReservationStateException.class)
+    public ResponseEntity<ApiError> handleIllegalReservationState(IllegalReservationStateException ex) {
+        return toError(ex, ErrorCodes.ILLEGAL_RESERVATION_STATE, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(IdentityServiceUnavailableException.class)

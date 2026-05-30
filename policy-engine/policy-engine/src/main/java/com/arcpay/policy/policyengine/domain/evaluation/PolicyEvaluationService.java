@@ -11,9 +11,11 @@ import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
+import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
 import com.arcpay.policy.policyengine.domain.port.EventPublisher;
 import com.arcpay.policy.policyengine.domain.port.PolicyEvaluationRepository;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
+import com.arcpay.policy.policyengine.domain.port.ReservationRepository;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLedgerService;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLockService;
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -50,6 +52,7 @@ public class PolicyEvaluationService {
     private final PolicyEvaluationRepository policyEvaluationRepository;
     private final SpendingLockService spendingLockService;
     private final SpendingLedgerService spendingLedgerService;
+    private final ReservationRepository reservationRepository;
     private final RuleEvaluatorRegistry ruleEvaluatorRegistry;
     private final EventPublisher eventPublisher;
 
@@ -93,7 +96,8 @@ public class PolicyEvaluationService {
         var spendingRules = classifyRules(policy.rules(), false);
         if (!spendingRules.isEmpty()) {
             var velocityMinutes = extractVelocityMinutes(spendingRules);
-            var summary = spendingLedgerService.getSpendingSummary(agentId, velocityMinutes);
+            var summary = applyReservedHold(
+                    spendingLedgerService.getSpendingSummary(agentId, velocityMinutes), heldReservations(agentId));
             context = context.toBuilder().spendingSummary(summary).build();
         }
 
@@ -171,6 +175,22 @@ public class PolicyEvaluationService {
         return rules.stream()
                 .filter(rule -> IN_MEMORY_RULE_TYPES.contains(rule.getClass()) == inMemory)
                 .toList();
+    }
+
+    private BigDecimal heldReservations(UUID agentId) {
+        var held = reservationRepository.sumActiveHeldAmount(agentId);
+        return held == null ? BigDecimal.ZERO : held;
+    }
+
+    private SpendingSummary applyReservedHold(SpendingSummary summary, BigDecimal heldReservations) {
+        if (heldReservations.signum() <= 0) {
+            return summary;
+        }
+        return summary.toBuilder()
+                .dailyTotal(summary.dailyTotal().add(heldReservations))
+                .weeklyTotal(summary.weeklyTotal().add(heldReservations))
+                .monthlyTotal(summary.monthlyTotal().add(heldReservations))
+                .build();
     }
 
     private int extractVelocityMinutes(List<PolicyRule> spendingRules) {
