@@ -22,7 +22,7 @@ class PaymentRepositoryAdapter implements PaymentRepository {
     @Override
     public Payment save(Payment payment) {
         var existing = jpaRepository.findByAgentIdAndIdempotencyKey(payment.agentId(), payment.idempotencyKey());
-        if (existing.isPresent()) {
+        if (existing.isPresent() && !existing.get().getPaymentId().equals(payment.paymentId())) {
             return resolveIdempotentReplay(payment, existing.get());
         }
         return mapper.mapToDomain(jpaRepository.saveAndFlush(mapper.mapToEntity(payment)));

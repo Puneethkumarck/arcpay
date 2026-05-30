@@ -1,6 +1,7 @@
 package com.arcpay.payment.paymentexecution.fixtures;
 
 import com.arcpay.payment.paymentexecution.api.model.CreatePaymentRequest;
+import com.arcpay.payment.paymentexecution.domain.event.PaymentRequested;
 import com.arcpay.payment.paymentexecution.domain.model.AgentInfo;
 import com.arcpay.payment.paymentexecution.domain.model.ChainResultSignal;
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
@@ -103,6 +104,22 @@ public final class PaymentFixtures {
 
     public static final String SOME_TX_HASH = "0xtransfer1234567890abcdef";
     public static final String SOME_ON_CHAIN_REF = "0xonchainref1234567890";
+
+    public static PaymentRequested somePaymentRequested() {
+        return PaymentRequested.builder()
+                .paymentId(SOME_PAYMENT_ID)
+                .agentId(SOME_AGENT_ID)
+                .ownerId(SOME_OWNER_ID)
+                .walletId(SOME_WALLET_ID)
+                .idempotencyKey(SOME_IDEMPOTENCY_KEY)
+                .recipientAddress(SOME_RECIPIENT)
+                .amount(SOME_AMOUNT)
+                .currency(SOME_CURRENCY)
+                .memo(SOME_MEMO)
+                .metadata(SOME_METADATA)
+                .requestedAt(SOME_CREATED_AT)
+                .build();
+    }
 
     public static PaymentExecutionInput someExecutionInput() {
         return PaymentExecutionInput.builder()
