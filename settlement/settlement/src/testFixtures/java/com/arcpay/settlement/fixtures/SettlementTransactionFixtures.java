@@ -38,4 +38,10 @@ public final class SettlementTransactionFixtures {
                 .errorReason(SOME_ERROR_REASON)
                 .build();
     }
+
+    public static SettlementTransaction someTransactionWith(UUID paymentId, TransferState state) {
+        return someSettlementTransaction(state).toBuilder()
+                .paymentId(paymentId)
+                .build();
+    }
 }
