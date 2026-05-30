@@ -1,14 +1,20 @@
 package com.arcpay.payment.paymentexecution.application.config;
 
 import com.arcpay.identity.client.IdentityClientFallbackFactory;
+import com.arcpay.payment.paymentexecution.infrastructure.client.settlement.SettlementClientFallbackFactory;
 import com.arcpay.platform.infrastructure.security.ServiceAuthFeignInterceptor;
+import com.arcpay.policy.client.PolicyEngineClientFallbackFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableFeignClients(basePackages = "com.arcpay.identity.client")
+@EnableFeignClients(basePackages = {
+        "com.arcpay.identity.client",
+        "com.arcpay.policy.client",
+        "com.arcpay.payment.paymentexecution.infrastructure.client.settlement"
+})
 public class FeignConfig {
 
     @Bean
@@ -20,5 +26,15 @@ public class FeignConfig {
     @Bean
     public IdentityClientFallbackFactory identityClientFallbackFactory() {
         return new IdentityClientFallbackFactory();
+    }
+
+    @Bean
+    public PolicyEngineClientFallbackFactory policyEngineClientFallbackFactory() {
+        return new PolicyEngineClientFallbackFactory();
+    }
+
+    @Bean
+    public SettlementClientFallbackFactory settlementClientFallbackFactory() {
+        return new SettlementClientFallbackFactory();
     }
 }
