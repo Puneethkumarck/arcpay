@@ -19,6 +19,7 @@ import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_CURRENCY;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_IDEMPOTENCY_KEY;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_MEMO;
+import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_METADATA;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_OWNER_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_RECIPIENT;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_TRANSITIONED_AT;
@@ -119,6 +120,7 @@ class PaymentOrchestrationServiceTest {
                 .amount(SOME_AMOUNT)
                 .currency(SOME_CURRENCY)
                 .memo(SOME_MEMO)
+                .metadata(SOME_METADATA)
                 .status(PaymentStatus.PENDING)
                 .createdAt(payment.createdAt())
                 .updatedAt(payment.updatedAt())

@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,6 +33,9 @@ class PaymentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest
 
     @Autowired
     private PaymentJpaRepository jpaRepository;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @BeforeEach
     void cleanUp() {
@@ -122,6 +127,27 @@ class PaymentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest
         assertThatThrownBy(() -> paymentRepository.save(conflicting))
                 .isInstanceOf(IdempotencyConflictException.class)
                 .hasMessageContaining(SOME_IDEMPOTENCY_KEY);
+        assertThat(jpaRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldResolveIdempotentReplayWithinTransactionWithoutPoisoning() {
+        // given
+        var first = somePayment(PaymentStatus.SCREENING);
+        paymentRepository.save(first);
+        var replay = somePayment(PaymentStatus.PENDING).toBuilder()
+                .paymentId(UUID.randomUUID())
+                .build();
+        var transactionTemplate = new TransactionTemplate(transactionManager);
+
+        // when
+        var result = transactionTemplate.execute(status -> paymentRepository.save(replay));
+
+        // then
+        assertThat(result)
+                .usingRecursiveComparison()
+                .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .isEqualTo(first);
         assertThat(jpaRepository.count()).isEqualTo(1);
     }
 

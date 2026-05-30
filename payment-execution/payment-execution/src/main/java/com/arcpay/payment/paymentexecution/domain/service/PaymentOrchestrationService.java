@@ -42,6 +42,7 @@ public class PaymentOrchestrationService {
                 .amount(request.amount())
                 .currency(request.currency())
                 .memo(request.memo())
+                .metadata(request.metadata())
                 .status(PaymentStatus.PENDING)
                 .createdAt(now)
                 .updatedAt(now)

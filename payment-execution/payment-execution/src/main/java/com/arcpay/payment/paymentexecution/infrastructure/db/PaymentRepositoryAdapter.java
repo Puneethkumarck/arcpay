@@ -5,7 +5,6 @@ import com.arcpay.payment.paymentexecution.domain.model.Payment;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -22,18 +21,14 @@ class PaymentRepositoryAdapter implements PaymentRepository {
 
     @Override
     public Payment save(Payment payment) {
-        try {
-            var saved = jpaRepository.saveAndFlush(mapper.mapToEntity(payment));
-            return mapper.mapToDomain(saved);
-        } catch (DataIntegrityViolationException violation) {
-            return resolveIdempotentReplay(payment, violation);
+        var existing = jpaRepository.findByAgentIdAndIdempotencyKey(payment.agentId(), payment.idempotencyKey());
+        if (existing.isPresent()) {
+            return resolveIdempotentReplay(payment, existing.get());
         }
+        return mapper.mapToDomain(jpaRepository.saveAndFlush(mapper.mapToEntity(payment)));
     }
 
-    private Payment resolveIdempotentReplay(Payment payment, DataIntegrityViolationException violation) {
-        var existing = jpaRepository
-                .findByAgentIdAndIdempotencyKey(payment.agentId(), payment.idempotencyKey())
-                .orElseThrow(() -> violation);
+    private Payment resolveIdempotentReplay(Payment payment, PaymentEntity existing) {
         if (!existing.getRequestFingerprint().equals(payment.requestFingerprint())) {
             throw new IdempotencyConflictException(
                     "Idempotency key '%s' for agent %s was reused with a different request fingerprint"
