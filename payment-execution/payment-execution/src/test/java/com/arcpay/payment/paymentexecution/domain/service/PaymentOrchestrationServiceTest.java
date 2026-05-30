@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.web3j.crypto.Hash;
 
+import java.util.Locale;
+
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AGENT_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AMOUNT;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_CURRENCY;
@@ -80,6 +82,22 @@ class PaymentOrchestrationServiceTest {
 
         // then
         assertThat(fingerprint).isNotEqualTo(otherFingerprint);
+    }
+
+    @Test
+    void shouldComputeSameFingerprintRegardlessOfRecipientCase() {
+        // given
+        var lowerCase = someRequest();
+        var upperCase = someRequest().toBuilder()
+                .recipientAddress(SOME_RECIPIENT.toUpperCase(Locale.ROOT))
+                .build();
+
+        // when
+        var lowerFingerprint = service.fingerprint(lowerCase);
+        var upperFingerprint = service.fingerprint(upperCase);
+
+        // then
+        assertThat(lowerFingerprint).isEqualTo(upperFingerprint);
     }
 
     @Test

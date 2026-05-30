@@ -32,7 +32,12 @@ public class PaymentStateMachine {
             HELD, Set.of(EXECUTING, REJECTED),
             EXECUTING, Set.of(COMPLETED, FAILED));
 
+    private static final Set<PaymentStatus> TERMINAL_STATUSES = Set.of(COMPLETED, FAILED, REJECTED);
+
     public PaymentTransition transition(Payment payment, PaymentStatus toStatus, Instant transitionedAt) {
+        if (TERMINAL_STATUSES.contains(toStatus)) {
+            throw new IllegalPaymentTransitionException(payment.paymentId(), payment.status(), toStatus);
+        }
         verifyTransitionAllowed(payment, toStatus);
         return toTransition(payment, payment.withStatus(toStatus, transitionedAt));
     }

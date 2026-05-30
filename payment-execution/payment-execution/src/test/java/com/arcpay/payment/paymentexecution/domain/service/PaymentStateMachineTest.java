@@ -228,6 +228,17 @@ class PaymentStateMachineTest {
                 .hasMessage("Payment " + payment.paymentId() + " cannot transition from SCREENING to FAILED");
     }
 
+    @Test
+    void shouldRejectGenericTransitionToTerminalStatus() {
+        // given
+        var payment = somePayment(SCREENING);
+
+        // when then
+        assertThatThrownBy(() -> stateMachine.transition(payment, REJECTED, SOME_TRANSITIONED_AT))
+                .isInstanceOf(IllegalPaymentTransitionException.class)
+                .hasMessage("Payment " + payment.paymentId() + " cannot transition from SCREENING to REJECTED");
+    }
+
     private PaymentTransition expectedTransition(Payment from, Payment to) {
         var event = PaymentStatusChanged.builder()
                 .paymentId(to.paymentId())

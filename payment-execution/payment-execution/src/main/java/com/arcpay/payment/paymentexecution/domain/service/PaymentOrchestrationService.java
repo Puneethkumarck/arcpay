@@ -14,6 +14,7 @@ import org.web3j.crypto.Hash;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 @Service
@@ -50,7 +51,7 @@ public class PaymentOrchestrationService {
     public String fingerprint(PaymentRequest request) {
         var canonical = String.join(FINGERPRINT_DELIMITER,
                 request.agentId().toString(),
-                request.recipientAddress(),
+                request.recipientAddress().toLowerCase(Locale.ROOT),
                 request.amount().stripTrailingZeros().toPlainString(),
                 request.currency(),
                 request.memo() == null ? "" : request.memo());
