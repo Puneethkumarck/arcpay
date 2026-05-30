@@ -85,4 +85,36 @@ public final class CircleStubs {
                                 }
                                 """.formatted(keyId, publicKey))));
     }
+
+    public static void stubListSubscriptions(WireMockServer circleServer, String endpoint) {
+        var subscriptions = endpoint == null ? "" : """
+                { "id": "sub-1", "endpoint": "%s" }
+                """.formatted(endpoint);
+        circleServer.stubFor(get(urlPathEqualTo("/v2/notifications/subscriptions"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {
+                                  "data": {
+                                    "subscriptions": [ %s ]
+                                  }
+                                }
+                                """.formatted(subscriptions))));
+    }
+
+    public static void stubCreateSubscription(WireMockServer circleServer) {
+        circleServer.stubFor(post(urlPathEqualTo("/v2/notifications/subscriptions"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {
+                                  "data": {
+                                    "id": "sub-created",
+                                    "endpoint": "https://settlement.arcpay.dev/api/v1/webhooks/circle"
+                                  }
+                                }
+                                """)));
+    }
 }

@@ -8,6 +8,8 @@ public final class ErrorCodes {
     public static final String INSUFFICIENT_BALANCE = code(2);
     public static final String CIRCLE_API_ERROR = code(3);
     public static final String INVALID_REQUEST = code(4);
+    public static final String INVALID_WEBHOOK_SIGNATURE = code(5);
+    public static final String CHAIN_WRITE_ERROR = code(6);
     public static final String INTERNAL_ERROR = code(50);
 
     private ErrorCodes() {}

@@ -39,7 +39,8 @@ class EntitySecretCiphertextProviderTest {
                 "ARC-TESTNET",
                 "0x3600000000000000000000000000000000000000",
                 SOME_ENTITY_SECRET_HEX,
-                new CircleApiProperties.Timeout(5000, 15000));
+                new CircleApiProperties.Timeout(5000, 15000),
+                null);
         var restClient = RestClient.builder().baseUrl(circleServer.baseUrl()).build();
         provider = new EntitySecretCiphertextProvider(properties, restClient);
     }

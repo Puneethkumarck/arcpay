@@ -56,6 +56,33 @@ public final class SettlementTransactionFixtures {
                 .build();
     }
 
+    public static String notificationBody(String circleTxId, String state) {
+        return """
+                {
+                  "notificationType": "transactions.outbound",
+                  "notification": {
+                    "id": "%s",
+                    "state": "%s",
+                    "txHash": "%s",
+                    "networkFee": "%s"
+                  }
+                }
+                """.formatted(circleTxId, state, SOME_TX_HASH, SOME_NETWORK_FEE.toPlainString());
+    }
+
+    public static String failedNotificationBody(String circleTxId, String state) {
+        return """
+                {
+                  "notificationType": "transactions.outbound",
+                  "notification": {
+                    "id": "%s",
+                    "state": "%s",
+                    "errorReason": "%s"
+                  }
+                }
+                """.formatted(circleTxId, state, SOME_ERROR_REASON);
+    }
+
     public static TransferCommand someTransferCommand() {
         return TransferCommand.builder()
                 .paymentId(SOME_PAYMENT_ID)

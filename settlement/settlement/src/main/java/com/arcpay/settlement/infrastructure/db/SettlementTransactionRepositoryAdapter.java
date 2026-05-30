@@ -25,7 +25,17 @@ class SettlementTransactionRepositoryAdapter implements SettlementTransactionRep
     }
 
     @Override
+    public SettlementTransaction update(SettlementTransaction transaction) {
+        return mapper.mapToDomain(jpaRepository.saveAndFlush(mapper.mapToEntity(transaction)));
+    }
+
+    @Override
     public Optional<SettlementTransaction> findByPaymentId(UUID paymentId) {
         return jpaRepository.findById(paymentId).map(mapper::mapToDomain);
+    }
+
+    @Override
+    public Optional<SettlementTransaction> findByCircleTxId(String circleTxId) {
+        return jpaRepository.findByCircleTxId(circleTxId).map(mapper::mapToDomain);
     }
 }

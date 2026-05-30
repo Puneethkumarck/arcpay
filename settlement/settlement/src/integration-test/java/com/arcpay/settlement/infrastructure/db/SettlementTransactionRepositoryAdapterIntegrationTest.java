@@ -12,6 +12,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someSettlementTransaction;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someTransactionWith;
@@ -96,6 +97,44 @@ class SettlementTransactionRepositoryAdapterIntegrationTest extends FullContextI
                 .usingRecursiveComparison()
                 .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
                 .isEqualTo(first);
+        assertThat(jpaRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldFindByCircleTxId() {
+        // given
+        repository.save(someSettlementTransaction(TransferState.SENT));
+
+        // when
+        var loaded = repository.findByCircleTxId(SOME_CIRCLE_TX_ID);
+
+        // then
+        assertThat(loaded).get()
+                .extracting(tx -> tx.paymentId())
+                .isEqualTo(SOME_PAYMENT_ID);
+    }
+
+    @Test
+    void shouldReturnEmptyWhenCircleTxIdNotFound() {
+        // when
+        var loaded = repository.findByCircleTxId("missing-circle-tx");
+
+        // then
+        assertThat(loaded).isEmpty();
+    }
+
+    @Test
+    void shouldUpdateExistingTransactionState() {
+        // given
+        repository.save(someSettlementTransaction(TransferState.SENT));
+        var transition = someSettlementTransaction(TransferState.COMPLETED);
+
+        // when
+        repository.update(transition);
+
+        // then
+        assertThat(repository.findByPaymentId(SOME_PAYMENT_ID).orElseThrow().state())
+                .isEqualTo(TransferState.COMPLETED);
         assertThat(jpaRepository.count()).isEqualTo(1);
     }
 
