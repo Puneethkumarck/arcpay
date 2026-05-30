@@ -12,6 +12,7 @@ public record AgentResponse(
         String name,
         String purpose,
         AgentStatusEnum status,
+        String walletId,
         String walletAddress,
         String onChainTxHash,
         String policyHash,
