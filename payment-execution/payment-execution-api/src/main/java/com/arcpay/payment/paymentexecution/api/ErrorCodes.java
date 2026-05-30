@@ -12,6 +12,7 @@ public final class ErrorCodes {
     public static final String POLICY_UNAVAILABLE = code(6);
     public static final String SETTLEMENT_UNAVAILABLE = code(7);
     public static final String IDENTITY_UNAVAILABLE = code(8);
+    public static final String AGENT_NOT_FOUND = code(9);
     public static final String INTERNAL_ERROR = code(50);
 
     private ErrorCodes() {}

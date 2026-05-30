@@ -6,7 +6,7 @@ import com.arcpay.payment.paymentexecution.domain.exception.AgentNotActiveExcept
 import com.arcpay.payment.paymentexecution.domain.exception.AgentNotFoundException;
 import com.arcpay.payment.paymentexecution.domain.exception.IdempotencyConflictException;
 import com.arcpay.payment.paymentexecution.domain.exception.InvalidPaymentRequestException;
-import com.arcpay.payment.paymentexecution.domain.exception.PaymentAccessDeniedException;
+import com.arcpay.payment.paymentexecution.domain.exception.AgentNotOwnedException;
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
@@ -164,11 +164,11 @@ class PaymentCreationServiceTest {
         // given
         var request = someCreatePaymentRequest();
         given(agentAuthorization.verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID))
-                .willThrow(new PaymentAccessDeniedException(SOME_AGENT_ID, SOME_OWNER_ID));
+                .willThrow(new AgentNotOwnedException(SOME_AGENT_ID, SOME_OWNER_ID));
 
         // when / then
         assertThatThrownBy(() -> paymentCreationService.create(owner(), request))
-                .isInstanceOf(PaymentAccessDeniedException.class);
+                .isInstanceOf(AgentNotOwnedException.class);
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.arcpay.payment.paymentexecution.application.controller;
 import com.arcpay.payment.paymentexecution.api.ErrorCodes;
 import com.arcpay.payment.paymentexecution.domain.exception.AgentNotActiveException;
 import com.arcpay.payment.paymentexecution.domain.exception.AgentNotFoundException;
+import com.arcpay.payment.paymentexecution.domain.exception.AgentNotOwnedException;
 import com.arcpay.payment.paymentexecution.domain.exception.IdempotencyConflictException;
 import com.arcpay.payment.paymentexecution.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.payment.paymentexecution.domain.exception.InvalidPaymentRequestException;
@@ -40,8 +41,13 @@ public class GlobalExceptionHandler {
         return toError(ex, ErrorCodes.INVALID_PAYMENT_REQUEST, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
-    @ExceptionHandler({AgentNotFoundException.class, AgentNotActiveException.class})
-    public ResponseEntity<ApiError> handleAgentPrecondition(RuntimeException ex) {
+    @ExceptionHandler({AgentNotFoundException.class, AgentNotOwnedException.class})
+    public ResponseEntity<ApiError> handleAgentNotFound(RuntimeException ex) {
+        return toError(ex, ErrorCodes.AGENT_NOT_FOUND, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler(AgentNotActiveException.class)
+    public ResponseEntity<ApiError> handleAgentNotActive(AgentNotActiveException ex) {
         return toError(ex, ErrorCodes.AGENT_NOT_ACTIVE, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 

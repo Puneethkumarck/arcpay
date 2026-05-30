@@ -229,11 +229,11 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
-        assertThat(actual.code()).isEqualTo("ARCPAY-PAYMENT-0004");
+        assertThat(actual.code()).isEqualTo("ARCPAY-PAYMENT-0009");
     }
 
     @Test
-    void shouldReturn403WhenAgentNotOwned() throws Exception {
+    void shouldReturn422WhenAgentNotOwned() throws Exception {
         // given
         stubAgent(UUID.randomUUID(), "ACTIVE");
 
@@ -242,12 +242,12 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .with(authentication(ownerAuth()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(SOME_IDEMPOTENCY_KEY, "25.00")))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isUnprocessableEntity())
                 .andReturn().getResponse().getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
-        assertThat(actual.code()).isEqualTo("ARCPAY-PAYMENT-0002");
+        assertThat(actual.code()).isEqualTo("ARCPAY-PAYMENT-0009");
     }
 
     @Test
