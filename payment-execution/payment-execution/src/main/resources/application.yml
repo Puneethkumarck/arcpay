@@ -1,0 +1,102 @@
+spring:
+  application:
+    name: payment-execution-service
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+        alphanumeric-ids:
+          enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/arcpay_payment
+    username: ${DB_USERNAME:arcpay}
+    password: ${DB_PASSWORD:arcpay}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: payment-execution
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.arcpay.payment.paymentexecution.domain.event,com.arcpay.compliance.domain.event
+  temporal:
+    service-address: ${TEMPORAL_ADDRESS:localhost:7233}
+    namespace: arcpay
+    workers-auto-discovery:
+      packages: com.arcpay.payment.paymentexecution
+
+namastack:
+  outbox:
+    poll-interval: 2000
+    batch-size: 20
+    jdbc:
+      table-prefix: "paymentexecution_"
+      schema-initialization:
+        enabled: false
+    retry:
+      policy: exponential
+      max-retries: 5
+      exponential:
+        initial-delay: 1000
+        max-delay: 60000
+        multiplier: 2.0
+
+temporal:
+  task-queue: PaymentExecutionTaskQueue
+
+payment:
+  held-review-timeout: 72h
+  chain-confirm-timeout: 5m
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50
+        sliding-window-size: 10
+        minimum-number-of-calls: 10
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        ignore-exceptions:
+          - feign.FeignException$NotFound
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+        cancel-running-future: true
+
+arcpay:
+  policy-service:
+    url: ${POLICY_SERVICE_URL:http://localhost:8081}
+  identity-service:
+    url: ${IDENTITY_SERVICE_URL:http://localhost:8080}
+  settlement-service:
+    url: ${SETTLEMENT_SERVICE_URL:http://localhost:8084}
+  security:
+    service-token: ${SERVICE_AUTH_TOKEN:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+    kafka:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

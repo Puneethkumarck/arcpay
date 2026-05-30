@@ -23,3 +23,8 @@ include("policy-engine:policy-engine")
 include("compliance:compliance-api")
 include("compliance:compliance-client")
 include("compliance:compliance")
+
+// Payment Execution Service
+include("payment-execution:payment-execution-api")
+include("payment-execution:payment-execution-client")
+include("payment-execution:payment-execution")
