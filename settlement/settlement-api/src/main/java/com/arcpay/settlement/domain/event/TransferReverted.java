@@ -11,7 +11,7 @@ public record TransferReverted(
         UUID paymentId,
         String reason,
         Instant revertedAt
-) {
+) implements SettlementEvent {
 
     public static final String TOPIC = "transfer.reverted";
 

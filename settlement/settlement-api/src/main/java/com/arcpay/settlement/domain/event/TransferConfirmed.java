@@ -13,7 +13,7 @@ public record TransferConfirmed(
         String txHash,
         BigDecimal networkFee,
         Instant confirmedAt
-) {
+) implements SettlementEvent {
 
     public static final String TOPIC = "transfer.confirmed";
 
