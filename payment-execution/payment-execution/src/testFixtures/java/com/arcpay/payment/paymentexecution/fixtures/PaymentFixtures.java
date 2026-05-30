@@ -2,9 +2,14 @@ package com.arcpay.payment.paymentexecution.fixtures;
 
 import com.arcpay.payment.paymentexecution.api.model.CreatePaymentRequest;
 import com.arcpay.payment.paymentexecution.domain.model.AgentInfo;
+import com.arcpay.payment.paymentexecution.domain.model.ChainResultSignal;
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentExecutionInput;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentRequest;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
+import com.arcpay.payment.paymentexecution.domain.model.ReviewDecisionSignal;
+import com.arcpay.payment.paymentexecution.domain.model.ScreeningResultSignal;
+import com.arcpay.payment.paymentexecution.domain.model.ScreeningVerdict;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -93,6 +98,41 @@ public final class PaymentFixtures {
                 .paymentId(paymentId)
                 .agentId(agentId)
                 .idempotencyKey(idempotencyKey)
+                .build();
+    }
+
+    public static final String SOME_TX_HASH = "0xtransfer1234567890abcdef";
+    public static final String SOME_ON_CHAIN_REF = "0xonchainref1234567890";
+
+    public static PaymentExecutionInput someExecutionInput() {
+        return PaymentExecutionInput.builder()
+                .paymentId(SOME_PAYMENT_ID)
+                .agentId(SOME_AGENT_ID)
+                .walletId(SOME_WALLET_ID)
+                .recipient(SOME_RECIPIENT)
+                .amount(SOME_AMOUNT)
+                .memo(SOME_MEMO)
+                .build();
+    }
+
+    public static ScreeningResultSignal someScreeningResult(ScreeningVerdict verdict) {
+        return ScreeningResultSignal.builder()
+                .verdict(verdict)
+                .riskScore(10)
+                .build();
+    }
+
+    public static ReviewDecisionSignal someReviewDecision(boolean approved) {
+        return ReviewDecisionSignal.builder()
+                .approved(approved)
+                .build();
+    }
+
+    public static ChainResultSignal someChainResult(boolean confirmed) {
+        return ChainResultSignal.builder()
+                .confirmed(confirmed)
+                .onChainRef(confirmed ? SOME_ON_CHAIN_REF : null)
+                .blockNumber(confirmed ? 42L : null)
                 .build();
     }
 }
