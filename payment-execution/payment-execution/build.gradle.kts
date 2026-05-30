@@ -17,6 +17,12 @@ dependencies {
     testFixturesImplementation(project(":identity:identity-client"))
     testFixturesImplementation("io.github.openfeign:feign-core")
 
+    implementation(project(":policy-engine:policy-engine-client"))
+    testFixturesImplementation(project(":policy-engine:policy-engine-client"))
+
+    implementation(project(":settlement:settlement-api"))
+    testFixturesImplementation(project(":settlement:settlement-api"))
+
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("io.temporal:temporal-spring-boot-starter:$temporalVersion")
     implementation(libs.spring.cloud.circuitbreaker.resilience4j)

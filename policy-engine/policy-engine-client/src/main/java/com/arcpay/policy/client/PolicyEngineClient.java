@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.UUID;
 
-@FeignClient(name = "policy-engine", url = "${arcpay.policy-engine.url}")
+@FeignClient(
+        name = "policy-engine",
+        url = "${arcpay.policy-engine.url}",
+        fallbackFactory = PolicyEngineClientFallbackFactory.class)
 public interface PolicyEngineClient {
 
     @PostMapping("/api/v1/internal/policies/reservations")

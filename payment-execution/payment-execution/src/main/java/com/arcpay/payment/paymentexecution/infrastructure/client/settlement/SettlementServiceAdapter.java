@@ -1,0 +1,70 @@
+package com.arcpay.payment.paymentexecution.infrastructure.client.settlement;
+
+import com.arcpay.payment.paymentexecution.api.model.PaymentReceipt;
+import com.arcpay.payment.paymentexecution.domain.exception.SettlementServiceUnavailableException;
+import com.arcpay.payment.paymentexecution.domain.port.SettlementPort;
+import com.arcpay.settlement.api.model.TransferRequest;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+class SettlementServiceAdapter implements SettlementPort {
+
+    private final SettlementServiceClient settlementClient;
+
+    @Override
+    public String transfer(UUID paymentId, UUID agentId, String recipientAddress, BigDecimal amount) {
+        try {
+            var request = TransferRequest.builder()
+                    .paymentId(paymentId)
+                    .walletId(agentId.toString())
+                    .recipientAddress(recipientAddress)
+                    .amount(amount)
+                    .build();
+            var response = settlementClient.submitTransfer(request);
+            return response.circleTxId();
+        } catch (SettlementServiceCallException e) {
+            throw toUnavailable("transfer", paymentId, e);
+        }
+    }
+
+    @Override
+    public BigDecimal balance(UUID agentId) {
+        try {
+            return settlementClient.balance(agentId.toString()).amount();
+        } catch (SettlementServiceCallException e) {
+            throw toUnavailable("balance", agentId, e);
+        }
+    }
+
+    @Override
+    public PaymentReceipt writeReceipt(UUID paymentId) {
+        try {
+            settlementClient.recordReceipt(ReceiptSubmissionRequest.builder().paymentId(paymentId).build());
+            return PaymentReceipt.builder()
+                    .timestamp(Instant.now())
+                    .build();
+        } catch (SettlementServiceCallException e) {
+            throw toUnavailable("writeReceipt", paymentId, e);
+        }
+    }
+
+    private SettlementServiceUnavailableException toUnavailable(String operation, UUID id, SettlementServiceCallException e) {
+        var reason = switch (e.getCause()) {
+            case CallNotPermittedException _ -> "Settlement service circuit breaker is open";
+            case TimeoutException _ -> "Settlement service call timed out";
+            case null, default -> "Settlement service call failed";
+        };
+        return new SettlementServiceUnavailableException(
+                reason + " during " + operation + " for " + id, e);
+    }
+}
