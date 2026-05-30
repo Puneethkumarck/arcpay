@@ -9,6 +9,7 @@ import com.arcpay.settlement.domain.model.TransferSubmission;
 import com.arcpay.settlement.domain.model.WalletBalance;
 import com.arcpay.settlement.domain.port.CustodyProvider;
 import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
+import com.arcpay.platform.infrastructure.circle.EntitySecretCiphertextProvider;
 import com.github.f4b6a3.uuid.UuidCreator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

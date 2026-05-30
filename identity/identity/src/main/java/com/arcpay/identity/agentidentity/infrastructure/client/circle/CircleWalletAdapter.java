@@ -2,6 +2,7 @@ package com.arcpay.identity.agentidentity.infrastructure.client.circle;
 
 import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
+import com.arcpay.platform.infrastructure.circle.EntitySecretCiphertextProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ class CircleWalletAdapter implements CircleWalletService {
 
     private final CircleApiProperties properties;
     private final RestClient restClient;
+    private final EntitySecretCiphertextProvider ciphertextProvider;
 
     @Override
     public WalletCreationResult createWallet(UUID agentId) {
@@ -25,7 +27,8 @@ class CircleWalletAdapter implements CircleWalletService {
                 "idempotencyKey", agentId.toString(),
                 "walletSetId", properties.walletSetId(),
                 "blockchains", new String[]{properties.blockchain()},
-                "count", 1
+                "count", 1,
+                "entitySecretCiphertext", ciphertextProvider.generate()
         );
 
         try {

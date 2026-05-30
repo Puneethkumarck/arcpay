@@ -1,7 +1,5 @@
-package com.arcpay.settlement.infrastructure.circle;
+package com.arcpay.platform.infrastructure.circle;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import javax.crypto.Cipher;
@@ -15,20 +13,23 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.concurrent.atomic.AtomicReference;
 
-@Component
-@RequiredArgsConstructor
-class EntitySecretCiphertextProvider {
+public class EntitySecretCiphertextProvider {
 
     private static final String TRANSFORMATION = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
     private static final int ENTITY_SECRET_BYTES = 32;
     private static final String PEM_HEADER = "-----BEGIN PUBLIC KEY-----";
     private static final String PEM_FOOTER = "-----END PUBLIC KEY-----";
 
-    private final CircleApiProperties properties;
+    private final String entitySecretHex;
     private final RestClient restClient;
     private final AtomicReference<PublicKey> cachedPublicKey = new AtomicReference<>();
 
-    String generate() {
+    public EntitySecretCiphertextProvider(String entitySecretHex, RestClient circleRestClient) {
+        this.entitySecretHex = entitySecretHex;
+        this.restClient = circleRestClient;
+    }
+
+    public String generate() {
         var entitySecret = decodeEntitySecret();
         try {
             var spec = new OAEPParameterSpec(
@@ -40,19 +41,19 @@ class EntitySecretCiphertextProvider {
             cipher.init(Cipher.ENCRYPT_MODE, circlePublicKey(), spec);
             return Base64.getEncoder().encodeToString(cipher.doFinal(entitySecret));
         } catch (Exception e) {
-            throw new CircleApiException("Failed to build entity-secret ciphertext", e);
+            throw new CircleEntitySecretException("Failed to build entity-secret ciphertext", e);
         }
     }
 
     private byte[] decodeEntitySecret() {
         byte[] secret;
         try {
-            secret = HexFormat.of().parseHex(properties.entitySecret());
+            secret = HexFormat.of().parseHex(entitySecretHex);
         } catch (IllegalArgumentException e) {
-            throw new CircleApiException("Entity secret must be a 32-byte hex string", e);
+            throw new CircleEntitySecretException("Entity secret must be a 32-byte hex string", e);
         }
         if (secret.length != ENTITY_SECRET_BYTES) {
-            throw new CircleApiException("Entity secret must decode to 32 bytes");
+            throw new CircleEntitySecretException("Entity secret must decode to 32 bytes");
         }
         return secret;
     }
@@ -74,7 +75,7 @@ class EntitySecretCiphertextProvider {
                 .body(PublicKeyResponse.class);
 
         if (response == null || response.data() == null || response.data().publicKey() == null) {
-            throw new CircleApiException("Empty entity public key response from Circle API");
+            throw new CircleEntitySecretException("Empty entity public key response from Circle API");
         }
 
         return parsePublicKey(response.data().publicKey());
@@ -89,7 +90,7 @@ class EntitySecretCiphertextProvider {
             var decoded = Base64.getDecoder().decode(base64);
             return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decoded));
         } catch (Exception e) {
-            throw new CircleApiException("Failed to parse Circle entity public key", e);
+            throw new CircleEntitySecretException("Failed to parse Circle entity public key", e);
         }
     }
 
