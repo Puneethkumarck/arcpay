@@ -11,6 +11,8 @@ dependencies {
 
     implementation("org.web3j:core:$web3jVersion")
 
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+
     testFixturesImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
     testImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
     integrationTestImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")

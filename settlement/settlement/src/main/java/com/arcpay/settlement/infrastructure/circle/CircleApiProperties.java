@@ -10,8 +10,11 @@ record CircleApiProperties(
         String blockchain,
         String usdcTokenAddress,
         String entitySecret,
-        Timeout timeout
+        Timeout timeout,
+        Webhook webhook
 ) {
 
     record Timeout(int connect, int read) {}
+
+    record Webhook(String subscriptionEndpoint) {}
 }

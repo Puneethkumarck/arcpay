@@ -1,8 +1,10 @@
 package com.arcpay.settlement.application.controller;
 
 import com.arcpay.settlement.api.ErrorCodes;
+import com.arcpay.settlement.application.webhook.CircleNotificationException;
 import com.arcpay.settlement.domain.InsufficientBalanceException;
 import com.arcpay.settlement.domain.TransferNotFoundException;
+import com.arcpay.settlement.domain.WebhookSignatureException;
 import com.arcpay.platform.api.ApiError;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +23,23 @@ import java.util.stream.Collectors;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(WebhookSignatureException.class)
+    public ResponseEntity<ApiError> handleInvalidSignature(WebhookSignatureException ex) {
+        log.warn("Rejected Circle webhook: {}", ex.getMessage());
+        return toError(ex.getMessage(), ErrorCodes.INVALID_WEBHOOK_SIGNATURE, UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(CircleNotificationException.class)
+    public ResponseEntity<ApiError> handleInvalidNotification(CircleNotificationException ex) {
+        return toError(ex.getMessage(), ErrorCodes.INVALID_REQUEST, BAD_REQUEST);
+    }
 
     @ExceptionHandler(TransferNotFoundException.class)
     public ResponseEntity<ApiError> handleTransferNotFound(TransferNotFoundException ex) {
