@@ -1,5 +1,6 @@
 package com.arcpay.payment.paymentexecution.domain.service;
 
+import com.arcpay.payment.paymentexecution.domain.exception.MissingTransferHashException;
 import com.arcpay.payment.paymentexecution.domain.exception.PaymentNotFoundException;
 import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
@@ -128,6 +129,15 @@ class PaymentStatusServiceTest {
     }
 
     @Test
+    void shouldThrowWhenRecordingTransferWithNullTxHash() {
+        // when / then
+        assertThatThrownBy(() -> service().recordTransfer(SOME_PAYMENT_ID, null))
+                .isInstanceOf(MissingTransferHashException.class)
+                .hasMessageContaining(SOME_PAYMENT_ID.toString());
+        then(paymentRepository).should(never()).save(any(Payment.class));
+    }
+
+    @Test
     void shouldRecordOnChainRef() {
         // given
         var current = somePayment(PaymentStatus.EXECUTING).toBuilder().txHash(SOME_TX_HASH).build();
@@ -139,6 +149,19 @@ class PaymentStatusServiceTest {
         // then
         var expected = current.toBuilder().onChainRef(SOME_ON_CHAIN_REF).build();
         then(paymentRepository).should().save(eqIgnoringTimestamps(expected));
+    }
+
+    @Test
+    void shouldNotOverwriteExistingOnChainRef() {
+        // given
+        var current = somePayment(PaymentStatus.COMPLETED).toBuilder().onChainRef(SOME_ON_CHAIN_REF).build();
+        given(paymentRepository.findById(SOME_PAYMENT_ID)).willReturn(Optional.of(current));
+
+        // when
+        service().recordOnChainRef(SOME_PAYMENT_ID, "0xlatereceiptref");
+
+        // then
+        then(paymentRepository).should(never()).save(any(Payment.class));
     }
 
     @Test

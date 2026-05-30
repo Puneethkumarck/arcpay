@@ -1,5 +1,6 @@
 package com.arcpay.payment.paymentexecution.domain.service;
 
+import com.arcpay.payment.paymentexecution.domain.exception.MissingTransferHashException;
 import com.arcpay.payment.paymentexecution.domain.exception.PaymentNotFoundException;
 import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
@@ -63,8 +64,11 @@ public class PaymentStatusService {
 
     @Transactional
     public void recordTransfer(UUID paymentId, String txHash) {
+        if (txHash == null) {
+            throw new MissingTransferHashException(paymentId);
+        }
         var payment = load(paymentId);
-        if (txHash == null || txHash.equals(payment.txHash())) {
+        if (txHash.equals(payment.txHash())) {
             return;
         }
         paymentRepository.save(payment.toBuilder().txHash(txHash).build());
@@ -73,7 +77,7 @@ public class PaymentStatusService {
     @Transactional
     public void recordOnChainRef(UUID paymentId, String onChainRef) {
         var payment = load(paymentId);
-        if (onChainRef == null || onChainRef.equals(payment.onChainRef())) {
+        if (onChainRef == null || payment.onChainRef() != null) {
             return;
         }
         paymentRepository.save(payment.toBuilder().onChainRef(onChainRef).build());

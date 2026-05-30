@@ -28,10 +28,9 @@ import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.someC
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.someExecutionInput;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.someReviewDecision;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.someScreeningResult;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -83,14 +82,14 @@ class PaymentExecutionWorkflowTest {
         // then
         InOrder inOrder = Mockito.inOrder(activities);
         inOrder.verify(activities).verifyAgentActive(SOME_AGENT_ID);
-        inOrder.verify(activities).persistStatus(eq(SOME_PAYMENT_ID), eq(PaymentStatus.POLICY_CHECK), any(Instant.class));
+        inOrder.verify(activities).persistStatus(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(PaymentStatus.POLICY_CHECK), anyInstant());
         inOrder.verify(activities).reserve(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
-        inOrder.verify(activities).persistStatus(eq(SOME_PAYMENT_ID), eq(PaymentStatus.SCREENING), any(Instant.class));
+        inOrder.verify(activities).persistStatus(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(PaymentStatus.SCREENING), anyInstant());
         inOrder.verify(activities).publishScreeningRequested(SOME_PAYMENT_ID);
-        inOrder.verify(activities).persistStatus(eq(SOME_PAYMENT_ID), eq(PaymentStatus.EXECUTING), any(Instant.class));
+        inOrder.verify(activities).persistStatus(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(PaymentStatus.EXECUTING), anyInstant());
         inOrder.verify(activities).submitTransfer(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
         inOrder.verify(activities).commit(SOME_PAYMENT_ID);
-        inOrder.verify(activities).persistCompleted(eq(SOME_PAYMENT_ID), any(Instant.class));
+        inOrder.verify(activities).persistCompleted(eqIgnoringTimestamps(SOME_PAYMENT_ID), anyInstant());
         inOrder.verify(activities).writeReceiptAsync(SOME_PAYMENT_ID);
         then(activities).should(never()).release(SOME_PAYMENT_ID);
     }
@@ -106,7 +105,7 @@ class PaymentExecutionWorkflowTest {
 
         // then
         then(activities).should()
-                .persistRejected(eq(SOME_PAYMENT_ID), eq(RejectionReason.AGENT_NOT_ACTIVE), any(Instant.class));
+                .persistRejected(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(RejectionReason.AGENT_NOT_ACTIVE), anyInstant());
         then(activities).should(never()).reserve(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
         then(activities).should(never()).release(SOME_PAYMENT_ID);
     }
@@ -123,7 +122,7 @@ class PaymentExecutionWorkflowTest {
 
         // then
         then(activities).should()
-                .persistRejected(eq(SOME_PAYMENT_ID), eq(RejectionReason.POLICY_VIOLATION), any(Instant.class));
+                .persistRejected(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(RejectionReason.POLICY_VIOLATION), anyInstant());
         then(activities).should(never()).publishScreeningRequested(SOME_PAYMENT_ID);
         then(activities).should(never()).submitTransfer(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
         then(activities).should(never()).release(SOME_PAYMENT_ID);
@@ -146,7 +145,7 @@ class PaymentExecutionWorkflowTest {
         InOrder inOrder = Mockito.inOrder(activities);
         inOrder.verify(activities).release(SOME_PAYMENT_ID);
         inOrder.verify(activities)
-                .persistRejected(eq(SOME_PAYMENT_ID), eq(RejectionReason.COMPLIANCE_BLOCK), any(Instant.class));
+                .persistRejected(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(RejectionReason.COMPLIANCE_BLOCK), anyInstant());
         then(activities).should(never()).submitTransfer(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
     }
 
@@ -169,9 +168,9 @@ class PaymentExecutionWorkflowTest {
         testEnv.sleep(Duration.ofHours(2));
 
         // then
-        then(activities).should().persistStatus(eq(SOME_PAYMENT_ID), eq(PaymentStatus.HELD), any(Instant.class));
+        then(activities).should().persistStatus(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(PaymentStatus.HELD), anyInstant());
         then(activities).should().commit(SOME_PAYMENT_ID);
-        then(activities).should().persistCompleted(eq(SOME_PAYMENT_ID), any(Instant.class));
+        then(activities).should().persistCompleted(eqIgnoringTimestamps(SOME_PAYMENT_ID), anyInstant());
         then(activities).should(never()).release(SOME_PAYMENT_ID);
     }
 
@@ -193,7 +192,7 @@ class PaymentExecutionWorkflowTest {
         // then
         then(activities).should().release(SOME_PAYMENT_ID);
         then(activities).should()
-                .persistRejected(eq(SOME_PAYMENT_ID), eq(RejectionReason.REVIEW_DENIED), any(Instant.class));
+                .persistRejected(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(RejectionReason.REVIEW_DENIED), anyInstant());
         then(activities).should(never()).submitTransfer(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
     }
 
@@ -213,7 +212,7 @@ class PaymentExecutionWorkflowTest {
         // then
         then(activities).should().release(SOME_PAYMENT_ID);
         then(activities).should()
-                .persistRejected(eq(SOME_PAYMENT_ID), eq(RejectionReason.REVIEW_DENIED), any(Instant.class));
+                .persistRejected(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(RejectionReason.REVIEW_DENIED), anyInstant());
         then(activities).should(never()).submitTransfer(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
     }
 
@@ -235,8 +234,35 @@ class PaymentExecutionWorkflowTest {
         then(activities).should().recordTransfer(SOME_PAYMENT_ID, SOME_TX_HASH);
         then(activities).should().release(SOME_PAYMENT_ID);
         then(activities).should()
-                .persistFailed(eq(SOME_PAYMENT_ID), eq(FailureReason.CHAIN_TIMEOUT), any(Instant.class));
+                .persistFailed(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(FailureReason.CHAIN_TIMEOUT), anyInstant());
         then(activities).should(never()).commit(SOME_PAYMENT_ID);
+    }
+
+    @Test
+    void shouldFailWhenChainReverts() {
+        // given
+        givenAgentActive();
+        givenReserve(POLICY_APPROVED);
+        givenTransfer();
+        var workflow = newWorkflow();
+        testEnv.registerDelayedCallback(Duration.ofSeconds(1),
+                () -> workflow.onScreeningResult(someScreeningResult(ScreeningVerdict.PASS)));
+        testEnv.registerDelayedCallback(Duration.ofSeconds(2),
+                () -> workflow.onChainResult(someChainResult(false)));
+
+        // when
+        WorkflowClient.start(workflow::execute, someExecutionInput());
+        testEnv.sleep(Duration.ofMinutes(10));
+
+        // then
+        InOrder inOrder = Mockito.inOrder(activities);
+        inOrder.verify(activities).submitTransfer(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
+        inOrder.verify(activities).recordTransfer(SOME_PAYMENT_ID, SOME_TX_HASH);
+        inOrder.verify(activities).release(SOME_PAYMENT_ID);
+        inOrder.verify(activities)
+                .persistFailed(eqIgnoringTimestamps(SOME_PAYMENT_ID), eqIgnoringTimestamps(FailureReason.EXECUTION_REVERTED), anyInstant());
+        then(activities).should(never()).commit(SOME_PAYMENT_ID);
+        then(activities).should(never()).persistCompleted(eqIgnoringTimestamps(SOME_PAYMENT_ID), anyInstant());
     }
 
     @Test
@@ -261,7 +287,7 @@ class PaymentExecutionWorkflowTest {
 
         // then
         then(activities).should(times(3)).commit(SOME_PAYMENT_ID);
-        then(activities).should().persistCompleted(eq(SOME_PAYMENT_ID), any(Instant.class));
+        then(activities).should().persistCompleted(eqIgnoringTimestamps(SOME_PAYMENT_ID), anyInstant());
     }
 
     private void givenAgentActive() {
@@ -275,6 +301,10 @@ class PaymentExecutionWorkflowTest {
     private void givenTransfer() {
         given(activities.submitTransfer(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT))
                 .willReturn(SOME_TX_HASH);
+    }
+
+    private Instant anyInstant() {
+        return argThat(instant -> instant != null);
     }
 
     private PaymentExecutionWorkflow newWorkflow() {
