@@ -8,6 +8,7 @@ record CircleApiProperties(
         String apiKey,
         String walletSetId,
         String blockchain,
+        String entitySecret,
         int connectTimeoutMs,
         int readTimeoutMs
 ) {}

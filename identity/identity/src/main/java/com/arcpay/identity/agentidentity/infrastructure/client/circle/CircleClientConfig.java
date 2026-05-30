@@ -1,5 +1,6 @@
 package com.arcpay.identity.agentidentity.infrastructure.client.circle;
 
+import com.arcpay.platform.infrastructure.circle.EntitySecretCiphertextProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -25,5 +26,11 @@ class CircleClientConfig {
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + properties.apiKey())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
+    }
+
+    @Bean
+    EntitySecretCiphertextProvider entitySecretCiphertextProvider(
+            CircleApiProperties properties, RestClient circleRestClient) {
+        return new EntitySecretCiphertextProvider(properties.entitySecret(), circleRestClient);
     }
 }

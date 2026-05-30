@@ -3,6 +3,7 @@ plugins {
 }
 
 val namastackVersion: String by project
+val wiremockVersion: String by project
 
 dependencies {
     api(project(":platform-api"))
@@ -20,5 +21,6 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.wiremock:wiremock-standalone:$wiremockVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
