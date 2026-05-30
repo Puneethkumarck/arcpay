@@ -3,6 +3,7 @@ package com.arcpay.payment.paymentexecution.domain.model;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -14,7 +15,8 @@ public record PaymentRequest(
         String recipientAddress,
         BigDecimal amount,
         String currency,
-        String memo
+        String memo,
+        Map<String, String> metadata
 ) {
 
     public PaymentRequest {
@@ -24,5 +26,6 @@ public record PaymentRequest(
         Objects.requireNonNull(recipientAddress, "recipientAddress must not be null");
         Objects.requireNonNull(amount, "amount must not be null");
         Objects.requireNonNull(currency, "currency must not be null");
+        metadata = metadata == null ? Map.of() : Map.copyOf(metadata);
     }
 }

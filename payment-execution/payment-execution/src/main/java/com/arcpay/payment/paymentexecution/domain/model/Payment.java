@@ -4,6 +4,7 @@ import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -25,12 +26,14 @@ public record Payment(
         String onChainRef,
         UUID policyEvaluationId,
         Integer complianceRiskScore,
+        Map<String, String> metadata,
         Instant createdAt,
         Instant updatedAt,
         Instant completedAt
 ) {
 
     public Payment {
+        metadata = metadata == null ? Map.of() : Map.copyOf(metadata);
         Objects.requireNonNull(paymentId, "paymentId must not be null");
         Objects.requireNonNull(agentId, "agentId must not be null");
         Objects.requireNonNull(ownerId, "ownerId must not be null");

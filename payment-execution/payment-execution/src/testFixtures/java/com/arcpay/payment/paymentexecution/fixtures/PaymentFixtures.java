@@ -6,6 +6,7 @@ import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 public final class PaymentFixtures {
@@ -21,6 +22,7 @@ public final class PaymentFixtures {
     public static final String SOME_CURRENCY = "USDC";
     public static final String SOME_MEMO = "GPT-4 API credits";
     public static final String SOME_FINGERPRINT = "0xfingerprint";
+    public static final Map<String, String> SOME_METADATA = Map.of("category", "compute", "team", "research");
     public static final Instant SOME_CREATED_AT = Instant.parse("2026-05-29T10:00:00Z");
     public static final Instant SOME_TRANSITIONED_AT = Instant.parse("2026-05-29T10:05:00Z");
 
@@ -33,8 +35,13 @@ public final class PaymentFixtures {
                 .amount(SOME_AMOUNT)
                 .currency(SOME_CURRENCY)
                 .memo(SOME_MEMO)
+                .metadata(SOME_METADATA)
                 .build();
     }
+
+    public static final UUID SOME_OTHER_AGENT_ID = UUID.fromString("0197aa00-4444-7def-8000-444444444444");
+    public static final String SOME_OTHER_IDEMPOTENCY_KEY = "invoice-2026-0043";
+    public static final String SOME_OTHER_FINGERPRINT = "0xotherfingerprint";
 
     public static Payment somePayment(PaymentStatus status) {
         return Payment.builder()
@@ -47,9 +54,18 @@ public final class PaymentFixtures {
                 .amount(SOME_AMOUNT)
                 .currency(SOME_CURRENCY)
                 .memo(SOME_MEMO)
+                .metadata(SOME_METADATA)
                 .status(status)
                 .createdAt(SOME_CREATED_AT)
                 .updatedAt(SOME_CREATED_AT)
+                .build();
+    }
+
+    public static Payment somePaymentWith(UUID paymentId, UUID agentId, String idempotencyKey, PaymentStatus status) {
+        return somePayment(status).toBuilder()
+                .paymentId(paymentId)
+                .agentId(agentId)
+                .idempotencyKey(idempotencyKey)
                 .build();
     }
 }
