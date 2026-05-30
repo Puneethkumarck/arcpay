@@ -300,7 +300,9 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
         // then
         await().during(Duration.ofSeconds(2)).atMost(Duration.ofSeconds(5))
                 .untilAsserted(() -> assertThat(loadStatus(paymentId)).isEqualTo(PaymentStatus.COMPLETED));
-        settlementServer.verify(exactly(1), postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)));
+        var statuses = awaitStatusEvents(paymentId, 4);
+        assertThat(statuses).containsExactly("POLICY_CHECK", "SCREENING", "EXECUTING", "COMPLETED");
+        settlementServer.verify(moreThanOrExactly(1), postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)));
     }
 
     private UUID seedPendingPaymentWithActiveAgent() {
