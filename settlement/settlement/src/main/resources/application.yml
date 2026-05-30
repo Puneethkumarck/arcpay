@@ -1,0 +1,80 @@
+spring:
+  application:
+    name: settlement-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/arcpay_settlement
+    username: ${DB_USERNAME:arcpay}
+    password: ${DB_PASSWORD:arcpay}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: settlement
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.arcpay.settlement.domain.event
+
+namastack:
+  outbox:
+    poll-interval: 2000
+    batch-size: 20
+    jdbc:
+      table-prefix: "settlement_"
+      schema-initialization:
+        enabled: false
+    retry:
+      policy: exponential
+      max-retries: 5
+      exponential:
+        initial-delay: 1000
+        max-delay: 60000
+        multiplier: 2.0
+
+circle:
+  api:
+    base-url: https://api.circle.com
+    api-key: ${CIRCLE_API_KEY}
+    wallet-set-id: ${CIRCLE_WALLET_SET_ID}
+    blockchain: ARC-TESTNET
+    usdc-token-address: ${CIRCLE_USDC_TOKEN_ADDRESS}
+    entity-secret: ${CIRCLE_ENTITY_SECRET}
+    timeout:
+      connect: 5000
+      read: 15000
+
+web3j:
+  client-address: ${ARC_TESTNET_RPC_URL}
+
+arcpay:
+  contract:
+    payment-receipts-address: ${PAYMENT_RECEIPTS_ADDRESS}
+  gas-wallet:
+    private-key: ${GAS_WALLET_PRIVATE_KEY}
+  security:
+    service-token: ${SERVICE_AUTH_TOKEN:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+    kafka:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

@@ -28,3 +28,8 @@ include("compliance:compliance")
 include("payment-execution:payment-execution-api")
 include("payment-execution:payment-execution-client")
 include("payment-execution:payment-execution")
+
+// Settlement Service
+include("settlement:settlement-api")
+include("settlement:settlement-client")
+include("settlement:settlement")
