@@ -17,4 +17,8 @@ public record CreatePaymentRequest(
         @NotBlank(message = "Currency is required") String currency,
         @Size(max = 256, message = "Memo must not exceed 256 characters") String memo,
         Map<String, String> metadata
-) {}
+) {
+    public CreatePaymentRequest {
+        metadata = metadata == null ? Map.of() : Map.copyOf(metadata);
+    }
+}

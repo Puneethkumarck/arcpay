@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PaymentRequestedTest {
 
@@ -35,5 +36,21 @@ class PaymentRequestedTest {
 
         // then
         assertThat(rebuilt).usingRecursiveComparison().isEqualTo(original);
+    }
+
+    @Test
+    void shouldRejectNullRequiredField() {
+        // given
+        var builder = PaymentRequested.builder()
+                .agentId(UUID.randomUUID())
+                .ownerId(UUID.randomUUID())
+                .idempotencyKey("idem-1")
+                .recipientAddress("0xabc")
+                .amount(new BigDecimal("25.00"))
+                .currency("USDC")
+                .requestedAt(Instant.parse("2026-05-29T10:00:00Z"));
+
+        // when / then
+        assertThatThrownBy(builder::build).isInstanceOf(NullPointerException.class);
     }
 }

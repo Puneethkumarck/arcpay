@@ -5,7 +5,7 @@ CREATE TABLE payment (
     idempotency_key       VARCHAR(255)  NOT NULL,
     request_fingerprint   VARCHAR(66)   NOT NULL,
     recipient_address     VARCHAR(42)   NOT NULL,
-    amount                NUMERIC(38,6) NOT NULL,
+    amount                NUMERIC(18,6) NOT NULL,
     currency              VARCHAR(10)   NOT NULL,
     memo                  VARCHAR(256),
     status                VARCHAR(20)   NOT NULL,

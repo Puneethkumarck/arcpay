@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -57,7 +58,7 @@ class ScaffoldIntegrationTest extends FullContextIntegrationTest {
                 idempotencyKey,
                 "0xfingerprint",
                 "0xrecipient",
-                new java.math.BigDecimal("25.000000"),
+                new BigDecimal("25.000000"),
                 "USDC",
                 "PENDING",
                 "{\"category\":\"compute\"}",

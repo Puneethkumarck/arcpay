@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PaymentStatusChangedTest {
 
@@ -32,5 +33,17 @@ class PaymentStatusChangedTest {
 
         // then
         assertThat(rebuilt).usingRecursiveComparison().isEqualTo(original);
+    }
+
+    @Test
+    void shouldRejectNullRequiredField() {
+        // given
+        var builder = PaymentStatusChanged.builder()
+                .agentId(UUID.randomUUID())
+                .status("COMPLETED")
+                .changedAt(Instant.parse("2026-05-29T10:00:01Z"));
+
+        // when / then
+        assertThatThrownBy(builder::build).isInstanceOf(NullPointerException.class);
     }
 }
