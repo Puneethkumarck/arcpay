@@ -14,7 +14,7 @@ import org.web3j.crypto.Hash;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.tx.TransactionManager;
+import org.web3j.tx.FastRawTransactionManager;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -32,14 +32,14 @@ class Web3jReceiptWriter implements ReceiptWriter {
     private static final String LOW_BALANCE_METRIC = "settlement.receipt.gas_wallet.low_balance";
 
     private final Web3j web3j;
-    private final TransactionManager transactionManager;
+    private final FastRawTransactionManager transactionManager;
     private final ReceiptContractProperties properties;
     private final MeterRegistry meterRegistry;
     private final Clock clock;
     private final ReentrantLock writeLock = new ReentrantLock(true);
 
     Web3jReceiptWriter(Web3j web3j,
-                       TransactionManager transactionManager,
+                       FastRawTransactionManager transactionManager,
                        ReceiptContractProperties properties,
                        MeterRegistry meterRegistry,
                        Clock clock) {
@@ -58,9 +58,18 @@ class Web3jReceiptWriter implements ReceiptWriter {
         } catch (Exception e) {
             log.warn("On-chain receipt write failed paymentId={}; payment stays COMPLETED, no onChainRef: {}",
                     command.paymentId(), e.getMessage());
+            resetNonceQuietly();
             return null;
         } finally {
             writeLock.unlock();
+        }
+    }
+
+    private void resetNonceQuietly() {
+        try {
+            transactionManager.resetNonce();
+        } catch (Exception e) {
+            log.warn("Failed to resync gas-wallet nonce after receipt failure: {}", e.getMessage());
         }
     }
 

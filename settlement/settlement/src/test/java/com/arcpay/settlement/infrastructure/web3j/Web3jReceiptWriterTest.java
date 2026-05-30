@@ -19,7 +19,7 @@ import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.tx.TransactionManager;
+import org.web3j.tx.FastRawTransactionManager;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -40,6 +40,7 @@ import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.someReceiptC
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,7 +60,7 @@ class Web3jReceiptWriterTest {
     private Web3j web3j;
 
     @Mock
-    private TransactionManager transactionManager;
+    private FastRawTransactionManager transactionManager;
 
     @Mock
     @SuppressWarnings("rawtypes")
@@ -160,6 +161,7 @@ class Web3jReceiptWriterTest {
 
         // then
         assertThat(onChainRef).isNull();
+        then(transactionManager).should().resetNonce();
     }
 
     @Test

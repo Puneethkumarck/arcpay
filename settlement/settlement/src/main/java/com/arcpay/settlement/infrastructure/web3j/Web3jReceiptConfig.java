@@ -11,7 +11,6 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.FastRawTransactionManager;
-import org.web3j.tx.TransactionManager;
 
 import java.time.Clock;
 
@@ -31,15 +30,15 @@ class Web3jReceiptConfig {
     }
 
     @Bean
-    TransactionManager receiptTransactionManager(Web3j receiptWeb3j,
-                                                 Credentials gasWalletCredentials,
-                                                 ReceiptContractProperties properties) {
+    FastRawTransactionManager receiptTransactionManager(Web3j receiptWeb3j,
+                                                        Credentials gasWalletCredentials,
+                                                        ReceiptContractProperties properties) {
         return new FastRawTransactionManager(receiptWeb3j, gasWalletCredentials, properties.chainId());
     }
 
     @Bean
     ReceiptWriter receiptWriter(Web3j receiptWeb3j,
-                                TransactionManager receiptTransactionManager,
+                                FastRawTransactionManager receiptTransactionManager,
                                 ReceiptContractProperties properties,
                                 MeterRegistry meterRegistry) {
         return new Web3jReceiptWriter(receiptWeb3j, receiptTransactionManager, properties, meterRegistry, Clock.systemUTC());
