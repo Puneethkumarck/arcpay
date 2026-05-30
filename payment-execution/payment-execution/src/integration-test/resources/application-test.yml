@@ -29,6 +29,8 @@ spring:
 namastack:
   outbox:
     enabled: true
+    processing:
+      delete-completed-records: false
 
 arcpay:
   policy-service:

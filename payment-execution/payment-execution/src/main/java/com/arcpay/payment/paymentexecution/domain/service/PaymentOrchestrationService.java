@@ -23,6 +23,7 @@ public class PaymentOrchestrationService {
 
     private static final String SUPPORTED_CURRENCY = "USDC";
     private static final BigDecimal MIN_AMOUNT = new BigDecimal("0.000001");
+    private static final int MAX_AMOUNT_SCALE = 6;
     private static final int MAX_MEMO_LENGTH = 256;
     private static final Pattern RECIPIENT_PATTERN = Pattern.compile("^0x[a-fA-F0-9]{40}$");
     private static final String FINGERPRINT_DELIMITER = "|";
@@ -84,6 +85,10 @@ public class PaymentOrchestrationService {
         }
         if (request.amount().compareTo(MIN_AMOUNT) < 0) {
             throw new InvalidPaymentRequestException("Amount below minimum: " + request.amount().toPlainString());
+        }
+        if (request.amount().stripTrailingZeros().scale() > MAX_AMOUNT_SCALE) {
+            throw new InvalidPaymentRequestException("Amount exceeds maximum of " + MAX_AMOUNT_SCALE + " decimal places: "
+                    + request.amount().toPlainString());
         }
         if (request.memo() != null && request.memo().length() > MAX_MEMO_LENGTH) {
             throw new InvalidPaymentRequestException("Memo exceeds maximum length of " + MAX_MEMO_LENGTH);
