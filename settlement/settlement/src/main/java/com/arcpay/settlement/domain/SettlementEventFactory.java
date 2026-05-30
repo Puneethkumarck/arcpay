@@ -1,5 +1,6 @@
 package com.arcpay.settlement.domain;
 
+import com.arcpay.settlement.domain.event.SettlementEvent;
 import com.arcpay.settlement.domain.event.TransferConfirmed;
 import com.arcpay.settlement.domain.event.TransferReverted;
 import com.arcpay.settlement.domain.model.SettlementTransaction;
@@ -21,7 +22,7 @@ import static com.arcpay.settlement.domain.model.TransferState.STUCK;
 @Service
 public class SettlementEventFactory {
 
-    public Optional<Object> eventFor(SettlementTransaction transaction) {
+    public Optional<SettlementEvent> eventFor(SettlementTransaction transaction) {
         return switch (transaction.state()) {
             case COMPLETED -> Optional.of(toConfirmed(transaction));
             case FAILED, DENIED, CANCELLED -> Optional.of(toReverted(transaction));
