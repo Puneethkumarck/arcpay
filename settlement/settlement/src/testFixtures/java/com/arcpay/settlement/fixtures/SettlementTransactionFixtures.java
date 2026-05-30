@@ -3,6 +3,7 @@ package com.arcpay.settlement.fixtures;
 import com.arcpay.settlement.domain.model.SettlementTransaction;
 import com.arcpay.settlement.domain.model.TransferCommand;
 import com.arcpay.settlement.domain.model.TransferState;
+import com.arcpay.settlement.domain.model.WalletBalance;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,8 +21,14 @@ public final class SettlementTransactionFixtures {
     public static final String SOME_ERROR_REASON = "insufficient on-chain funds";
     public static final Instant SOME_CREATED_AT = Instant.parse("2026-05-30T10:00:00Z");
     public static final Instant SOME_UPDATED_AT = Instant.parse("2026-05-30T10:05:00Z");
+    public static final String SOME_USDC_TOKEN_ADDRESS = "0x3600000000000000000000000000000000000000";
+    public static final BigDecimal SOME_BALANCE_AMOUNT = new BigDecimal("120.500000");
 
     private SettlementTransactionFixtures() {
+    }
+
+    public static WalletBalance someWalletBalance() {
+        return new WalletBalance(SOME_WALLET_ID, SOME_USDC_TOKEN_ADDRESS, SOME_BALANCE_AMOUNT);
     }
 
     public static SettlementTransaction someSettlementTransaction(TransferState state) {

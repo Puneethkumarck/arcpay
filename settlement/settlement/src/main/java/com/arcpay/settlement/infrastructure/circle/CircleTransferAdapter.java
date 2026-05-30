@@ -66,12 +66,40 @@ class CircleTransferAdapter implements CustodyProvider {
 
     @Override
     public TransferStatus getStatus(String circleTxId) {
-        throw new UnsupportedOperationException("getStatus not implemented");
+        try {
+            var response = restClient.get()
+                    .uri("/v1/w3s/transactions/{circleTxId}", circleTxId)
+                    .retrieve()
+                    .body(TransactionResponse.class);
+
+            if (response == null || response.data() == null || response.data().transaction() == null) {
+                throw new CircleApiException("Empty transaction response from Circle API for circleTxId="
+                        + circleTxId);
+            }
+
+            var transaction = response.data().transaction();
+            return TransferStatus.builder()
+                    .circleTxId(circleTxId)
+                    .txHash(transaction.txHash())
+                    .state(TransferState.valueOf(transaction.state()))
+                    .networkFee(networkFee(transaction.networkFee()))
+                    .errorReason(transaction.errorReason())
+                    .build();
+        } catch (CircleApiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CircleApiException("Circle transaction status query failed for circleTxId="
+                    + circleTxId, e);
+        }
     }
 
     @Override
     public WalletBalance getBalance(String walletId) {
-        throw new UnsupportedOperationException("getBalance not implemented");
+        return fetchBalance(walletId);
+    }
+
+    private BigDecimal networkFee(String networkFee) {
+        return networkFee == null ? null : new BigDecimal(networkFee);
     }
 
     private void guardBalance(TransferCommand command) {
@@ -88,7 +116,10 @@ class CircleTransferAdapter implements CustodyProvider {
     private WalletBalance fetchBalance(String walletId) {
         try {
             var response = restClient.get()
-                    .uri("/v1/w3s/wallets/{walletId}/balances", walletId)
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v1/w3s/wallets/{walletId}/balances")
+                            .queryParam("tokenAddress", properties.usdcTokenAddress())
+                            .build(walletId))
                     .retrieve()
                     .body(BalancesResponse.class);
 
@@ -153,6 +184,12 @@ class CircleTransferAdapter implements CustodyProvider {
     record BalancesResponse(BalancesData data) {
         record BalancesData(List<TokenBalance> tokenBalances) {
             record TokenBalance(String amount) {}
+        }
+    }
+
+    record TransactionResponse(TransactionData data) {
+        record TransactionData(Transaction transaction) {
+            record Transaction(String state, String txHash, String networkFee, String errorReason) {}
         }
     }
 }

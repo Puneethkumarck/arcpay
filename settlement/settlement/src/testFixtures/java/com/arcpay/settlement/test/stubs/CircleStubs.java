@@ -28,6 +28,20 @@ public final class CircleStubs {
                                 """.formatted(amount))));
     }
 
+    public static void stubEmptyWalletBalance(WireMockServer circleServer, String walletId) {
+        circleServer.stubFor(get(urlPathEqualTo("/v1/w3s/wallets/" + walletId + "/balances"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {
+                                  "data": {
+                                    "tokenBalances": []
+                                  }
+                                }
+                                """)));
+    }
+
     public static void stubCreateTransfer(WireMockServer circleServer, String circleTxId, String state) {
         circleServer.stubFor(post(urlPathEqualTo("/v1/w3s/developer/transactions/transfer"))
                 .willReturn(aResponse()
