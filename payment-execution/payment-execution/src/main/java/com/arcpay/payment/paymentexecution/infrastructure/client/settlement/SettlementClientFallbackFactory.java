@@ -6,8 +6,10 @@ import com.arcpay.settlement.api.model.TransferRequest;
 import com.arcpay.settlement.api.model.TransferStatusResponse;
 import feign.FeignException;
 import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
 
-public class SettlementClientFallbackFactory implements FallbackFactory<SettlementServiceClient> {
+@Component
+class SettlementClientFallbackFactory implements FallbackFactory<SettlementServiceClient> {
 
     @Override
     public SettlementServiceClient create(Throwable cause) {
