@@ -4,7 +4,6 @@ import com.arcpay.platform.api.ApiError;
 import com.arcpay.platform.infrastructure.security.ApiKeyAuthFilter;
 import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
 import com.arcpay.policy.policyengine.api.model.PolicyResponse;
-import com.arcpay.policy.policyengine.api.model.SpendingLedgerResponse;
 import com.arcpay.policy.policyengine.api.model.SpendingSummaryResponse;
 import com.arcpay.policy.policyengine.test.BusinessTest;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -421,11 +420,10 @@ class PolicyEngineBusinessTest extends BusinessTest {
         var paymentId = UUID.randomUUID();
 
         // when
-        var first = recordSpending(ctx.agentId(), paymentId, "40.00");
-        var second = recordSpending(ctx.agentId(), paymentId, "40.00");
+        recordSpending(ctx.agentId(), paymentId, "40.00");
+        recordSpending(ctx.agentId(), paymentId, "40.00");
 
         // then
-        assertThat(second.entryId()).isEqualTo(first.entryId());
         var summary = restClient().get()
                 .uri("/api/v1/internal/agents/{agentId}/spending-summary", ctx.agentId())
                 .header("X-Service-Auth", SERVICE_TOKEN)
@@ -524,19 +522,24 @@ class PolicyEngineBusinessTest extends BusinessTest {
                 .body(PolicyEvaluationResponse.class);
     }
 
-    private SpendingLedgerResponse recordSpending(UUID agentId, UUID paymentId, String amount) {
-        return restClient().post()
-                .uri("/api/v1/internal/spending-ledger")
+    private void recordSpending(UUID agentId, UUID paymentId, String amount) {
+        restClient().post()
+                .uri("/api/v1/internal/policies/reservations")
                 .header("X-Service-Auth", SERVICE_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of(
-                        "agentId", agentId.toString(),
                         "paymentId", paymentId.toString(),
+                        "agentId", agentId.toString(),
+                        "recipientAddress", RECIPIENT,
                         "amount", amount,
-                        "recipient", RECIPIENT,
-                        "executedAt", Instant.now().toString()))
+                        "requestedAt", Instant.now().toString()))
                 .retrieve()
-                .body(SpendingLedgerResponse.class);
+                .toBodilessEntity();
+        restClient().post()
+                .uri("/api/v1/internal/policies/reservations/{paymentId}/commit", paymentId)
+                .header("X-Service-Auth", SERVICE_TOKEN)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     private Map<String, Object> evaluateBody(UUID agentId, String recipient, String amount) {

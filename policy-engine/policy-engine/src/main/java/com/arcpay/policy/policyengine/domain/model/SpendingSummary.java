@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 
-@Builder
+@Builder(toBuilder = true)
 public record SpendingSummary(
         BigDecimal dailyTotal,
         BigDecimal weeklyTotal,

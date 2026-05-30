@@ -11,6 +11,7 @@ import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
+import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
 import com.arcpay.policy.policyengine.domain.port.EventPublisher;
 import com.arcpay.policy.policyengine.domain.port.PolicyEvaluationRepository;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
@@ -62,6 +63,17 @@ public class PolicyEvaluationService {
     @Transactional
     public PolicyEvaluationResult evaluate(UUID agentId, AgentInfo agent, String recipientAddress,
             BigDecimal amount, Instant requestedAt, boolean dryRun) {
+        return doEvaluate(agentId, agent, recipientAddress, amount, requestedAt, dryRun, BigDecimal.ZERO);
+    }
+
+    @Transactional
+    public PolicyEvaluationResult evaluate(UUID agentId, AgentInfo agent, String recipientAddress,
+            BigDecimal amount, Instant requestedAt, boolean dryRun, BigDecimal pendingReservedAmount) {
+        return doEvaluate(agentId, agent, recipientAddress, amount, requestedAt, dryRun, pendingReservedAmount);
+    }
+
+    private PolicyEvaluationResult doEvaluate(UUID agentId, AgentInfo agent, String recipientAddress,
+            BigDecimal amount, Instant requestedAt, boolean dryRun, BigDecimal pendingReservedAmount) {
         var startNanos = System.nanoTime();
 
         var activePolicy = policyRepository.findActiveByAgentId(agentId);
@@ -93,7 +105,8 @@ public class PolicyEvaluationService {
         var spendingRules = classifyRules(policy.rules(), false);
         if (!spendingRules.isEmpty()) {
             var velocityMinutes = extractVelocityMinutes(spendingRules);
-            var summary = spendingLedgerService.getSpendingSummary(agentId, velocityMinutes);
+            var summary = applyReservedHold(
+                    spendingLedgerService.getSpendingSummary(agentId, velocityMinutes), pendingReservedAmount);
             context = context.toBuilder().spendingSummary(summary).build();
         }
 
@@ -171,6 +184,17 @@ public class PolicyEvaluationService {
         return rules.stream()
                 .filter(rule -> IN_MEMORY_RULE_TYPES.contains(rule.getClass()) == inMemory)
                 .toList();
+    }
+
+    private SpendingSummary applyReservedHold(SpendingSummary summary, BigDecimal pendingReservedAmount) {
+        if (pendingReservedAmount.signum() <= 0) {
+            return summary;
+        }
+        return summary.toBuilder()
+                .dailyTotal(summary.dailyTotal().add(pendingReservedAmount))
+                .weeklyTotal(summary.weeklyTotal().add(pendingReservedAmount))
+                .monthlyTotal(summary.monthlyTotal().add(pendingReservedAmount))
+                .build();
     }
 
     private int extractVelocityMinutes(List<PolicyRule> spendingRules) {
