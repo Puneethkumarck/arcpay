@@ -47,9 +47,8 @@ public class ReservationService {
             return idempotentResult(existing.get());
         }
 
-        var heldTotal = reservationRepository.sumActiveHeldAmount(agentId);
         var result = policyEvaluationService.evaluate(
-                agentId, agent, recipientAddress, amount, requestedAt, false, heldTotal);
+                agentId, agent, recipientAddress, amount, requestedAt, false);
 
         if (result.verdict() == PolicyVerdict.APPROVED) {
             reservationRepository.save(Reservation.held(paymentId, agentId, amount, recipientAddress, Instant.now()));

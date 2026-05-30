@@ -16,6 +16,7 @@ import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import com.arcpay.policy.policyengine.domain.port.EventPublisher;
 import com.arcpay.policy.policyengine.domain.port.PolicyEvaluationRepository;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
+import com.arcpay.policy.policyengine.domain.port.ReservationRepository;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLedgerService;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLockService;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,6 +89,9 @@ class PolicyEvaluationServiceTest {
     private EventPublisher eventPublisher;
 
     @Mock
+    private ReservationRepository reservationRepository;
+
+    @Mock
     private RuleEvaluator<PolicyRule.PerTransactionLimit> perTxEvaluator;
 
     @Mock
@@ -104,7 +108,7 @@ class PolicyEvaluationServiceTest {
     @BeforeEach
     void setUp() {
         service = new PolicyEvaluationService(agentAuthorization, policyRepository, policyEvaluationRepository,
-                spendingLockService, spendingLedgerService,
+                spendingLockService, spendingLedgerService, reservationRepository,
                 ruleEvaluatorRegistry, eventPublisher);
     }
 

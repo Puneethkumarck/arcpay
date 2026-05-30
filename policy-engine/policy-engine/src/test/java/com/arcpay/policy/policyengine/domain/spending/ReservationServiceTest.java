@@ -29,14 +29,14 @@ import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME
 import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_RECIPIENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationServiceTest {
 
+    private static final UUID NO_POLICY_ID = new UUID(0L, 0L);
     private static final BigDecimal AMOUNT = new BigDecimal("100.000000");
     private static final Instant REQUESTED_AT = Instant.parse("2026-01-01T12:00:00Z");
 
@@ -68,10 +68,8 @@ class ReservationServiceTest {
     void shouldHoldReservationWhenPolicyApproves() {
         // given
         given(reservationRepository.findByPaymentId(SOME_PAYMENT_ID)).willReturn(Optional.empty());
-        given(reservationRepository.sumActiveHeldAmount(SOME_AGENT_ID)).willReturn(BigDecimal.ZERO);
         var approved = resultWith(PolicyVerdict.APPROVED);
-        given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, agent, SOME_RECIPIENT, AMOUNT, REQUESTED_AT, false, BigDecimal.ZERO))
+        given(policyEvaluationService.evaluate(SOME_AGENT_ID, agent, SOME_RECIPIENT, AMOUNT, REQUESTED_AT, false))
                 .willReturn(approved);
 
         // when
@@ -96,9 +94,7 @@ class ReservationServiceTest {
     void shouldNotHoldReservationWhenPolicyRejects() {
         // given
         given(reservationRepository.findByPaymentId(SOME_PAYMENT_ID)).willReturn(Optional.empty());
-        given(reservationRepository.sumActiveHeldAmount(SOME_AGENT_ID)).willReturn(BigDecimal.ZERO);
-        given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, agent, SOME_RECIPIENT, AMOUNT, REQUESTED_AT, false, BigDecimal.ZERO))
+        given(policyEvaluationService.evaluate(SOME_AGENT_ID, agent, SOME_RECIPIENT, AMOUNT, REQUESTED_AT, false))
                 .willReturn(resultWith(PolicyVerdict.REJECTED));
 
         // when
@@ -106,7 +102,8 @@ class ReservationServiceTest {
 
         // then
         assertThat(result.verdict()).isEqualTo(PolicyVerdict.REJECTED);
-        then(reservationRepository).should(never()).save(any());
+        then(reservationRepository).should().findByPaymentId(SOME_PAYMENT_ID);
+        then(reservationRepository).shouldHaveNoMoreInteractions();
     }
 
     @Test
@@ -119,26 +116,38 @@ class ReservationServiceTest {
         var result = reservationService.reserve(SOME_PAYMENT_ID, SOME_AGENT_ID, agent, SOME_RECIPIENT, AMOUNT, REQUESTED_AT);
 
         // then
-        assertThat(result.verdict()).isEqualTo(PolicyVerdict.APPROVED);
+        var expected = PolicyEvaluationResult.builder()
+                .evaluationId(UUID.randomUUID())
+                .agentId(SOME_AGENT_ID)
+                .policyId(NO_POLICY_ID)
+                .verdict(PolicyVerdict.APPROVED)
+                .ruleResults(List.of())
+                .requestedAmount(AMOUNT)
+                .recipientAddress(SOME_RECIPIENT)
+                .dryRun(false)
+                .evaluatedAt(REQUESTED_AT)
+                .durationMs(0)
+                .build();
+        assertThat(result).usingRecursiveComparison()
+                .ignoringFields("evaluationId", "evaluatedAt").isEqualTo(expected);
         then(policyEvaluationService).shouldHaveNoInteractions();
-        then(reservationRepository).should(never()).save(any());
-        then(reservationRepository).should(never()).sumActiveHeldAmount(any());
+        then(reservationRepository).should().findByPaymentId(SOME_PAYMENT_ID);
+        then(reservationRepository).shouldHaveNoMoreInteractions();
     }
 
     @Test
     void shouldCommitHeldReservationAndPersistCommittedState() {
         // given
+        var expectedCommitted = heldReservation().commit();
         given(reservationRepository.findByPaymentId(SOME_PAYMENT_ID)).willReturn(Optional.of(heldReservation()));
-        given(reservationRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
+        given(reservationRepository.save(expectedCommitted)).willReturn(expectedCommitted);
 
         // when
         var committed = reservationService.commit(SOME_PAYMENT_ID);
 
         // then
-        then(reservationRepository).should().save(reservationCaptor.capture());
-        var expected = Reservation.held(SOME_PAYMENT_ID, SOME_AGENT_ID, AMOUNT, SOME_RECIPIENT, REQUESTED_AT).commit();
-        assertThat(reservationCaptor.getValue()).usingRecursiveComparison().isEqualTo(expected);
-        assertThat(committed.status()).isEqualTo(ReservationStatus.COMMITTED);
+        assertThat(committed).usingRecursiveComparison().isEqualTo(expectedCommitted);
+        then(reservationRepository).should().save(expectedCommitted);
     }
 
     @Test
@@ -152,7 +161,8 @@ class ReservationServiceTest {
 
         // then
         assertThat(committed.status()).isEqualTo(ReservationStatus.COMMITTED);
-        then(reservationRepository).should(never()).save(any());
+        then(reservationRepository).should(times(2)).findByPaymentId(SOME_PAYMENT_ID);
+        then(reservationRepository).shouldHaveNoMoreInteractions();
         then(spendingLedgerService).shouldHaveNoInteractions();
     }
 
@@ -171,14 +181,15 @@ class ReservationServiceTest {
     @Test
     void shouldReleaseHeldReservation() {
         // given
+        var expectedReleased = heldReservation().release();
         given(reservationRepository.findByPaymentId(SOME_PAYMENT_ID)).willReturn(Optional.of(heldReservation()));
-        given(reservationRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
+        given(reservationRepository.save(expectedReleased)).willReturn(expectedReleased);
 
         // when
         var released = reservationService.release(SOME_PAYMENT_ID);
 
         // then
-        assertThat(released.status()).isEqualTo(ReservationStatus.RELEASED);
+        assertThat(released).usingRecursiveComparison().isEqualTo(expectedReleased);
     }
 
     @Test
@@ -196,14 +207,15 @@ class ReservationServiceTest {
     @Test
     void shouldOpsReleaseOrphanHeldReservation() {
         // given
+        var expectedReleased = heldReservation().release();
         given(reservationRepository.findByPaymentId(SOME_PAYMENT_ID)).willReturn(Optional.of(heldReservation()));
-        given(reservationRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
+        given(reservationRepository.save(expectedReleased)).willReturn(expectedReleased);
 
         // when
         var released = reservationService.opsRelease(SOME_PAYMENT_ID);
 
         // then
-        assertThat(released.status()).isEqualTo(ReservationStatus.RELEASED);
+        assertThat(released).usingRecursiveComparison().isEqualTo(expectedReleased);
     }
 
     @Test

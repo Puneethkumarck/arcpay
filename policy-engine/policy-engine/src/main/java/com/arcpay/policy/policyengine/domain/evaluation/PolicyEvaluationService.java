@@ -15,6 +15,7 @@ import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
 import com.arcpay.policy.policyengine.domain.port.EventPublisher;
 import com.arcpay.policy.policyengine.domain.port.PolicyEvaluationRepository;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
+import com.arcpay.policy.policyengine.domain.port.ReservationRepository;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLedgerService;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLockService;
 import com.github.f4b6a3.uuid.UuidCreator;
@@ -51,6 +52,7 @@ public class PolicyEvaluationService {
     private final PolicyEvaluationRepository policyEvaluationRepository;
     private final SpendingLockService spendingLockService;
     private final SpendingLedgerService spendingLedgerService;
+    private final ReservationRepository reservationRepository;
     private final RuleEvaluatorRegistry ruleEvaluatorRegistry;
     private final EventPublisher eventPublisher;
 
@@ -63,17 +65,6 @@ public class PolicyEvaluationService {
     @Transactional
     public PolicyEvaluationResult evaluate(UUID agentId, AgentInfo agent, String recipientAddress,
             BigDecimal amount, Instant requestedAt, boolean dryRun) {
-        return doEvaluate(agentId, agent, recipientAddress, amount, requestedAt, dryRun, BigDecimal.ZERO);
-    }
-
-    @Transactional
-    public PolicyEvaluationResult evaluate(UUID agentId, AgentInfo agent, String recipientAddress,
-            BigDecimal amount, Instant requestedAt, boolean dryRun, BigDecimal pendingReservedAmount) {
-        return doEvaluate(agentId, agent, recipientAddress, amount, requestedAt, dryRun, pendingReservedAmount);
-    }
-
-    private PolicyEvaluationResult doEvaluate(UUID agentId, AgentInfo agent, String recipientAddress,
-            BigDecimal amount, Instant requestedAt, boolean dryRun, BigDecimal pendingReservedAmount) {
         var startNanos = System.nanoTime();
 
         var activePolicy = policyRepository.findActiveByAgentId(agentId);
@@ -106,7 +97,7 @@ public class PolicyEvaluationService {
         if (!spendingRules.isEmpty()) {
             var velocityMinutes = extractVelocityMinutes(spendingRules);
             var summary = applyReservedHold(
-                    spendingLedgerService.getSpendingSummary(agentId, velocityMinutes), pendingReservedAmount);
+                    spendingLedgerService.getSpendingSummary(agentId, velocityMinutes), heldReservations(agentId));
             context = context.toBuilder().spendingSummary(summary).build();
         }
 
@@ -186,14 +177,19 @@ public class PolicyEvaluationService {
                 .toList();
     }
 
-    private SpendingSummary applyReservedHold(SpendingSummary summary, BigDecimal pendingReservedAmount) {
-        if (pendingReservedAmount.signum() <= 0) {
+    private BigDecimal heldReservations(UUID agentId) {
+        var held = reservationRepository.sumActiveHeldAmount(agentId);
+        return held == null ? BigDecimal.ZERO : held;
+    }
+
+    private SpendingSummary applyReservedHold(SpendingSummary summary, BigDecimal heldReservations) {
+        if (heldReservations.signum() <= 0) {
             return summary;
         }
         return summary.toBuilder()
-                .dailyTotal(summary.dailyTotal().add(pendingReservedAmount))
-                .weeklyTotal(summary.weeklyTotal().add(pendingReservedAmount))
-                .monthlyTotal(summary.monthlyTotal().add(pendingReservedAmount))
+                .dailyTotal(summary.dailyTotal().add(heldReservations))
+                .weeklyTotal(summary.weeklyTotal().add(heldReservations))
+                .monthlyTotal(summary.monthlyTotal().add(heldReservations))
                 .build();
     }
 
