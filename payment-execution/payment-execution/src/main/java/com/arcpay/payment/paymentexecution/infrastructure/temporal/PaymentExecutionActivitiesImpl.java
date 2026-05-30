@@ -73,7 +73,11 @@ class PaymentExecutionActivitiesImpl implements PaymentExecutionActivities {
 
     @Override
     public String submitTransfer(UUID paymentId, UUID agentId, String recipient, BigDecimal amount) {
-        var txHash = settlementPort.transfer(paymentId, agentId, recipient, amount);
+        var walletId = agentServiceClient.getAgent(agentId)
+                .map(agent -> agent.walletId())
+                .orElseThrow(() -> ApplicationFailure.newNonRetryableFailure(
+                        "Agent wallet not found: " + agentId, "AgentWalletNotFound"));
+        var txHash = settlementPort.transfer(paymentId, walletId, recipient, amount);
         log.info("Transfer submitted paymentId={} txHash={}", paymentId, txHash);
         return txHash;
     }
@@ -81,7 +85,10 @@ class PaymentExecutionActivitiesImpl implements PaymentExecutionActivities {
     @Override
     public void writeReceiptAsync(UUID paymentId) {
         try {
-            var receipt = settlementPort.writeReceipt(paymentId);
+            var payment = paymentRepository.findById(paymentId)
+                    .orElseThrow(() -> ApplicationFailure.newNonRetryableFailure(
+                            "Payment not found: " + paymentId, PaymentNotFoundException.class.getSimpleName()));
+            var receipt = settlementPort.writeReceipt(payment);
             paymentStatusService.recordOnChainRef(paymentId, receipt.onChainRef());
             log.info("Receipt written paymentId={} onChainRef={}", paymentId, receipt.onChainRef());
         } catch (RuntimeException e) {
