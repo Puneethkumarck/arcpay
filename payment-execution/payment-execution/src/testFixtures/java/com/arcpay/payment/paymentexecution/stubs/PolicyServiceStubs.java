@@ -30,6 +30,30 @@ public final class PolicyServiceStubs {
                         .withBody(reserveApprovedJson())));
     }
 
+    public static void stubReserveRejected(WireMockServer server) {
+        server.stubFor(post(urlPathEqualTo(RESERVE_PATH))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(reserveRejectedJson())));
+    }
+
+    public static void stubCommitAccepted(WireMockServer server, UUID paymentId) {
+        server.stubFor(post(urlPathEqualTo(commitPath(paymentId)))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(reservationJson(paymentId, "COMMITTED"))));
+    }
+
+    public static void stubReleaseAccepted(WireMockServer server, UUID paymentId) {
+        server.stubFor(post(urlPathEqualTo(releasePath(paymentId)))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(reservationJson(paymentId, "RELEASED"))));
+    }
+
     public static void stubReserveServerError(WireMockServer server) {
         server.stubFor(post(urlPathEqualTo(RESERVE_PATH))
                 .willReturn(aResponse().withStatus(500)));
@@ -46,6 +70,22 @@ public final class PolicyServiceStubs {
                 + "\"dryRun\":false,"
                 + "\"durationMs\":5,"
                 + "\"ruleResults\":[{\"ruleType\":\"AMOUNT_LIMIT\",\"verdict\":\"APPROVED\"}]"
+                + "}";
+    }
+
+    public static String reserveRejectedJson() {
+        return "{"
+                + "\"verdict\":\"REJECTED\","
+                + "\"dryRun\":false,"
+                + "\"durationMs\":5,"
+                + "\"ruleResults\":[{\"ruleType\":\"AMOUNT_LIMIT\",\"verdict\":\"REJECTED\"}]"
+                + "}";
+    }
+
+    public static String reservationJson(UUID paymentId, String status) {
+        return "{"
+                + "\"paymentId\":\"" + paymentId + "\","
+                + "\"status\":\"" + status + "\""
                 + "}";
     }
 }
