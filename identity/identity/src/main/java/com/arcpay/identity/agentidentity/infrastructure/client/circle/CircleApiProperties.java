@@ -9,6 +9,8 @@ record CircleApiProperties(
         String walletSetId,
         String blockchain,
         String entitySecret,
-        int connectTimeoutMs,
-        int readTimeoutMs
-) {}
+        Timeout timeout
+) {
+
+    record Timeout(int connect, int read) {}
+}

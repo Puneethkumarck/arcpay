@@ -32,7 +32,7 @@ class CircleWalletAdapterTest {
 
     private static final CircleApiProperties PROPERTIES = new CircleApiProperties(
             "https://api.circle.com", "test-api-key", "wallet-set-1", "ARC",
-            SOME_ENTITY_SECRET_HEX, 5000, 10000);
+            SOME_ENTITY_SECRET_HEX, new CircleApiProperties.Timeout(5000, 10000));
 
     private static final String WALLETS_URL = "https://api.circle.com/v1/w3s/developer/wallets";
     private static final String PUBLIC_KEY_URL = "https://api.circle.com/v1/w3s/config/entity/publicKey";
