@@ -18,8 +18,8 @@ class CircleClientConfig {
     @Bean
     RestClient circleRestClient(CircleApiProperties properties) {
         var requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(properties.connectTimeoutMs());
-        requestFactory.setReadTimeout(properties.readTimeoutMs());
+        requestFactory.setConnectTimeout(properties.timeout().connect());
+        requestFactory.setReadTimeout(properties.timeout().read());
         return RestClient.builder()
                 .baseUrl(properties.baseUrl())
                 .requestFactory(requestFactory)
