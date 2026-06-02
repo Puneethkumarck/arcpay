@@ -1,10 +1,23 @@
 package com.arcpay.compliance;
 
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
 import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
 import com.arcpay.compliance.domain.event.ScreeningCompleted;
 import com.arcpay.compliance.domain.port.SanctionsSetProvider;
 import com.arcpay.compliance.test.BusinessTest;
 import com.github.f4b6a3.uuid.UuidCreator;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -16,20 +29,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.TestPropertySource;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 @TestPropertySource(properties = "compliance.sanctions.poll-interval-ms=500")
 class ScreeningIdempotencyTest extends BusinessTest {
@@ -66,7 +65,8 @@ class ScreeningIdempotencyTest extends BusinessTest {
 
         // when
         kafkaTemplate.send(PaymentScreeningRequested.TOPIC, paymentId.toString(), request);
-        await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+        await().atMost(Duration.ofSeconds(30))
+                .pollInterval(Duration.ofMillis(500))
                 .until(() -> screeningResultCount(paymentId) == 1);
         var screenedAtAfterFirst = screenedAt(paymentId);
         kafkaTemplate.send(PaymentScreeningRequested.TOPIC, paymentId.toString(), request);
@@ -76,7 +76,8 @@ class ScreeningIdempotencyTest extends BusinessTest {
         assertThat(screeningResultCount(paymentId)).isEqualTo(1);
         assertThat(screenedAt(paymentId)).isEqualTo(screenedAtAfterFirst);
         assertThat(events).hasSize(2);
-        assertThat(events.getLast()).usingRecursiveComparison()
+        assertThat(events.getLast())
+                .usingRecursiveComparison()
                 .ignoringFieldsOfTypes(Instant.class)
                 .isEqualTo(events.getFirst());
     }
@@ -96,7 +97,8 @@ class ScreeningIdempotencyTest extends BusinessTest {
         try (var consumer = newCompletedConsumer()) {
             consumer.subscribe(List.of(ScreeningCompleted.TOPIC));
             var captured = new ArrayList<ScreeningCompleted>();
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (var record : consumer.poll(Duration.ofSeconds(2))) {
                             var event = jsonMapper.readValue(record.value(), ScreeningCompleted.class);
@@ -132,7 +134,8 @@ class ScreeningIdempotencyTest extends BusinessTest {
 
     private void awaitSanctionsLoaded(UUID versionId) {
         await().atMost(Duration.ofSeconds(10))
-                .until(() -> versionId.equals(sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
+                .until(() -> versionId.equals(
+                        sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
     }
 
     private UUID seedSanctions(String address) {
@@ -141,14 +144,19 @@ class ScreeningIdempotencyTest extends BusinessTest {
                 "INSERT INTO sanctions_list_version "
                         + "(version_id, source, downloaded_at, record_count, checksum, status) "
                         + "VALUES (?, ?, now(), ?, ?, 'ACTIVE')",
-                versionId, "OFAC_SDN", 1, "checksum");
+                versionId,
+                "OFAC_SDN",
+                1,
+                "checksum");
         jdbcTemplate.update(
                 "INSERT INTO sanctioned_address (id, version_id, address, source) VALUES (?, ?, ?, ?)",
-                UuidCreator.getTimeOrderedEpoch(), versionId, address, "OFAC_SDN");
+                UuidCreator.getTimeOrderedEpoch(),
+                versionId,
+                address,
+                "OFAC_SDN");
         jdbcTemplate.update("DELETE FROM current_list_version WHERE id = 1");
         jdbcTemplate.update(
-                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())",
-                versionId);
+                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())", versionId);
         return versionId;
     }
 }

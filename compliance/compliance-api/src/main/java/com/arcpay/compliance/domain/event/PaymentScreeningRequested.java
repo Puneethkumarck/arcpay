@@ -1,11 +1,10 @@
 package com.arcpay.compliance.domain.event;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record PaymentScreeningRequested(
@@ -14,8 +13,7 @@ public record PaymentScreeningRequested(
         String recipientAddress,
         BigDecimal amount,
         String currency,
-        Instant requestedAt
-) {
+        Instant requestedAt) {
 
     public static final String TOPIC = "screening.requested";
 

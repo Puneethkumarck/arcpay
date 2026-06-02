@@ -1,9 +1,8 @@
 package com.arcpay.policy.policyengine.infrastructure.db.evaluation;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.time.Instant;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 interface PolicyEvaluationJpaRepository extends JpaRepository<PolicyEvaluationEntity, UUID> {
 

@@ -1,12 +1,11 @@
 package com.arcpay.compliance.infrastructure.db;
 
 import com.arcpay.compliance.domain.model.ReviewState;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 interface HoldReviewRepository extends JpaRepository<HoldReviewEntity, UUID> {
 

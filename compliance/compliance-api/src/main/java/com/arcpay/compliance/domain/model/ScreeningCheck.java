@@ -1,17 +1,11 @@
 package com.arcpay.compliance.domain.model;
 
-import lombok.Builder;
-
 import java.util.Map;
 import java.util.Objects;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
-public record ScreeningCheck(
-        CheckType type,
-        CheckResult result,
-        int matchScore,
-        Map<String, Object> details
-) {
+public record ScreeningCheck(CheckType type, CheckResult result, int matchScore, Map<String, Object> details) {
 
     public ScreeningCheck {
         Objects.requireNonNull(type, "type must not be null");

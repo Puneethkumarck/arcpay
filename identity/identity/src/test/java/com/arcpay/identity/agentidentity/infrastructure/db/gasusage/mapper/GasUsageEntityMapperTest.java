@@ -1,13 +1,12 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.gasusage.mapper;
 
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-
-import java.math.BigDecimal;
-
 import static com.arcpay.identity.agentidentity.fixtures.GasUsageFixtures.SOME_GAS_USAGE;
 import static com.arcpay.identity.agentidentity.fixtures.GasUsageFixtures.SOME_GAS_USAGE_WITHOUT_AGENT;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 class GasUsageEntityMapperTest {
 
@@ -22,9 +21,7 @@ class GasUsageEntityMapperTest {
         var entity = mapper.mapToEntity(domain);
 
         // then
-        assertThat(entity)
-                .usingRecursiveComparison()
-                .isEqualTo(domain);
+        assertThat(entity).usingRecursiveComparison().isEqualTo(domain);
     }
 
     @Test
@@ -36,9 +33,7 @@ class GasUsageEntityMapperTest {
         var domain = mapper.mapToDomain(entity);
 
         // then
-        assertThat(domain)
-                .usingRecursiveComparison()
-                .isEqualTo(SOME_GAS_USAGE);
+        assertThat(domain).usingRecursiveComparison().isEqualTo(SOME_GAS_USAGE);
     }
 
     @Test
@@ -51,9 +46,7 @@ class GasUsageEntityMapperTest {
         var roundTrip = mapper.mapToDomain(mapper.mapToEntity(domain));
 
         // then
-        assertThat(roundTrip)
-                .usingRecursiveComparison()
-                .isEqualTo(domain);
+        assertThat(roundTrip).usingRecursiveComparison().isEqualTo(domain);
         assertThat(roundTrip.gasCostUsdc()).isEqualByComparingTo(preciseValue);
         assertThat(roundTrip.gasCostUsdc().scale()).isEqualTo(8);
     }
@@ -67,9 +60,7 @@ class GasUsageEntityMapperTest {
         var entity = mapper.mapToEntity(domain);
 
         // then
-        assertThat(entity)
-                .usingRecursiveComparison()
-                .isEqualTo(domain);
+        assertThat(entity).usingRecursiveComparison().isEqualTo(domain);
         assertThat(entity.getAgentId()).isNull();
     }
 
@@ -82,9 +73,7 @@ class GasUsageEntityMapperTest {
         var domain = mapper.mapToDomain(entity);
 
         // then
-        assertThat(domain)
-                .usingRecursiveComparison()
-                .isEqualTo(SOME_GAS_USAGE_WITHOUT_AGENT);
+        assertThat(domain).usingRecursiveComparison().isEqualTo(SOME_GAS_USAGE_WITHOUT_AGENT);
         assertThat(domain.agentId()).isNull();
     }
 }

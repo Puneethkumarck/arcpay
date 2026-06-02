@@ -4,13 +4,12 @@ import com.arcpay.compliance.domain.port.OwnerResolver;
 import com.arcpay.compliance.domain.port.ReviewAuthorizer;
 import com.arcpay.platform.api.OwnerPrincipal;
 import com.arcpay.platform.infrastructure.security.Roles;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor

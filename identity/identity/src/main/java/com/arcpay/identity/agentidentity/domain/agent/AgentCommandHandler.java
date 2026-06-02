@@ -10,13 +10,12 @@ import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
 import com.arcpay.identity.agentidentity.domain.model.Agent;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.domain.port.EventPublisher;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -88,10 +87,8 @@ public class AgentCommandHandler {
         agentValidator.validatePolicyUpdate(policyHash);
         var agent = findAgentForUpdate(agentId, ownerId);
         var now = Instant.now();
-        var updatedAgent = agent.toBuilder()
-                .policyHash(policyHash)
-                .updatedAt(now)
-                .build();
+        var updatedAgent =
+                agent.toBuilder().policyHash(policyHash).updatedAt(now).build();
         var savedAgent = agentRepository.save(updatedAgent);
         eventPublisher.publish(new AgentPolicyUpdated(savedAgent.agentId(), policyHash, now));
         log.info("Agent policy updated agentId={}", agentId);
@@ -99,8 +96,7 @@ public class AgentCommandHandler {
     }
 
     private Agent findAgentForUpdate(UUID agentId, UUID ownerId) {
-        var agent = agentRepository.findByIdForUpdate(agentId)
-                .orElseThrow(() -> new AgentNotFoundException(agentId));
+        var agent = agentRepository.findByIdForUpdate(agentId).orElseThrow(() -> new AgentNotFoundException(agentId));
         if (!agent.ownerId().equals(ownerId)) {
             throw new ForbiddenException("agent", ownerId);
         }

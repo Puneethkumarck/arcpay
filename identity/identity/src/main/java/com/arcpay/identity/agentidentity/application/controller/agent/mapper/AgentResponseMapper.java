@@ -7,14 +7,13 @@ import com.arcpay.identity.agentidentity.api.model.ProvisioningStatusResponse;
 import com.arcpay.identity.agentidentity.api.model.ProvisioningStepResponse;
 import com.arcpay.identity.agentidentity.api.model.StepStatusEnum;
 import com.arcpay.identity.agentidentity.domain.model.Agent;
+import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import com.arcpay.identity.agentidentity.domain.model.ProvisioningStatus;
 import com.arcpay.identity.agentidentity.domain.model.StepStatus;
-import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface AgentResponseMapper {

@@ -1,5 +1,10 @@
 package com.arcpay.policy.policyengine.application.controller;
 
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_POLICY_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.platform.api.ApiError;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
 import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
@@ -9,16 +14,10 @@ import com.arcpay.policy.policyengine.domain.exception.InvalidPolicyException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyHashMismatchException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyViolationException;
+import java.util.UUID;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-
-import java.util.UUID;
-
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_POLICY_ID;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class GlobalExceptionHandlerTest {
 

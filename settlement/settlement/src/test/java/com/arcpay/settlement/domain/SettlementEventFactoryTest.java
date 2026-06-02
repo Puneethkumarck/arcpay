@@ -1,15 +1,5 @@
 package com.arcpay.settlement.domain;
 
-import com.arcpay.settlement.domain.event.TransferConfirmed;
-import com.arcpay.settlement.domain.event.TransferReverted;
-import com.arcpay.settlement.domain.model.SettlementTransaction;
-import com.arcpay.settlement.domain.model.TransferState;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import static com.arcpay.settlement.domain.model.TransferState.CANCELLED;
 import static com.arcpay.settlement.domain.model.TransferState.COMPLETED;
 import static com.arcpay.settlement.domain.model.TransferState.DENIED;
@@ -20,6 +10,15 @@ import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someFailedTransaction;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someSettlementTransaction;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.settlement.domain.event.TransferConfirmed;
+import com.arcpay.settlement.domain.event.TransferReverted;
+import com.arcpay.settlement.domain.model.TransferState;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SettlementEventFactoryTest {
@@ -41,14 +40,17 @@ class SettlementEventFactoryTest {
         var event = factory.eventFor(transaction);
 
         // then
-        assertThat(event).get()
+        assertThat(event)
+                .get()
                 .usingRecursiveComparison()
                 .ignoringFields("confirmedAt")
                 .isEqualTo(expected);
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransferState.class, names = {"FAILED", "DENIED", "CANCELLED"})
+    @EnumSource(
+            value = TransferState.class,
+            names = {"FAILED", "DENIED", "CANCELLED"})
     void shouldEmitTransferRevertedWhenFailedDeniedOrCancelled(TransferState state) {
         // given
         var transaction = someFailedTransaction(state);
@@ -62,14 +64,17 @@ class SettlementEventFactoryTest {
         var event = factory.eventFor(transaction);
 
         // then
-        assertThat(event).get()
+        assertThat(event)
+                .get()
                 .usingRecursiveComparison()
                 .ignoringFields("revertedAt")
                 .isEqualTo(expected);
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransferState.class, names = {"FAILED", "DENIED", "CANCELLED"})
+    @EnumSource(
+            value = TransferState.class,
+            names = {"FAILED", "DENIED", "CANCELLED"})
     void shouldFallBackToStateNameAsReasonWhenErrorReasonMissing(TransferState state) {
         // given
         var transaction = someSettlementTransaction(state);
@@ -83,14 +88,17 @@ class SettlementEventFactoryTest {
         var event = factory.eventFor(transaction);
 
         // then
-        assertThat(event).get()
+        assertThat(event)
+                .get()
                 .usingRecursiveComparison()
                 .ignoringFields("revertedAt")
                 .isEqualTo(expected);
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransferState.class, names = {"INITIATED", "QUEUED", "SENT", "CONFIRMED", "STUCK"})
+    @EnumSource(
+            value = TransferState.class,
+            names = {"INITIATED", "QUEUED", "SENT", "CONFIRMED", "STUCK"})
     void shouldEmitNoEventForNonTerminalStates(TransferState state) {
         // given
         var transaction = someSettlementTransaction(state);

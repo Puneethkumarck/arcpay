@@ -2,7 +2,6 @@ package com.arcpay.compliance.infrastructure.sanctions.parser;
 
 import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
 import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
-
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

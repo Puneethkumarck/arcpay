@@ -1,12 +1,7 @@
 package com.arcpay.policy.policyengine.api.model;
 
+import java.util.UUID;
 import lombok.Builder;
 
-import java.util.UUID;
-
 @Builder
-public record ReservationResponse(
-        UUID paymentId,
-        UUID agentId,
-        String status
-) {}
+public record ReservationResponse(UUID paymentId, UUID agentId, String status) {}

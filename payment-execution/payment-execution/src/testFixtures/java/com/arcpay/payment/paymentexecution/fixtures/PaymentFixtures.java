@@ -11,7 +11,6 @@ import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 import com.arcpay.payment.paymentexecution.domain.model.ReviewDecisionSignal;
 import com.arcpay.payment.paymentexecution.domain.model.ScreeningResultSignal;
 import com.arcpay.payment.paymentexecution.domain.model.ScreeningVerdict;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
@@ -133,16 +132,11 @@ public final class PaymentFixtures {
     }
 
     public static ScreeningResultSignal someScreeningResult(ScreeningVerdict verdict) {
-        return ScreeningResultSignal.builder()
-                .verdict(verdict)
-                .riskScore(10)
-                .build();
+        return ScreeningResultSignal.builder().verdict(verdict).riskScore(10).build();
     }
 
     public static ReviewDecisionSignal someReviewDecision(boolean approved) {
-        return ReviewDecisionSignal.builder()
-                .approved(approved)
-                .build();
+        return ReviewDecisionSignal.builder().approved(approved).build();
     }
 
     public static ChainResultSignal someChainResult(boolean confirmed) {

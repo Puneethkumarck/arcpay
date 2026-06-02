@@ -1,5 +1,18 @@
 package com.arcpay.compliance.application.stream;
 
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_WATCHLIST_ADDRESS;
+import static com.arcpay.compliance.fixtures.OnChainFixtures.blockNumberJson;
+import static com.arcpay.compliance.fixtures.OnChainFixtures.emptyLogsJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
 import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
 import com.arcpay.compliance.domain.event.ScreeningCompleted;
 import com.arcpay.compliance.domain.model.ReviewState;
@@ -10,6 +23,14 @@ import com.arcpay.compliance.test.FullContextIntegrationTest;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -27,31 +48,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_WATCHLIST_ADDRESS;
-import static com.arcpay.compliance.fixtures.OnChainFixtures.blockNumberJson;
-import static com.arcpay.compliance.fixtures.OnChainFixtures.emptyLogsJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
-@TestPropertySource(properties = {
-        "compliance.sanctions.poll-interval-ms=500"
-})
+@TestPropertySource(properties = {"compliance.sanctions.poll-interval-ms=500"})
 class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTest {
 
     private static final long LATEST_BLOCK = 100000;
@@ -123,8 +120,8 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
         var paymentId = UuidCreator.getTimeOrderedEpoch();
 
         // when
-        kafkaTemplate.send(PaymentScreeningRequested.TOPIC, paymentId.toString(),
-                requestFor(paymentId, SOME_RECIPIENT_ADDRESS));
+        kafkaTemplate.send(
+                PaymentScreeningRequested.TOPIC, paymentId.toString(), requestFor(paymentId, SOME_RECIPIENT_ADDRESS));
 
         // then
         assertThat(awaitVerdict(paymentId)).isEqualTo(Verdict.PASS);
@@ -139,11 +136,11 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
         var paymentId = UuidCreator.getTimeOrderedEpoch();
 
         // when
-        kafkaTemplate.send(PaymentScreeningRequested.TOPIC, paymentId.toString(),
-                requestFor(paymentId, SOME_RECIPIENT_ADDRESS));
+        kafkaTemplate.send(
+                PaymentScreeningRequested.TOPIC, paymentId.toString(), requestFor(paymentId, SOME_RECIPIENT_ADDRESS));
         awaitVerdict(paymentId);
-        kafkaTemplate.send(PaymentScreeningRequested.TOPIC, paymentId.toString(),
-                requestFor(paymentId, SOME_RECIPIENT_ADDRESS));
+        kafkaTemplate.send(
+                PaymentScreeningRequested.TOPIC, paymentId.toString(), requestFor(paymentId, SOME_RECIPIENT_ADDRESS));
 
         // then
         awaitCompletedCount(paymentId, 2);
@@ -159,12 +156,13 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
         var paymentId = UuidCreator.getTimeOrderedEpoch();
 
         // when
-        kafkaTemplate.send(PaymentScreeningRequested.TOPIC, paymentId.toString(),
-                requestFor(paymentId, SOME_WATCHLIST_ADDRESS));
+        kafkaTemplate.send(
+                PaymentScreeningRequested.TOPIC, paymentId.toString(), requestFor(paymentId, SOME_WATCHLIST_ADDRESS));
 
         // then
         assertThat(awaitVerdict(paymentId)).isEqualTo(Verdict.HOLD);
-        await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofMillis(200))
+        await().atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(200))
                 .untilAsserted(() -> assertThat(holdReviewState(paymentId)).isEqualTo(ReviewState.PENDING.name()));
     }
 
@@ -183,7 +181,8 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
         try (var consumer = newCompletedConsumer()) {
             consumer.subscribe(List.of(ScreeningCompleted.TOPIC));
             var verdict = new AtomicReference<Verdict>();
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (var record : consumer.poll(Duration.ofSeconds(2))) {
                             var event = jsonMapper.readValue(record.value(), ScreeningCompleted.class);
@@ -202,7 +201,8 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
         try (var consumer = newCompletedConsumer()) {
             consumer.subscribe(List.of(ScreeningCompleted.TOPIC));
             var count = new AtomicInteger();
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (var record : consumer.poll(Duration.ofSeconds(2))) {
                             var event = jsonMapper.readValue(record.value(), ScreeningCompleted.class);
@@ -238,7 +238,8 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
 
     private void awaitSanctionsLoaded(UUID versionId) {
         await().atMost(Duration.ofSeconds(10))
-                .until(() -> versionId.equals(sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
+                .until(() -> versionId.equals(
+                        sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
     }
 
     private UUID seedSanctions(String address) {
@@ -247,14 +248,19 @@ class ScreeningRequestedListenerIntegrationTest extends FullContextIntegrationTe
                 "INSERT INTO sanctions_list_version "
                         + "(version_id, source, downloaded_at, record_count, checksum, status) "
                         + "VALUES (?, ?, now(), ?, ?, 'ACTIVE')",
-                versionId, "OFAC_SDN", 1, "checksum");
+                versionId,
+                "OFAC_SDN",
+                1,
+                "checksum");
         jdbcTemplate.update(
                 "INSERT INTO sanctioned_address (id, version_id, address, source) VALUES (?, ?, ?, ?)",
-                UuidCreator.getTimeOrderedEpoch(), versionId, address, "OFAC_SDN");
+                UuidCreator.getTimeOrderedEpoch(),
+                versionId,
+                address,
+                "OFAC_SDN");
         jdbcTemplate.update("DELETE FROM current_list_version WHERE id = 1");
         jdbcTemplate.update(
-                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())",
-                versionId);
+                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())", versionId);
         return versionId;
     }
 

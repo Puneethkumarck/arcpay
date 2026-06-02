@@ -1,16 +1,15 @@
 package com.arcpay.policy.policyengine.domain.evaluation;
 
+import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextWith;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-
-import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextWith;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class DailyLimitEvaluatorTest {
 
@@ -46,9 +45,7 @@ class DailyLimitEvaluatorTest {
                     .requested(new BigDecimal("30.00"))
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -69,9 +66,7 @@ class DailyLimitEvaluatorTest {
                     .requested(new BigDecimal("55.00"))
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -93,9 +88,7 @@ class DailyLimitEvaluatorTest {
                     .message("Daily spending 45.00 + 60.00 would exceed limit of 100.00")
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -117,9 +110,7 @@ class DailyLimitEvaluatorTest {
                     .message("Daily spending 120.00 + 5.00 would exceed limit of 100.00")
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
     }
 }

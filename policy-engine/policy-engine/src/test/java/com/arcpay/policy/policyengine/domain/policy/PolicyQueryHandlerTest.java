@@ -1,23 +1,5 @@
 package com.arcpay.policy.policyengine.domain.policy;
 
-import com.arcpay.policy.policyengine.domain.agent.AgentAuthorization;
-import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
-import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
-import com.arcpay.policy.policyengine.domain.model.Policy;
-import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
-import java.util.List;
-import java.util.Optional;
-
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_ID;
@@ -28,6 +10,23 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
+
+import com.arcpay.policy.policyengine.domain.agent.AgentAuthorization;
+import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
+import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
+import com.arcpay.policy.policyengine.domain.model.Policy;
+import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 class PolicyQueryHandlerTest {
@@ -105,7 +104,8 @@ class PolicyQueryHandlerTest {
     void shouldThrowWhenAgentNotOwnedOnActiveQuery() {
         // given
         willThrow(new AgentOwnershipException(SOME_AGENT_ID, SOME_OWNER_ID))
-                .given(agentAuthorization).verifyOwnership(SOME_AGENT_ID, SOME_OWNER_ID);
+                .given(agentAuthorization)
+                .verifyOwnership(SOME_AGENT_ID, SOME_OWNER_ID);
 
         // when / then
         assertThatThrownBy(() -> policyQueryHandler.getActivePolicy(SOME_AGENT_ID, SOME_OWNER_ID))
@@ -117,7 +117,8 @@ class PolicyQueryHandlerTest {
         // given
         var pageable = (Pageable) PageRequest.of(0, 20);
         willThrow(new AgentOwnershipException(SOME_AGENT_ID, SOME_OWNER_ID))
-                .given(agentAuthorization).verifyOwnership(SOME_AGENT_ID, SOME_OWNER_ID);
+                .given(agentAuthorization)
+                .verifyOwnership(SOME_AGENT_ID, SOME_OWNER_ID);
 
         // when / then
         assertThatThrownBy(() -> policyQueryHandler.listPolicyHistory(SOME_AGENT_ID, SOME_OWNER_ID, pageable))

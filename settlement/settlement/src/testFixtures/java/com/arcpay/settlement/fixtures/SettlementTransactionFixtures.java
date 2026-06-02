@@ -4,7 +4,6 @@ import com.arcpay.settlement.domain.model.SettlementTransaction;
 import com.arcpay.settlement.domain.model.TransferCommand;
 import com.arcpay.settlement.domain.model.TransferState;
 import com.arcpay.settlement.domain.model.WalletBalance;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -24,8 +23,7 @@ public final class SettlementTransactionFixtures {
     public static final String SOME_USDC_TOKEN_ADDRESS = "0x3600000000000000000000000000000000000000";
     public static final BigDecimal SOME_BALANCE_AMOUNT = new BigDecimal("120.500000");
 
-    private SettlementTransactionFixtures() {
-    }
+    private SettlementTransactionFixtures() {}
 
     public static WalletBalance someWalletBalance() {
         return new WalletBalance(SOME_WALLET_ID, SOME_USDC_TOKEN_ADDRESS, SOME_BALANCE_AMOUNT);
@@ -51,9 +49,7 @@ public final class SettlementTransactionFixtures {
     }
 
     public static SettlementTransaction someTransactionWith(UUID paymentId, TransferState state) {
-        return someSettlementTransaction(state).toBuilder()
-                .paymentId(paymentId)
-                .build();
+        return someSettlementTransaction(state).toBuilder().paymentId(paymentId).build();
     }
 
     public static String notificationBody(String circleTxId, String state) {

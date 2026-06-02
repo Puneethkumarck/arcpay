@@ -1,20 +1,19 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.owner;
 
-import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Locale;
-import java.util.UUID;
-
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_EMAIL;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_WALLET_ADDRESS;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.someOwnerEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
+import java.util.Locale;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
 class OwnerJpaRepositoryIntegrationTest extends FullContextIntegrationTest {

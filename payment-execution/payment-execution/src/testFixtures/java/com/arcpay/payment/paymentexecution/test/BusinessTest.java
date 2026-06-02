@@ -19,9 +19,8 @@ public abstract class BusinessTest extends FullContextIntegrationTest {
 
     protected RestClient restClient() {
         if (cachedRestClient == null) {
-            cachedRestClient = RestClient.builder()
-                    .baseUrl("http://localhost:" + port)
-                    .build();
+            cachedRestClient =
+                    RestClient.builder().baseUrl("http://localhost:" + port).build();
         }
         return cachedRestClient;
     }

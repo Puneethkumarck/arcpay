@@ -1,11 +1,10 @@
 package com.arcpay.identity.agentidentity.domain.model;
 
 import com.arcpay.identity.agentidentity.domain.exception.AgentNotInExpectedStateException;
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record Agent(
@@ -21,8 +20,7 @@ public record Agent(
         String metadataHash,
         String failureReason,
         Instant createdAt,
-        Instant updatedAt
-) {
+        Instant updatedAt) {
 
     public Agent {
         Objects.requireNonNull(agentId, "agentId must not be null");
@@ -78,10 +76,7 @@ public record Agent(
         if (status != AgentStatus.SUSPENDED) {
             throw new AgentNotInExpectedStateException(agentId, status, AgentStatus.SUSPENDED);
         }
-        return toBuilder()
-                .status(AgentStatus.ACTIVE)
-                .updatedAt(Instant.now())
-                .build();
+        return toBuilder().status(AgentStatus.ACTIVE).updatedAt(Instant.now()).build();
     }
 
     public Agent updateMetadata(String name, String purpose, String metadataHash) {

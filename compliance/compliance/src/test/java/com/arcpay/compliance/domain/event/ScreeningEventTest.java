@@ -1,10 +1,5 @@
 package com.arcpay.compliance.domain.event;
 
-import com.arcpay.compliance.domain.model.Verdict;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_DECISION_REASON;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_LIST_VERSION_ID;
@@ -12,6 +7,10 @@ import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_REVIEWER_PRINCIPAL;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SCREENED_AT;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.compliance.domain.model.Verdict;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 class ScreeningEventTest {
 
@@ -53,7 +52,8 @@ class ScreeningEventTest {
                 .build();
 
         // then
-        var expected = new ScreeningApproved(SOME_PAYMENT_ID, SOME_REVIEWER_PRINCIPAL, SOME_DECISION_REASON, SOME_SCREENED_AT);
+        var expected =
+                new ScreeningApproved(SOME_PAYMENT_ID, SOME_REVIEWER_PRINCIPAL, SOME_DECISION_REASON, SOME_SCREENED_AT);
         assertThat(event).usingRecursiveComparison().isEqualTo(expected);
     }
 
@@ -68,7 +68,8 @@ class ScreeningEventTest {
                 .build();
 
         // then
-        var expected = new ScreeningRejected(SOME_PAYMENT_ID, SOME_REVIEWER_PRINCIPAL, SOME_DECISION_REASON, SOME_SCREENED_AT);
+        var expected =
+                new ScreeningRejected(SOME_PAYMENT_ID, SOME_REVIEWER_PRINCIPAL, SOME_DECISION_REASON, SOME_SCREENED_AT);
         assertThat(event).usingRecursiveComparison().isEqualTo(expected);
     }
 }

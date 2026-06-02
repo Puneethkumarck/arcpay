@@ -8,5 +8,4 @@ public record UpdateAgentRequest(
         String name,
 
         @Size(max = 256, message = ErrorMessages.PURPOSE_SIZE)
-        String purpose
-) {}
+        String purpose) {}

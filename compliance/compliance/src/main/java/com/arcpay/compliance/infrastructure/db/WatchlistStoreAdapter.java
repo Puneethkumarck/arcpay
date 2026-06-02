@@ -2,15 +2,14 @@ package com.arcpay.compliance.infrastructure.db;
 
 import com.arcpay.compliance.domain.port.WatchlistStore;
 import com.github.f4b6a3.uuid.UuidCreator;
-import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor

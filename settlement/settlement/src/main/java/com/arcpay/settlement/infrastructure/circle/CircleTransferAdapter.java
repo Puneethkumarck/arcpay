@@ -1,5 +1,8 @@
 package com.arcpay.settlement.infrastructure.circle;
 
+import static com.arcpay.settlement.domain.model.TransferState.INITIATED;
+
+import com.arcpay.platform.infrastructure.circle.EntitySecretCiphertextProvider;
 import com.arcpay.settlement.domain.InsufficientBalanceException;
 import com.arcpay.settlement.domain.model.SettlementTransaction;
 import com.arcpay.settlement.domain.model.TransferCommand;
@@ -9,28 +12,23 @@ import com.arcpay.settlement.domain.model.TransferSubmission;
 import com.arcpay.settlement.domain.model.WalletBalance;
 import com.arcpay.settlement.domain.port.CustodyProvider;
 import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
-import com.arcpay.platform.infrastructure.circle.EntitySecretCiphertextProvider;
 import com.github.f4b6a3.uuid.UuidCreator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static com.arcpay.settlement.domain.model.TransferState.INITIATED;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 class CircleTransferAdapter implements CustodyProvider {
 
-    private static final UUID IDEMPOTENCY_NAMESPACE =
-            UUID.fromString("a3f1b2c4-5d6e-4f80-9a1b-2c3d4e5f6071");
+    private static final UUID IDEMPOTENCY_NAMESPACE = UUID.fromString("a3f1b2c4-5d6e-4f80-9a1b-2c3d4e5f6071");
     private static final String FEE_LEVEL = "MEDIUM";
 
     private final CircleApiProperties properties;
@@ -44,8 +42,7 @@ class CircleTransferAdapter implements CustodyProvider {
         var existing = repository.findByPaymentId(command.paymentId());
         if (existing.isPresent()) {
             var found = existing.get();
-            log.info("Replay for paymentId={} returns existing circleTxId={}",
-                    command.paymentId(), found.circleTxId());
+            log.info("Replay for paymentId={} returns existing circleTxId={}", command.paymentId(), found.circleTxId());
             return new TransferSubmission(found.circleTxId(), found.state());
         }
 
@@ -68,14 +65,14 @@ class CircleTransferAdapter implements CustodyProvider {
     @Override
     public TransferStatus getStatus(String circleTxId) {
         try {
-            var response = restClient.get()
+            var response = restClient
+                    .get()
                     .uri("/v1/w3s/transactions/{circleTxId}", circleTxId)
                     .retrieve()
                     .body(TransactionResponse.class);
 
             if (response == null || response.data() == null || response.data().transaction() == null) {
-                throw new CircleApiException("Empty transaction response from Circle API for circleTxId="
-                        + circleTxId);
+                throw new CircleApiException("Empty transaction response from Circle API for circleTxId=" + circleTxId);
             }
 
             var transaction = response.data().transaction();
@@ -89,8 +86,7 @@ class CircleTransferAdapter implements CustodyProvider {
         } catch (CircleApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new CircleApiException("Circle transaction status query failed for circleTxId="
-                    + circleTxId, e);
+            throw new CircleApiException("Circle transaction status query failed for circleTxId=" + circleTxId, e);
         }
     }
 
@@ -107,16 +103,16 @@ class CircleTransferAdapter implements CustodyProvider {
         var balance = fetchBalance(command.walletId());
         var required = command.amount().add(settlementProperties.gasBufferUsdc());
         if (balance.amount().compareTo(required) < 0) {
-            throw new InsufficientBalanceException(
-                    "Insufficient balance for paymentId=" + command.paymentId()
-                            + " walletId=" + command.walletId()
-                            + " balance=" + balance.amount() + " required=" + required);
+            throw new InsufficientBalanceException("Insufficient balance for paymentId=" + command.paymentId()
+                    + " walletId=" + command.walletId()
+                    + " balance=" + balance.amount() + " required=" + required);
         }
     }
 
     private WalletBalance fetchBalance(String walletId) {
         try {
-            var response = restClient.get()
+            var response = restClient
+                    .get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/v1/w3s/wallets/{walletId}/balances")
                             .queryParam("tokenAddress", properties.usdcTokenAddress())
@@ -124,12 +120,15 @@ class CircleTransferAdapter implements CustodyProvider {
                     .retrieve()
                     .body(BalancesResponse.class);
 
-            if (response == null || response.data() == null || response.data().tokenBalances() == null
+            if (response == null
+                    || response.data() == null
+                    || response.data().tokenBalances() == null
                     || response.data().tokenBalances().isEmpty()) {
                 return new WalletBalance(walletId, properties.usdcTokenAddress(), BigDecimal.ZERO);
             }
 
-            var amount = new BigDecimal(response.data().tokenBalances().getFirst().amount());
+            var amount =
+                    new BigDecimal(response.data().tokenBalances().getFirst().amount());
             return new WalletBalance(walletId, properties.usdcTokenAddress(), amount);
         } catch (CircleApiException e) {
             throw e;
@@ -148,29 +147,30 @@ class CircleTransferAdapter implements CustodyProvider {
                 "feeLevel", FEE_LEVEL,
                 "idempotencyKey", idempotencyKey(command.paymentId()).toString(),
                 "entitySecretCiphertext", ciphertextProvider.generate(),
-                "refId", command.paymentId().toString()
-        );
+                "refId", command.paymentId().toString());
 
         try {
-            var response = restClient.post()
+            var response = restClient
+                    .post()
                     .uri("/v1/w3s/developer/transactions/transfer")
                     .body(requestBody)
                     .retrieve()
                     .body(TransferResponse.class);
 
             if (response == null || response.data() == null || response.data().id() == null) {
-                throw new CircleApiException("Empty transfer response from Circle API for paymentId="
-                        + command.paymentId());
+                throw new CircleApiException(
+                        "Empty transfer response from Circle API for paymentId=" + command.paymentId());
             }
 
-            log.info("Circle transfer submitted paymentId={} circleTxId={}",
-                    command.paymentId(), response.data().id());
+            log.info(
+                    "Circle transfer submitted paymentId={} circleTxId={}",
+                    command.paymentId(),
+                    response.data().id());
             return response.data().id();
         } catch (CircleApiException e) {
             throw e;
         } catch (Exception e) {
-            throw new CircleApiException("Circle transfer submission failed for paymentId="
-                    + command.paymentId(), e);
+            throw new CircleApiException("Circle transfer submission failed for paymentId=" + command.paymentId(), e);
         }
     }
 

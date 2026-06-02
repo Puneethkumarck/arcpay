@@ -4,16 +4,15 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.List;
 
 @RequiredArgsConstructor
 public class ServiceAuthFilter extends OncePerRequestFilter {
@@ -26,7 +25,8 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         if (SecurityContextHolder.getContext().getAuthentication() == null
-                && serviceToken != null && !serviceToken.isBlank()) {
+                && serviceToken != null
+                && !serviceToken.isBlank()) {
             var token = request.getHeader(SERVICE_AUTH_HEADER);
             if (token != null && constantTimeEquals(token, serviceToken)) {
                 var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + Roles.SERVICE));
@@ -38,8 +38,6 @@ public class ServiceAuthFilter extends OncePerRequestFilter {
     }
 
     private boolean constantTimeEquals(String a, String b) {
-        return MessageDigest.isEqual(
-                a.getBytes(StandardCharsets.UTF_8),
-                b.getBytes(StandardCharsets.UTF_8));
+        return MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8), b.getBytes(StandardCharsets.UTF_8));
     }
 }

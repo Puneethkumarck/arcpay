@@ -19,17 +19,16 @@ import com.arcpay.policy.policyengine.domain.port.ReservationRepository;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLedgerService;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLockService;
 import com.github.f4b6a3.uuid.UuidCreator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -56,15 +55,20 @@ public class PolicyEvaluationService {
     private final RuleEvaluatorRegistry ruleEvaluatorRegistry;
     private final EventPublisher eventPublisher;
 
-    public PolicyEvaluationResult evaluateDryRunForOwner(UUID ownerId, UUID agentId,
-            String recipientAddress, BigDecimal amount) {
+    public PolicyEvaluationResult evaluateDryRunForOwner(
+            UUID ownerId, UUID agentId, String recipientAddress, BigDecimal amount) {
         var agent = agentAuthorization.verifyOwnershipAndActive(agentId, ownerId);
         return evaluate(agentId, agent, recipientAddress, amount, Instant.now(), true);
     }
 
     @Transactional
-    public PolicyEvaluationResult evaluate(UUID agentId, AgentInfo agent, String recipientAddress,
-            BigDecimal amount, Instant requestedAt, boolean dryRun) {
+    public PolicyEvaluationResult evaluate(
+            UUID agentId,
+            AgentInfo agent,
+            String recipientAddress,
+            BigDecimal amount,
+            Instant requestedAt,
+            boolean dryRun) {
         var startNanos = System.nanoTime();
 
         var activePolicy = policyRepository.findActiveByAgentId(agentId);
@@ -113,8 +117,8 @@ public class PolicyEvaluationService {
         return complete(context, policy, results, startNanos);
     }
 
-    private PolicyEvaluationResult rejectNoActivePolicy(UUID agentId, String recipientAddress,
-            BigDecimal amount, boolean dryRun, long startNanos) {
+    private PolicyEvaluationResult rejectNoActivePolicy(
+            UUID agentId, String recipientAddress, BigDecimal amount, boolean dryRun, long startNanos) {
         var noPolicyRule = RuleEvaluationResult.builder()
                 .ruleType(NO_POLICY_RULE_TYPE)
                 .verdict(RuleVerdict.FAIL)
@@ -136,14 +140,14 @@ public class PolicyEvaluationService {
         return persistAndPublish(evalResult, results);
     }
 
-    private PolicyEvaluationResult complete(EvaluationContext context, Policy policy,
-            List<RuleEvaluationResult> results, long startNanos) {
+    private PolicyEvaluationResult complete(
+            EvaluationContext context, Policy policy, List<RuleEvaluationResult> results, long startNanos) {
         var evalResult = buildResult(context, policy, results, startNanos);
         return persistAndPublish(evalResult, results);
     }
 
-    private PolicyEvaluationResult persistAndPublish(PolicyEvaluationResult evalResult,
-            List<RuleEvaluationResult> results) {
+    private PolicyEvaluationResult persistAndPublish(
+            PolicyEvaluationResult evalResult, List<RuleEvaluationResult> results) {
         if (evalResult.verdict() != PolicyVerdict.APPROVED || evalResult.dryRun()) {
             policyEvaluationRepository.save(evalResult);
         }
@@ -152,14 +156,24 @@ public class PolicyEvaluationService {
             publishViolationEvent(evalResult, results);
         }
 
-        log.info("Evaluation complete agentId={} policyId={} verdict={} dryRun={} durationMs={}",
-                evalResult.agentId(), evalResult.policyId(), evalResult.verdict(),
-                evalResult.dryRun(), evalResult.durationMs());
+        log.info(
+                "Evaluation complete agentId={} policyId={} verdict={} dryRun={} durationMs={}",
+                evalResult.agentId(),
+                evalResult.policyId(),
+                evalResult.verdict(),
+                evalResult.dryRun(),
+                evalResult.durationMs());
         return evalResult;
     }
 
-    private EvaluationContext buildContext(UUID agentId, AgentInfo agent, Policy policy,
-            String recipientAddress, BigDecimal amount, Instant requestedAt, boolean dryRun) {
+    private EvaluationContext buildContext(
+            UUID agentId,
+            AgentInfo agent,
+            Policy policy,
+            String recipientAddress,
+            BigDecimal amount,
+            Instant requestedAt,
+            boolean dryRun) {
         return EvaluationContext.builder()
                 .agentId(agentId)
                 .ownerId(agent.ownerId())
@@ -208,8 +222,8 @@ public class PolicyEvaluationService {
         return ruleEvaluatorRegistry.getEvaluator(ruleType).evaluate(rule, context);
     }
 
-    private PolicyEvaluationResult buildResult(EvaluationContext context, Policy policy,
-            List<RuleEvaluationResult> results, long startNanos) {
+    private PolicyEvaluationResult buildResult(
+            EvaluationContext context, Policy policy, List<RuleEvaluationResult> results, long startNanos) {
         var verdict = determineVerdict(results);
         var now = Instant.now();
         return PolicyEvaluationResult.builder()

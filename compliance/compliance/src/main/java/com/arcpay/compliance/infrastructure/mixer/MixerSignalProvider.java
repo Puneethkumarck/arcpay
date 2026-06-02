@@ -4,14 +4,13 @@ import com.arcpay.compliance.domain.model.CheckResult;
 import com.arcpay.compliance.domain.model.CheckType;
 import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.port.RiskSignalProvider;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 class MixerSignalProvider implements RiskSignalProvider {
@@ -37,9 +36,10 @@ class MixerSignalProvider implements RiskSignalProvider {
                 .type(CheckType.ONCHAIN_MIXER)
                 .result(matched ? CheckResult.FLAGGED : CheckResult.CLEAR)
                 .matchScore(matched ? mixerScore : 0)
-                .details(matched
-                        ? Map.of("knownMixer", Boolean.TRUE, "riskLevel", "high")
-                        : Map.of("knownMixer", Boolean.FALSE))
+                .details(
+                        matched
+                                ? Map.of("knownMixer", Boolean.TRUE, "riskLevel", "high")
+                                : Map.of("knownMixer", Boolean.FALSE))
                 .build();
     }
 }

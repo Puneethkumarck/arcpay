@@ -8,13 +8,12 @@ import com.arcpay.payment.paymentexecution.domain.model.AgentInfo;
 import com.arcpay.payment.paymentexecution.domain.port.AgentServiceClient;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -38,11 +37,12 @@ class IdentityServiceAdapter implements AgentServiceClient {
     }
 
     private IdentityServiceUnavailableException toUnavailable(IdentityServiceCallException e) {
-        var message = switch (e.getCause()) {
-            case CallNotPermittedException _ -> "Identity service circuit breaker is open";
-            case TimeoutException _ -> "Identity service call timed out";
-            case null, default -> "Identity service call failed";
-        };
+        var message =
+                switch (e.getCause()) {
+                    case CallNotPermittedException _ -> "Identity service circuit breaker is open";
+                    case TimeoutException _ -> "Identity service call timed out";
+                    case null, default -> "Identity service call failed";
+                };
         return new IdentityServiceUnavailableException(message, e);
     }
 }

@@ -1,22 +1,21 @@
 package com.arcpay.policy.policyengine.infrastructure.scheduling;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
+
 import com.arcpay.policy.policyengine.domain.port.PolicyEvaluationRepository;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class EvaluationCleanupJobTest {

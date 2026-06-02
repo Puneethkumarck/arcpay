@@ -1,11 +1,10 @@
 package com.arcpay.identity.agentidentity.domain.agent;
 
-import org.junit.jupiter.api.Test;
-
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
 
 class UuidConversionUtilTest {
 

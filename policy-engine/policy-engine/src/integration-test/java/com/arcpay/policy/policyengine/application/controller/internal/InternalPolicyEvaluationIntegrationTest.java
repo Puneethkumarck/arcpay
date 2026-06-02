@@ -1,5 +1,10 @@
 package com.arcpay.policy.policyengine.application.controller.internal;
 
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.api.model.InternalEvaluateRequest;
 import com.arcpay.policy.policyengine.domain.model.AgentInfo;
@@ -12,21 +17,15 @@ import com.arcpay.policy.policyengine.test.RestControllerAbstractTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class InternalPolicyEvaluationIntegrationTest extends RestControllerAbstractTest {
 

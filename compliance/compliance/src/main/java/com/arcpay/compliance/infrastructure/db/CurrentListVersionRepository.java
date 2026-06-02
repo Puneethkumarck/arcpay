@@ -1,8 +1,7 @@
 package com.arcpay.compliance.infrastructure.db;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 interface CurrentListVersionRepository extends JpaRepository<CurrentListVersionEntity, Short> {
 

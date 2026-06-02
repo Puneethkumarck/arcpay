@@ -1,5 +1,11 @@
 package com.arcpay.policy.policyengine.infrastructure.client.identity;
 
+import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_AGENT_ID;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
@@ -17,20 +23,15 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 
-import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_AGENT_ID;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-@TestPropertySource(properties = {
-        "resilience4j.circuitbreaker.configs.default.sliding-window-size=3",
-        "resilience4j.circuitbreaker.configs.default.minimum-number-of-calls=3",
-        "resilience4j.circuitbreaker.configs.default.failure-rate-threshold=50",
-        "resilience4j.circuitbreaker.configs.default.wait-duration-in-open-state=30s",
-        "resilience4j.timelimiter.configs.default.timeout-duration=1s",
-        "resilience4j.timelimiter.configs.default.cancel-running-future=true"
-})
+@TestPropertySource(
+        properties = {
+            "resilience4j.circuitbreaker.configs.default.sliding-window-size=3",
+            "resilience4j.circuitbreaker.configs.default.minimum-number-of-calls=3",
+            "resilience4j.circuitbreaker.configs.default.failure-rate-threshold=50",
+            "resilience4j.circuitbreaker.configs.default.wait-duration-in-open-state=30s",
+            "resilience4j.timelimiter.configs.default.timeout-duration=1s",
+            "resilience4j.timelimiter.configs.default.cancel-running-future=true"
+        })
 class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
 
     private static final String AGENT_PATH = "/api/v1/internal/agents/" + SOME_AGENT_ID;
@@ -70,8 +71,8 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldRegisterCircuitBreakerForIdentityClient() {
         // given
-        identityServer.stubFor(WireMock.get(urlPathEqualTo(AGENT_PATH))
-                .willReturn(aResponse().withStatus(500)));
+        identityServer.stubFor(
+                WireMock.get(urlPathEqualTo(AGENT_PATH)).willReturn(aResponse().withStatus(500)));
         assertThatThrownBy(() -> agentServiceClient.getAgent(SOME_AGENT_ID))
                 .isInstanceOf(IdentityServiceUnavailableException.class);
 
@@ -85,8 +86,8 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldOpenCircuitAfterRepeatedServerErrorsAndMapToUnavailable() {
         // given
-        identityServer.stubFor(WireMock.get(urlPathEqualTo(AGENT_PATH))
-                .willReturn(aResponse().withStatus(500)));
+        identityServer.stubFor(
+                WireMock.get(urlPathEqualTo(AGENT_PATH)).willReturn(aResponse().withStatus(500)));
 
         // when
         for (int i = 0; i < 3; i++) {
@@ -122,8 +123,8 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldSurfaceNotFoundWithoutOpeningCircuit() {
         // given
-        identityServer.stubFor(WireMock.get(urlPathEqualTo(AGENT_PATH))
-                .willReturn(aResponse().withStatus(404)));
+        identityServer.stubFor(
+                WireMock.get(urlPathEqualTo(AGENT_PATH)).willReturn(aResponse().withStatus(404)));
 
         // when
         for (int i = 0; i < 6; i++) {
@@ -163,9 +164,8 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
                 .filter(b -> b.getName().startsWith("IdentityServiceClient")
                         && b.getMetrics().getNumberOfBufferedCalls() > 0)
                 .findFirst()
-                .orElseThrow(() -> new AssertionError(
-                        "No IdentityServiceClient circuit breaker recorded any calls — "
-                                + "the OpenFeign circuit-breaker integration did not engage"));
+                .orElseThrow(() -> new AssertionError("No IdentityServiceClient circuit breaker recorded any calls — "
+                        + "the OpenFeign circuit-breaker integration did not engage"));
     }
 
     private CircuitBreaker getAgentBreaker() {
@@ -173,8 +173,8 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
                 .filter(b -> b.getName().startsWith("IdentityServiceClient")
                         && b.getName().contains("getAgent"))
                 .findFirst()
-                .orElseThrow(() -> new AssertionError(
-                        "No IdentityServiceClient getAgent circuit breaker was registered — "
+                .orElseThrow(
+                        () -> new AssertionError("No IdentityServiceClient getAgent circuit breaker was registered — "
                                 + "the OpenFeign circuit-breaker integration did not engage"));
     }
 }

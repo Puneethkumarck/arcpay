@@ -1,26 +1,24 @@
 package com.arcpay.identity.agentidentity.application.stream;
 
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_METADATA_HASH;
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+
 import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningWorkflow;
 import com.arcpay.identity.agentidentity.domain.event.AgentRegistrationRequested;
 import io.temporal.api.enums.v1.WorkflowIdReusePolicy;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowOptions;
+import java.time.Duration;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Duration;
-import java.time.Instant;
-
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_METADATA_HASH;
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class AgentProvisioningTriggerTest {
@@ -35,8 +33,7 @@ class AgentProvisioningTriggerTest {
     void shouldStartProvisioningWorkflowWithCorrectOptions() {
         // given
         var event = new AgentRegistrationRequested(
-                SOME_AGENT_ID, SOME_OWNER_ID, "test-agent", "test purpose",
-                SOME_METADATA_HASH, Instant.now());
+                SOME_AGENT_ID, SOME_OWNER_ID, "test-agent", "test purpose", SOME_METADATA_HASH, Instant.now());
 
         var expectedOptions = WorkflowOptions.newBuilder()
                 .setWorkflowId("AgentProvisioning_" + SOME_AGENT_ID)

@@ -1,28 +1,5 @@
 package com.arcpay.identity.agentidentity.domain.agent;
 
-import com.arcpay.identity.agentidentity.domain.model.ProvisioningStatus;
-import com.arcpay.identity.agentidentity.domain.model.StepStatus;
-import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
-import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
-import com.arcpay.identity.agentidentity.domain.model.Agent;
-import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
-import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Stream;
-
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_FAILED;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
@@ -33,6 +10,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+
+import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
+import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
+import com.arcpay.identity.agentidentity.domain.model.Agent;
+import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import com.arcpay.identity.agentidentity.domain.model.ProvisioningStatus;
+import com.arcpay.identity.agentidentity.domain.model.StepStatus;
+import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
 class AgentQueryHandlerTest {
@@ -130,8 +129,7 @@ class AgentQueryHandlerTest {
                 Arguments.of(SOME_AGENT_PROVISIONING, StepStatus.IN_PROGRESS, StepStatus.PENDING),
                 Arguments.of(SOME_AGENT_WALLET_READY, StepStatus.COMPLETED, StepStatus.IN_PROGRESS),
                 Arguments.of(SOME_AGENT_ACTIVE, StepStatus.COMPLETED, StepStatus.COMPLETED),
-                Arguments.of(SOME_AGENT_SUSPENDED, StepStatus.COMPLETED, StepStatus.COMPLETED)
-        );
+                Arguments.of(SOME_AGENT_SUSPENDED, StepStatus.COMPLETED, StepStatus.COMPLETED));
     }
 
     @Test

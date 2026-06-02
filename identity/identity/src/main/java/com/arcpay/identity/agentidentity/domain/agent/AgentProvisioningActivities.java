@@ -2,7 +2,6 @@ package com.arcpay.identity.agentidentity.domain.agent;
 
 import io.temporal.activity.ActivityInterface;
 import io.temporal.activity.ActivityMethod;
-
 import java.util.UUID;
 
 @ActivityInterface

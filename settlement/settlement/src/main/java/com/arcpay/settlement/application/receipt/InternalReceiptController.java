@@ -1,5 +1,7 @@
 package com.arcpay.settlement.application.receipt;
 
+import static org.springframework.http.HttpStatus.ACCEPTED;
+
 import com.arcpay.settlement.api.model.ReceiptRequest;
 import com.arcpay.settlement.application.receipt.mapper.ReceiptRequestMapper;
 import jakarta.validation.Valid;
@@ -11,8 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import static org.springframework.http.HttpStatus.ACCEPTED;
 
 @Slf4j
 @RestController

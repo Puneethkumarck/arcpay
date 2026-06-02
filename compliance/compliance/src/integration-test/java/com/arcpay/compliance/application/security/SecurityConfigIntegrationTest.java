@@ -1,5 +1,13 @@
 package com.arcpay.compliance.application.security;
 
+import static com.arcpay.compliance.test.stubs.IdentityStubs.stubResolveApiKey;
+import static com.arcpay.platform.infrastructure.security.ApiKeyAuthFilter.hashApiKey;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.arcpay.compliance.test.FullContextIntegrationTest;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -21,14 +29,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.WebApplicationContext;
-
-import static com.arcpay.compliance.test.stubs.IdentityStubs.stubResolveApiKey;
-import static com.arcpay.platform.infrastructure.security.ApiKeyAuthFilter.hashApiKey;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @Import(SecurityConfigIntegrationTest.TestEndpoints.class)
@@ -76,8 +76,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         // given — no credentials
 
         // when / then
-        mockMvc.perform(get("/actuator/health"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/actuator/health")).andExpect(status().isOk());
     }
 
     @Test
@@ -85,8 +84,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         // given — no credentials
 
         // when / then
-        mockMvc.perform(get("/compliance/test/ping"))
-                .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
+        mockMvc.perform(get("/compliance/test/ping")).andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
     }
 
     @Test
@@ -95,21 +93,19 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         stubResolveApiKey(identityServer, hashApiKey(VALID_API_KEY));
 
         // when / then
-        mockMvc.perform(get("/compliance/test/ping")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_API_KEY))
+        mockMvc.perform(get("/compliance/test/ping").header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_API_KEY))
                 .andExpect(status().isOk());
     }
 
     @Test
     void shouldRejectUnknownApiKey() throws Exception {
         // given
-        identityServer.stubFor(WireMock.get(urlPathEqualTo(
-                        "/api/v1/internal/owners/by-api-key-hash/" + hashApiKey(UNKNOWN_API_KEY)))
-                .willReturn(aResponse().withStatus(404)));
+        identityServer.stubFor(
+                WireMock.get(urlPathEqualTo("/api/v1/internal/owners/by-api-key-hash/" + hashApiKey(UNKNOWN_API_KEY)))
+                        .willReturn(aResponse().withStatus(404)));
 
         // when / then
-        mockMvc.perform(get("/compliance/test/ping")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + UNKNOWN_API_KEY))
+        mockMvc.perform(get("/compliance/test/ping").header(HttpHeaders.AUTHORIZATION, "Bearer " + UNKNOWN_API_KEY))
                 .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
     }
 
@@ -118,8 +114,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         // given — a valid X-Service-Auth token
 
         // when / then
-        mockMvc.perform(get("/api/v1/internal/test/ping")
-                        .header("X-Service-Auth", SERVICE_TOKEN))
+        mockMvc.perform(get("/api/v1/internal/test/ping").header("X-Service-Auth", SERVICE_TOKEN))
                 .andExpect(status().isOk());
     }
 
@@ -129,8 +124,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         stubResolveApiKey(identityServer, hashApiKey(VALID_API_KEY));
 
         // when / then
-        mockMvc.perform(get("/api/v1/internal/test/ping")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_API_KEY))
+        mockMvc.perform(get("/api/v1/internal/test/ping").header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_API_KEY))
                 .andExpect(status().is(HttpStatus.FORBIDDEN.value()));
     }
 

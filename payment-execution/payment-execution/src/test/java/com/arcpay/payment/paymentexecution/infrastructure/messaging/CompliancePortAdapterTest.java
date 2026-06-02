@@ -1,16 +1,5 @@
 package com.arcpay.payment.paymentexecution.infrastructure.messaging;
 
-import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AGENT_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AMOUNT;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_CURRENCY;
@@ -19,6 +8,16 @@ import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.somePayment;
 import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
 import static org.mockito.BDDMockito.then;
+
+import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
+import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
+import java.time.Instant;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class CompliancePortAdapterTest {

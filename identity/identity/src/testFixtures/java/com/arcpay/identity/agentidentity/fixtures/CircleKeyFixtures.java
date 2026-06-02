@@ -12,8 +12,7 @@ public final class CircleKeyFixtures {
 
     private static final KeyPair KEY_PAIR = generateKeyPair();
 
-    private CircleKeyFixtures() {
-    }
+    private CircleKeyFixtures() {}
 
     public static String publicKeyPem() {
         return toPem(KEY_PAIR.getPublic());
@@ -30,8 +29,7 @@ public final class CircleKeyFixtures {
     }
 
     private static String toPem(PublicKey key) {
-        var base64 = Base64.getMimeEncoder(64, "\n".getBytes())
-                .encodeToString(key.getEncoded());
+        var base64 = Base64.getMimeEncoder(64, "\n".getBytes()).encodeToString(key.getEncoded());
         return "-----BEGIN PUBLIC KEY-----\n" + base64 + "\n-----END PUBLIC KEY-----";
     }
 

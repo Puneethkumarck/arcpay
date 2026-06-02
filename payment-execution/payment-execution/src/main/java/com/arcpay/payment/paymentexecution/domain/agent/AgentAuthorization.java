@@ -5,10 +5,9 @@ import com.arcpay.payment.paymentexecution.domain.exception.AgentNotFoundExcepti
 import com.arcpay.payment.paymentexecution.domain.exception.AgentNotOwnedException;
 import com.arcpay.payment.paymentexecution.domain.model.AgentInfo;
 import com.arcpay.payment.paymentexecution.domain.port.AgentServiceClient;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -19,8 +18,7 @@ public class AgentAuthorization {
     private final AgentServiceClient agentServiceClient;
 
     public AgentInfo verifyOwnershipAndActive(UUID agentId, UUID ownerId) {
-        var agent = agentServiceClient.getAgent(agentId)
-                .orElseThrow(() -> new AgentNotFoundException(agentId));
+        var agent = agentServiceClient.getAgent(agentId).orElseThrow(() -> new AgentNotFoundException(agentId));
         if (!agent.ownerId().equals(ownerId)) {
             throw new AgentNotOwnedException(agentId, ownerId);
         }

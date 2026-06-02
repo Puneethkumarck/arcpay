@@ -1,5 +1,9 @@
 package com.arcpay.identity.agentidentity.domain.owner;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.identity.agentidentity.domain.exception.InvalidEmailException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidWalletAddressException;
 import com.arcpay.identity.agentidentity.domain.exception.OwnerEmailAlreadyExistsException;
@@ -10,10 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class OwnerValidatorTest {

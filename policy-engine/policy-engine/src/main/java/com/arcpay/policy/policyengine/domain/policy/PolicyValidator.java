@@ -2,8 +2,6 @@ package com.arcpay.policy.policyengine.domain.policy;
 
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.exception.InvalidPolicyException;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +9,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 @Component
 public class PolicyValidator {
@@ -36,7 +35,8 @@ public class PolicyValidator {
         var seen = new HashSet<Class<?>>();
         for (var rule : rules) {
             if (!seen.add(rule.getClass())) {
-                throw new InvalidPolicyException("Duplicate rule type: " + rule.getClass().getSimpleName());
+                throw new InvalidPolicyException(
+                        "Duplicate rule type: " + rule.getClass().getSimpleName());
             }
         }
     }
@@ -52,10 +52,9 @@ public class PolicyValidator {
     }
 
     private void requireOrdered(Optional<BigDecimal> lower, Optional<BigDecimal> upper, String message) {
-        lower.flatMap(low -> upper.filter(high -> low.compareTo(high) > 0))
-                .ifPresent(violation -> {
-                    throw new InvalidPolicyException(message);
-                });
+        lower.flatMap(low -> upper.filter(high -> low.compareTo(high) > 0)).ifPresent(violation -> {
+            throw new InvalidPolicyException(message);
+        });
     }
 
     private Optional<BigDecimal> findAmount(List<PolicyRule> rules, Class<? extends PolicyRule> type) {
@@ -89,8 +88,7 @@ public class PolicyValidator {
         overlap.retainAll(blocklist);
 
         if (!overlap.isEmpty()) {
-            throw new InvalidPolicyException(
-                    "Address overlap between allowlist and blocklist: " + overlap);
+            throw new InvalidPolicyException("Address overlap between allowlist and blocklist: " + overlap);
         }
     }
 

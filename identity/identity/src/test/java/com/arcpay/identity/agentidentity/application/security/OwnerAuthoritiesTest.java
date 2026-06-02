@@ -1,11 +1,10 @@
 package com.arcpay.identity.agentidentity.application.security;
 
-import com.arcpay.platform.infrastructure.security.Roles;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.platform.infrastructure.security.Roles;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 class OwnerAuthoritiesTest {
 

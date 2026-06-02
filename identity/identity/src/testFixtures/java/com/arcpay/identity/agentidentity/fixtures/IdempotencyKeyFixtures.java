@@ -2,7 +2,6 @@ package com.arcpay.identity.agentidentity.fixtures;
 
 import com.arcpay.identity.agentidentity.domain.model.IdempotencyKey;
 import com.arcpay.identity.agentidentity.infrastructure.db.idempotency.IdempotencyKeyEntity;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -13,7 +12,8 @@ public final class IdempotencyKeyFixtures {
     public static final UUID SOME_OWNER_ID = UUID.fromString("019718a0-1234-7def-8000-abcdef123456");
 
     public static final String SOME_ENDPOINT = "POST /v1/agents";
-    public static final String SOME_RESPONSE_BODY = "{\"agentId\":\"019718a0-aaaa-7def-8000-000000000001\",\"status\":\"PROVISIONING\"}";
+    public static final String SOME_RESPONSE_BODY =
+            "{\"agentId\":\"019718a0-aaaa-7def-8000-000000000001\",\"status\":\"PROVISIONING\"}";
     public static final Instant SOME_CREATED_AT = Instant.parse("2026-06-01T10:00:00Z");
     public static final Instant SOME_EXPIRES_AT = Instant.parse("2026-06-02T10:00:00Z");
     public static final Instant SOME_EXPIRED_CREATED_AT = Instant.parse("2026-05-29T10:00:00Z");
@@ -59,6 +59,5 @@ public final class IdempotencyKeyFixtures {
             .expiresAt(SOME_EXPIRED_EXPIRES_AT)
             .build();
 
-    private IdempotencyKeyFixtures() {
-    }
+    private IdempotencyKeyFixtures() {}
 }

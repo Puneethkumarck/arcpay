@@ -1,5 +1,22 @@
 package com.arcpay.policy.policyengine.domain.evaluation;
 
+import static com.arcpay.platform.test.TestUtils.eqIgnoring;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.FAIL_DAILY;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.FAIL_PER_TX;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.PASS_DAILY;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.PASS_PER_TX;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.REQUIRES_APPROVAL_THRESHOLD;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_AMOUNT;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_RECIPIENT;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_REQUESTED_AT;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_SPENDING_SUMMARY;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.never;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.agent.AgentAuthorization;
 import com.arcpay.policy.policyengine.domain.event.PolicyViolationDetected;
@@ -19,35 +36,17 @@ import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
 import com.arcpay.policy.policyengine.domain.port.ReservationRepository;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLedgerService;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLockService;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static com.arcpay.platform.test.TestUtils.eqIgnoring;
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.FAIL_DAILY;
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.FAIL_PER_TX;
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.PASS_DAILY;
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.PASS_PER_TX;
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.REQUIRES_APPROVAL_THRESHOLD;
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_AMOUNT;
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_RECIPIENT;
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_REQUESTED_AT;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_SPENDING_SUMMARY;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.never;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class PolicyEvaluationServiceTest {
@@ -107,9 +106,15 @@ class PolicyEvaluationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PolicyEvaluationService(agentAuthorization, policyRepository, policyEvaluationRepository,
-                spendingLockService, spendingLedgerService, reservationRepository,
-                ruleEvaluatorRegistry, eventPublisher);
+        service = new PolicyEvaluationService(
+                agentAuthorization,
+                policyRepository,
+                policyEvaluationRepository,
+                spendingLockService,
+                spendingLedgerService,
+                reservationRepository,
+                ruleEvaluatorRegistry,
+                eventPublisher);
     }
 
     private static Policy policyWith(PolicyRule... rules) {
@@ -154,8 +159,8 @@ class PolicyEvaluationServiceTest {
         return eqIgnoring(context(dryRun), "spendingSummary");
     }
 
-    private PolicyEvaluationResult expectedResult(PolicyVerdict verdict, boolean dryRun,
-            List<RuleEvaluationResult> ruleResults) {
+    private PolicyEvaluationResult expectedResult(
+            PolicyVerdict verdict, boolean dryRun, List<RuleEvaluationResult> ruleResults) {
         return PolicyEvaluationResult.builder()
                 .evaluationId(UUID.fromString("00000000-0000-0000-0000-000000000000"))
                 .agentId(SOME_AGENT_ID)
@@ -196,12 +201,12 @@ class PolicyEvaluationServiceTest {
         void shouldApproveWhenAllRulesPass() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX, SOME_DAILY));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
-                    .willReturn(PASS_PER_TX);
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.DailyLimit.class)).willReturn(dailyEvaluator);
-            given(dailyEvaluator.evaluate(eqIgnoring(SOME_DAILY), ctx(false)))
-                    .willReturn(PASS_DAILY);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false))).willReturn(PASS_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.DailyLimit.class))
+                    .willReturn(dailyEvaluator);
+            given(dailyEvaluator.evaluate(eqIgnoring(SOME_DAILY), ctx(false))).willReturn(PASS_DAILY);
             given(spendingLedgerService.getSpendingSummary(SOME_AGENT_ID, 0)).willReturn(SOME_SPENDING_SUMMARY);
 
             // when
@@ -218,10 +223,11 @@ class PolicyEvaluationServiceTest {
         void shouldReturnRequiresApprovalWhenThresholdTriggered() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX, SOME_APPROVAL));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
-                    .willReturn(PASS_PER_TX);
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.ApprovalThreshold.class)).willReturn(approvalEvaluator);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false))).willReturn(PASS_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.ApprovalThreshold.class))
+                    .willReturn(approvalEvaluator);
             given(approvalEvaluator.evaluate(eqIgnoring(SOME_APPROVAL), ctx(false)))
                     .willReturn(REQUIRES_APPROVAL_THRESHOLD);
 
@@ -232,8 +238,8 @@ class PolicyEvaluationServiceTest {
             assertThat(result)
                     .usingRecursiveComparison()
                     .ignoringFields("evaluationId", "evaluatedAt", "durationMs")
-                    .isEqualTo(expectedResult(PolicyVerdict.REQUIRES_APPROVAL, false,
-                            List.of(PASS_PER_TX, REQUIRES_APPROVAL_THRESHOLD)));
+                    .isEqualTo(expectedResult(
+                            PolicyVerdict.REQUIRES_APPROVAL, false, List.of(PASS_PER_TX, REQUIRES_APPROVAL_THRESHOLD)));
         }
     }
 
@@ -244,9 +250,9 @@ class PolicyEvaluationServiceTest {
         void shouldRejectWhenAnyRuleFails() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
-                    .willReturn(FAIL_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false))).willReturn(FAIL_PER_TX);
 
             // when
             var result = invoke(false);
@@ -262,9 +268,9 @@ class PolicyEvaluationServiceTest {
         void shouldFailFastInRealMode() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX, SOME_DAILY));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
-                    .willReturn(FAIL_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false))).willReturn(FAIL_PER_TX);
 
             // when
             var result = invoke(false);
@@ -282,12 +288,12 @@ class PolicyEvaluationServiceTest {
         void shouldEvaluateAllRulesInDryRunMode() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX, SOME_DAILY));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(true)))
-                    .willReturn(FAIL_PER_TX);
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.DailyLimit.class)).willReturn(dailyEvaluator);
-            given(dailyEvaluator.evaluate(eqIgnoring(SOME_DAILY), ctx(true)))
-                    .willReturn(FAIL_DAILY);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(true))).willReturn(FAIL_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.DailyLimit.class))
+                    .willReturn(dailyEvaluator);
+            given(dailyEvaluator.evaluate(eqIgnoring(SOME_DAILY), ctx(true))).willReturn(FAIL_DAILY);
             given(spendingLedgerService.getSpendingSummary(SOME_AGENT_ID, 0)).willReturn(SOME_SPENDING_SUMMARY);
 
             // when
@@ -308,9 +314,9 @@ class PolicyEvaluationServiceTest {
         void shouldFetchSpendingSummaryOnlyWhenSpendingRulesExist() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
-                    .willReturn(PASS_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false))).willReturn(PASS_PER_TX);
 
             // when
             invoke(false);
@@ -323,9 +329,9 @@ class PolicyEvaluationServiceTest {
         void shouldFetchSpendingSummaryWithVelocityWindowFromVelocityRule() {
             // given
             givenActivePolicy(policyWith(SOME_VELOCITY, SOME_DAILY));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.DailyLimit.class)).willReturn(dailyEvaluator);
-            given(dailyEvaluator.evaluate(eqIgnoring(SOME_DAILY), ctx(false)))
-                    .willReturn(PASS_DAILY);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.DailyLimit.class))
+                    .willReturn(dailyEvaluator);
+            given(dailyEvaluator.evaluate(eqIgnoring(SOME_DAILY), ctx(false))).willReturn(PASS_DAILY);
             given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.Velocity.class)).willReturn(velocityEvaluator);
             given(velocityEvaluator.evaluate(eqIgnoring(SOME_VELOCITY), ctx(false)))
                     .willReturn(PASS_DAILY);
@@ -342,9 +348,9 @@ class PolicyEvaluationServiceTest {
         void shouldAcquirePessimisticLockBeforeEvaluation() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
-                    .willReturn(PASS_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false))).willReturn(PASS_PER_TX);
 
             // when
             invoke(false);
@@ -361,43 +367,51 @@ class PolicyEvaluationServiceTest {
         void shouldPersistRejectedEvaluation() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
-                    .willReturn(FAIL_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false))).willReturn(FAIL_PER_TX);
 
             // when
             invoke(false);
 
             // then
-            then(policyEvaluationRepository).should().save(eqIgnoring(
-                    expectedResult(PolicyVerdict.REJECTED, false, List.of(FAIL_PER_TX)),
-                    "evaluationId", "evaluatedAt", "durationMs"));
+            then(policyEvaluationRepository)
+                    .should()
+                    .save(eqIgnoring(
+                            expectedResult(PolicyVerdict.REJECTED, false, List.of(FAIL_PER_TX)),
+                            "evaluationId",
+                            "evaluatedAt",
+                            "durationMs"));
         }
 
         @Test
         void shouldPersistDryRunEvaluation() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(true)))
-                    .willReturn(PASS_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(true))).willReturn(PASS_PER_TX);
 
             // when
             invoke(true);
 
             // then
-            then(policyEvaluationRepository).should().save(eqIgnoring(
-                    expectedResult(PolicyVerdict.APPROVED, true, List.of(PASS_PER_TX)),
-                    "evaluationId", "evaluatedAt", "durationMs"));
+            then(policyEvaluationRepository)
+                    .should()
+                    .save(eqIgnoring(
+                            expectedResult(PolicyVerdict.APPROVED, true, List.of(PASS_PER_TX)),
+                            "evaluationId",
+                            "evaluatedAt",
+                            "durationMs"));
         }
 
         @Test
         void shouldNotPersistApprovedRealEvaluation() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
-                    .willReturn(PASS_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false))).willReturn(PASS_PER_TX);
 
             // when
             invoke(false);
@@ -414,29 +428,36 @@ class PolicyEvaluationServiceTest {
         void shouldPublishViolationEventOnRejection() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false)))
-                    .willReturn(FAIL_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(false))).willReturn(FAIL_PER_TX);
 
             // when
             invoke(false);
 
             // then
-            then(eventPublisher).should().publish(eqIgnoring(
-                    new PolicyViolationDetected(
-                            UUID.fromString("00000000-0000-0000-0000-000000000000"),
-                            SOME_AGENT_ID, SOME_POLICY_ID, FAIL_PER_TX.ruleType(), FAIL_PER_TX.message(),
-                            SOME_AMOUNT, Instant.parse("2026-01-01T00:00:00Z")),
-                    "evaluationId", "detectedAt"));
+            then(eventPublisher)
+                    .should()
+                    .publish(eqIgnoring(
+                            new PolicyViolationDetected(
+                                    UUID.fromString("00000000-0000-0000-0000-000000000000"),
+                                    SOME_AGENT_ID,
+                                    SOME_POLICY_ID,
+                                    FAIL_PER_TX.ruleType(),
+                                    FAIL_PER_TX.message(),
+                                    SOME_AMOUNT,
+                                    Instant.parse("2026-01-01T00:00:00Z")),
+                            "evaluationId",
+                            "detectedAt"));
         }
 
         @Test
         void shouldNotPublishViolationEventOnDryRunRejection() {
             // given
             givenActivePolicy(policyWith(SOME_PER_TX));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(true)))
-                    .willReturn(FAIL_PER_TX);
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX), ctx(true))).willReturn(FAIL_PER_TX);
 
             // when
             invoke(true);
@@ -488,8 +509,9 @@ class PolicyEvaluationServiceTest {
             invoke(false);
 
             // then
-            then(policyEvaluationRepository).should().save(eqIgnoring(
-                    noPolicyResult(false), "evaluationId", "evaluatedAt", "durationMs"));
+            then(policyEvaluationRepository)
+                    .should()
+                    .save(eqIgnoring(noPolicyResult(false), "evaluationId", "evaluatedAt", "durationMs"));
         }
 
         @Test
@@ -501,12 +523,19 @@ class PolicyEvaluationServiceTest {
             invoke(false);
 
             // then
-            then(eventPublisher).should().publish(eqIgnoring(
-                    new PolicyViolationDetected(
-                            UUID.fromString("00000000-0000-0000-0000-000000000000"),
-                            SOME_AGENT_ID, NO_POLICY_ID, "NO_ACTIVE_POLICY", "no active policy configured",
-                            SOME_AMOUNT, Instant.parse("2026-01-01T00:00:00Z")),
-                    "evaluationId", "detectedAt"));
+            then(eventPublisher)
+                    .should()
+                    .publish(eqIgnoring(
+                            new PolicyViolationDetected(
+                                    UUID.fromString("00000000-0000-0000-0000-000000000000"),
+                                    SOME_AGENT_ID,
+                                    NO_POLICY_ID,
+                                    "NO_ACTIVE_POLICY",
+                                    "no active policy configured",
+                                    SOME_AMOUNT,
+                                    Instant.parse("2026-01-01T00:00:00Z")),
+                            "evaluationId",
+                            "detectedAt"));
         }
 
         @Test
@@ -529,8 +558,7 @@ class PolicyEvaluationServiceTest {
 
             // when
             // then
-            assertThatThrownBy(() -> invoke(mismatchedAgent, false))
-                    .isInstanceOf(PolicyHashMismatchException.class);
+            assertThatThrownBy(() -> invoke(mismatchedAgent, false)).isInstanceOf(PolicyHashMismatchException.class);
             then(spendingLockService).shouldHaveNoInteractions();
         }
     }
@@ -541,11 +569,13 @@ class PolicyEvaluationServiceTest {
         @Test
         void shouldAuthorizeThenEvaluateAsDryRun() {
             // given
-            given(agentAuthorization.verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID)).willReturn(SOME_AGENT);
+            given(agentAuthorization.verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID))
+                    .willReturn(SOME_AGENT);
             givenActivePolicy(policyWith(SOME_PER_TX));
-            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class)).willReturn(perTxEvaluator);
-            given(perTxEvaluator.evaluate(eqIgnoring(SOME_PER_TX),
-                    eqIgnoring(context(true), "spendingSummary", "requestedAt")))
+            given(ruleEvaluatorRegistry.getEvaluator(PolicyRule.PerTransactionLimit.class))
+                    .willReturn(perTxEvaluator);
+            given(perTxEvaluator.evaluate(
+                            eqIgnoring(SOME_PER_TX), eqIgnoring(context(true), "spendingSummary", "requestedAt")))
                     .willReturn(PASS_PER_TX);
 
             // when
@@ -563,11 +593,12 @@ class PolicyEvaluationServiceTest {
         void shouldPropagateAuthorizationFailureWithoutEvaluating() {
             // given
             willThrow(new AgentOwnershipException(SOME_AGENT_ID, SOME_OWNER_ID))
-                    .given(agentAuthorization).verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
+                    .given(agentAuthorization)
+                    .verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
 
             // when / then
             assertThatThrownBy(() ->
-                    service.evaluateDryRunForOwner(SOME_OWNER_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT))
+                            service.evaluateDryRunForOwner(SOME_OWNER_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT))
                     .isInstanceOf(AgentOwnershipException.class);
             then(policyRepository).shouldHaveNoInteractions();
         }

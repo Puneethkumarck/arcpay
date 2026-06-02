@@ -1,7 +1,6 @@
 package com.arcpay.policy.policyengine.domain.exception;
 
 import com.arcpay.policy.policyengine.domain.model.ReservationStatus;
-
 import java.util.UUID;
 
 public class IllegalReservationStateException extends RuntimeException {

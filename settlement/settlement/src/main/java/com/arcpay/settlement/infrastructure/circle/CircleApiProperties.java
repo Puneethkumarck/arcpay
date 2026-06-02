@@ -11,8 +11,7 @@ record CircleApiProperties(
         String usdcTokenAddress,
         String entitySecret,
         Timeout timeout,
-        Webhook webhook
-) {
+        Webhook webhook) {
 
     record Timeout(int connect, int read) {}
 

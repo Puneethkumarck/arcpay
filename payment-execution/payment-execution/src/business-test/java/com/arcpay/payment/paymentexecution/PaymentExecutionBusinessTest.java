@@ -1,11 +1,20 @@
 package com.arcpay.payment.paymentexecution;
 
+import static com.arcpay.payment.paymentexecution.domain.event.PaymentStatusChanged.TOPIC;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
 import com.arcpay.payment.paymentexecution.domain.event.PaymentStatusChanged;
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
 import com.arcpay.payment.paymentexecution.test.BusinessTest;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -18,16 +27,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-
-import static com.arcpay.payment.paymentexecution.domain.event.PaymentStatusChanged.TOPIC;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 abstract class PaymentExecutionBusinessTest extends BusinessTest {
 
@@ -97,7 +96,8 @@ abstract class PaymentExecutionBusinessTest extends BusinessTest {
         var statuses = new ArrayList<String>();
         try (var consumer = newStatusConsumer()) {
             consumer.subscribe(List.of(TOPIC));
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (var record : consumer.poll(Duration.ofSeconds(2))) {
                             var event = jsonMapper.readValue(record.value(), PaymentStatusChanged.class);

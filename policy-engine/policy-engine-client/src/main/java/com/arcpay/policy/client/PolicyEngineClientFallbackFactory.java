@@ -4,9 +4,8 @@ import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
 import com.arcpay.policy.policyengine.api.model.ReservationResponse;
 import com.arcpay.policy.policyengine.api.model.ReserveRequest;
 import feign.FeignException;
-import org.springframework.cloud.openfeign.FallbackFactory;
-
 import java.util.UUID;
+import org.springframework.cloud.openfeign.FallbackFactory;
 
 public class PolicyEngineClientFallbackFactory implements FallbackFactory<PolicyEngineClient> {
 

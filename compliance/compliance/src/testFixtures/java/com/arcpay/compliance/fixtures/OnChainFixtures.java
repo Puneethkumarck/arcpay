@@ -1,8 +1,7 @@
 package com.arcpay.compliance.fixtures;
 
-import org.web3j.protocol.core.methods.response.EthLog;
-
 import java.util.List;
+import org.web3j.protocol.core.methods.response.EthLog;
 
 public final class OnChainFixtures {
 
@@ -31,8 +30,7 @@ public final class OnChainFixtures {
     }
 
     public static String blockNumberJson(long blockNumber) {
-        return "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x"
-                + Long.toHexString(blockNumber) + "\"}";
+        return "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x" + Long.toHexString(blockNumber) + "\"}";
     }
 
     public static String emptyLogsJson() {

@@ -29,15 +29,11 @@ public class InternalPolicyEvaluationController {
     @PostMapping("/evaluate")
     public PolicyEvaluationResponse evaluate(@Valid @RequestBody InternalEvaluateRequest request) {
         log.info("Internal policy evaluation agentId={} amount={}", request.agentId(), request.amount());
-        var agent = agentServiceClient.getAgent(request.agentId())
+        var agent = agentServiceClient
+                .getAgent(request.agentId())
                 .orElseThrow(() -> new AgentNotFoundException(request.agentId()));
         var result = policyEvaluationService.evaluate(
-                request.agentId(),
-                agent,
-                request.recipientAddress(),
-                request.amount(),
-                request.requestedAt(),
-                false);
+                request.agentId(), agent, request.recipientAddress(), request.amount(), request.requestedAt(), false);
         return evaluationResponseMapper.toApi(result);
     }
 }

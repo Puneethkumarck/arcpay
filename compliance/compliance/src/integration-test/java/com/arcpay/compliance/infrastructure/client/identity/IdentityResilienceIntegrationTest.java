@@ -1,5 +1,15 @@
 package com.arcpay.compliance.infrastructure.client.identity;
 
+import static com.arcpay.compliance.fixtures.CircuitBreakerFixtures.getAgentBreaker;
+import static com.arcpay.compliance.fixtures.CircuitBreakerFixtures.identityCallBreaker;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
+import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
+import static com.arcpay.compliance.fixtures.IdentityFixtures.someAgentResponseJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.arcpay.compliance.domain.exception.IdentityServiceUnavailableException;
 import com.arcpay.compliance.domain.port.OwnerResolver;
 import com.arcpay.compliance.test.FullContextIntegrationTest;
@@ -17,24 +27,15 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 
-import static com.arcpay.compliance.fixtures.CircuitBreakerFixtures.getAgentBreaker;
-import static com.arcpay.compliance.fixtures.CircuitBreakerFixtures.identityCallBreaker;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
-import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
-import static com.arcpay.compliance.fixtures.IdentityFixtures.someAgentResponseJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-@TestPropertySource(properties = {
-        "resilience4j.circuitbreaker.configs.default.sliding-window-size=3",
-        "resilience4j.circuitbreaker.configs.default.minimum-number-of-calls=3",
-        "resilience4j.circuitbreaker.configs.default.failure-rate-threshold=50",
-        "resilience4j.circuitbreaker.configs.default.wait-duration-in-open-state=30s",
-        "resilience4j.timelimiter.configs.default.timeout-duration=1s",
-        "resilience4j.timelimiter.configs.default.cancel-running-future=true"
-})
+@TestPropertySource(
+        properties = {
+            "resilience4j.circuitbreaker.configs.default.sliding-window-size=3",
+            "resilience4j.circuitbreaker.configs.default.minimum-number-of-calls=3",
+            "resilience4j.circuitbreaker.configs.default.failure-rate-threshold=50",
+            "resilience4j.circuitbreaker.configs.default.wait-duration-in-open-state=30s",
+            "resilience4j.timelimiter.configs.default.timeout-duration=1s",
+            "resilience4j.timelimiter.configs.default.cancel-running-future=true"
+        })
 class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
 
     private static final String AGENT_PATH = "/api/v1/internal/agents/" + SOME_AGENT_ID;
@@ -87,8 +88,8 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldOpenCircuitAfterRepeatedServerErrorsAndMapToUnavailable() {
         // given
-        identityServer.stubFor(WireMock.get(urlPathEqualTo(AGENT_PATH))
-                .willReturn(aResponse().withStatus(500)));
+        identityServer.stubFor(
+                WireMock.get(urlPathEqualTo(AGENT_PATH)).willReturn(aResponse().withStatus(500)));
 
         // when
         for (int i = 0; i < 3; i++) {
@@ -121,8 +122,8 @@ class IdentityResilienceIntegrationTest extends FullContextIntegrationTest {
     @Test
     void shouldSurfaceNotFoundWithoutOpeningCircuit() {
         // given
-        identityServer.stubFor(WireMock.get(urlPathEqualTo(AGENT_PATH))
-                .willReturn(aResponse().withStatus(404)));
+        identityServer.stubFor(
+                WireMock.get(urlPathEqualTo(AGENT_PATH)).willReturn(aResponse().withStatus(404)));
 
         // when
         for (int i = 0; i < 6; i++) {

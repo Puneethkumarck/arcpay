@@ -1,8 +1,17 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.agent;
 
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_FAILED;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_SUSPENDED;
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,16 +20,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.IllegalTransactionStateException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
-
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_FAILED;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_SUSPENDED;
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Transactional
 class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
@@ -33,12 +32,11 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
 
     @BeforeEach
     void seedOwner() {
-        jdbcTemplate.update("""
+        jdbcTemplate.update(
+                """
                 INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
                 VALUES (?, ?, ?, ?, 'ACTIVE')
-                ON CONFLICT DO NOTHING""",
-                SOME_OWNER_ID, "alice@example.com",
-                "0x1234567890abcdef1234567890abcdef12345678", "a".repeat(64));
+                ON CONFLICT DO NOTHING""", SOME_OWNER_ID, "alice@example.com", "0x1234567890abcdef1234567890abcdef12345678", "a".repeat(64));
     }
 
     @Test
@@ -125,7 +123,8 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
         agentRepository.save(SOME_AGENT_SUSPENDED);
 
         // when
-        var activePage = agentRepository.findByOwnerIdAndStatus(SOME_OWNER_ID, AgentStatus.ACTIVE, PageRequest.of(0, 10));
+        var activePage =
+                agentRepository.findByOwnerIdAndStatus(SOME_OWNER_ID, AgentStatus.ACTIVE, PageRequest.of(0, 10));
 
         // then
         assertThat(activePage.getTotalElements()).isEqualTo(1);
@@ -149,10 +148,7 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
         assertThat(page.getContent())
                 .usingRecursiveFieldByFieldElementComparator()
                 .containsExactlyInAnyOrder(
-                        SOME_AGENT_PROVISIONING,
-                        SOME_AGENT_ACTIVE,
-                        SOME_AGENT_SUSPENDED,
-                        SOME_AGENT_FAILED);
+                        SOME_AGENT_PROVISIONING, SOME_AGENT_ACTIVE, SOME_AGENT_SUSPENDED, SOME_AGENT_FAILED);
     }
 
     @Test
@@ -182,7 +178,8 @@ class AgentRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
         agentRepository.save(SOME_AGENT_PROVISIONING);
 
         // when
-        var transitioned = SOME_AGENT_PROVISIONING.withWallet("wallet-xyz", "0xabcabcabcabcabcabcabcabcabcabcabcabcabca");
+        var transitioned =
+                SOME_AGENT_PROVISIONING.withWallet("wallet-xyz", "0xabcabcabcabcabcabcabcabcabcabcabcabcabca");
         agentRepository.save(transitioned);
         var loaded = agentRepository.findById(SOME_AGENT_PROVISIONING.agentId()).orElseThrow();
 

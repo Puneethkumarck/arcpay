@@ -1,10 +1,9 @@
 package com.arcpay.identity.agentidentity.domain.model;
 
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record Owner(
@@ -14,8 +13,7 @@ public record Owner(
         String apiKeyHash,
         OwnerStatus status,
         Instant createdAt,
-        Instant updatedAt
-) {
+        Instant updatedAt) {
 
     public Owner {
         Objects.requireNonNull(ownerId, "ownerId must not be null");

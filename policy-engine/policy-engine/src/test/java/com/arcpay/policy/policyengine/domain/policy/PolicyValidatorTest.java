@@ -1,19 +1,18 @@
 package com.arcpay.policy.policyengine.domain.policy;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.exception.InvalidPolicyException;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 class PolicyValidatorTest {
 
@@ -29,12 +28,10 @@ class PolicyValidatorTest {
                     new PolicyRule.DailyLimit(new BigDecimal("1000.00")),
                     new PolicyRule.WeeklyLimit(new BigDecimal("5000.00")),
                     new PolicyRule.MonthlyLimit(new BigDecimal("20000.00")),
-                    new PolicyRule.PerTransactionLimit(new BigDecimal("500.00"))
-            );
+                    new PolicyRule.PerTransactionLimit(new BigDecimal("500.00")));
 
             // when / then
-            assertThatCode(() -> policyValidator.validate(rules))
-                    .doesNotThrowAnyException();
+            assertThatCode(() -> policyValidator.validate(rules)).doesNotThrowAnyException();
         }
 
         @Test
@@ -42,12 +39,10 @@ class PolicyValidatorTest {
             // given
             var rules = List.<PolicyRule>of(
                     new PolicyRule.DailyLimit(new BigDecimal("1000.00")),
-                    new PolicyRule.WeeklyLimit(new BigDecimal("1000.00"))
-            );
+                    new PolicyRule.WeeklyLimit(new BigDecimal("1000.00")));
 
             // when / then
-            assertThatCode(() -> policyValidator.validate(rules))
-                    .doesNotThrowAnyException();
+            assertThatCode(() -> policyValidator.validate(rules)).doesNotThrowAnyException();
         }
     }
 
@@ -82,8 +77,7 @@ class PolicyValidatorTest {
             // given
             var rules = List.<PolicyRule>of(
                     new PolicyRule.DailyLimit(new BigDecimal("1000.00")),
-                    new PolicyRule.DailyLimit(new BigDecimal("2000.00"))
-            );
+                    new PolicyRule.DailyLimit(new BigDecimal("2000.00")));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -100,8 +94,7 @@ class PolicyValidatorTest {
             // given
             var rules = List.<PolicyRule>of(
                     new PolicyRule.DailyLimit(new BigDecimal("5000.00")),
-                    new PolicyRule.WeeklyLimit(new BigDecimal("1000.00"))
-            );
+                    new PolicyRule.WeeklyLimit(new BigDecimal("1000.00")));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -114,8 +107,7 @@ class PolicyValidatorTest {
             // given
             var rules = List.<PolicyRule>of(
                     new PolicyRule.WeeklyLimit(new BigDecimal("25000.00")),
-                    new PolicyRule.MonthlyLimit(new BigDecimal("20000.00"))
-            );
+                    new PolicyRule.MonthlyLimit(new BigDecimal("20000.00")));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -132,8 +124,7 @@ class PolicyValidatorTest {
             // given
             var rules = List.<PolicyRule>of(
                     new PolicyRule.RecipientAllowlist(Set.of("0x1234567890abcdef1234567890abcdef12345678")),
-                    new PolicyRule.RecipientBlocklist(Set.of("0x1234567890abcdef1234567890abcdef12345678"))
-            );
+                    new PolicyRule.RecipientBlocklist(Set.of("0x1234567890abcdef1234567890abcdef12345678")));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -146,8 +137,7 @@ class PolicyValidatorTest {
             // given
             var rules = List.<PolicyRule>of(
                     new PolicyRule.RecipientAllowlist(Set.of("0xABCDEF1234567890ABCDEF1234567890ABCDEF12")),
-                    new PolicyRule.RecipientBlocklist(Set.of("0xabcdef1234567890abcdef1234567890abcdef12"))
-            );
+                    new PolicyRule.RecipientBlocklist(Set.of("0xabcdef1234567890abcdef1234567890abcdef12")));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -162,9 +152,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectNegativeAmount() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.DailyLimit(new BigDecimal("-100.00"))
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.DailyLimit(new BigDecimal("-100.00")));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -175,9 +163,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectZeroAmount() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.PerTransactionLimit(BigDecimal.ZERO)
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.PerTransactionLimit(BigDecimal.ZERO));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -192,9 +178,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectEmptyAddressSet() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.RecipientAllowlist(Set.of())
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.RecipientAllowlist(Set.of()));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -208,9 +192,7 @@ class PolicyValidatorTest {
             var addresses = IntStream.rangeClosed(1, 101)
                     .mapToObj(i -> "0x" + String.format("%040d", i))
                     .collect(Collectors.toSet());
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.RecipientBlocklist(addresses)
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.RecipientBlocklist(addresses));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -225,9 +207,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectStartHourGreaterThanEndHour() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.TimeWindow(17, 9, Set.of(DayOfWeek.MONDAY))
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.TimeWindow(17, 9, Set.of(DayOfWeek.MONDAY)));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -238,9 +218,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectStartHourEqualsEndHour() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.TimeWindow(9, 9, Set.of(DayOfWeek.MONDAY))
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.TimeWindow(9, 9, Set.of(DayOfWeek.MONDAY)));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -251,9 +229,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectHourOutsideRange() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.TimeWindow(-1, 17, Set.of(DayOfWeek.MONDAY))
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.TimeWindow(-1, 17, Set.of(DayOfWeek.MONDAY)));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -264,9 +240,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectEndHourAboveRange() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.TimeWindow(9, 24, Set.of(DayOfWeek.MONDAY))
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.TimeWindow(9, 24, Set.of(DayOfWeek.MONDAY)));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -277,9 +251,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectEmptyDaysOfWeek() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.TimeWindow(9, 17, Set.of())
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.TimeWindow(9, 17, Set.of()));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -294,9 +266,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectZeroMaxTransactions() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.Velocity(0, 60)
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.Velocity(0, 60));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -307,9 +277,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectZeroPeriodMinutes() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.Velocity(10, 0)
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.Velocity(10, 0));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -320,9 +288,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectNegativeMaxTransactions() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.Velocity(-1, 60)
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.Velocity(-1, 60));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -333,9 +299,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectNegativePeriodMinutes() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.Velocity(10, -1)
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.Velocity(10, -1));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -350,9 +314,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectZeroCooldownSeconds() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.Cooldown(0)
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.Cooldown(0));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))
@@ -363,9 +325,7 @@ class PolicyValidatorTest {
         @Test
         void shouldRejectNegativeCooldownSeconds() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.Cooldown(-1)
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.Cooldown(-1));
 
             // when / then
             assertThatThrownBy(() -> policyValidator.validate(rules))

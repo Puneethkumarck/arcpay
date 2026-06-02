@@ -1,16 +1,15 @@
 package com.arcpay.identity.client;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.arcpay.identity.agentidentity.api.model.UpdateAgentPolicyRequest;
 import feign.FeignException;
 import feign.Request;
-import org.junit.jupiter.api.Test;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
 
 class IdentityClientFallbackFactoryTest {
 
@@ -27,8 +26,7 @@ class IdentityClientFallbackFactoryTest {
         var fallback = factory.create(notFound);
 
         // when / then
-        assertThatThrownBy(() -> fallback.getAgent(SOME_AGENT_ID))
-                .isSameAs(notFound);
+        assertThatThrownBy(() -> fallback.getAgent(SOME_AGENT_ID)).isSameAs(notFound);
     }
 
     @Test
@@ -85,12 +83,12 @@ class IdentityClientFallbackFactoryTest {
     }
 
     private static FeignException feignServerError() {
-        return new FeignException.InternalServerError("Internal Server Error",
-                someRequest(), null, Collections.emptyMap());
+        return new FeignException.InternalServerError(
+                "Internal Server Error", someRequest(), null, Collections.emptyMap());
     }
 
     private static Request someRequest() {
-        return Request.create(Request.HttpMethod.GET, "/test",
-                Collections.emptyMap(), null, StandardCharsets.UTF_8, null);
+        return Request.create(
+                Request.HttpMethod.GET, "/test", Collections.emptyMap(), null, StandardCharsets.UTF_8, null);
     }
 }

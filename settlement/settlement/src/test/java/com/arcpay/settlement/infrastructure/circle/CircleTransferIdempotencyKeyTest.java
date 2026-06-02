@@ -1,11 +1,10 @@
 package com.arcpay.settlement.infrastructure.circle;
 
-import org.junit.jupiter.api.Test;
-
-import java.util.UUID;
-
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_PAYMENT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
 
 class CircleTransferIdempotencyKeyTest {
 

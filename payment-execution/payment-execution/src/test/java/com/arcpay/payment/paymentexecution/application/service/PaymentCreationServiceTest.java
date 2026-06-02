@@ -1,26 +1,5 @@
 package com.arcpay.payment.paymentexecution.application.service;
 
-import com.arcpay.payment.paymentexecution.domain.agent.AgentAuthorization;
-import com.arcpay.payment.paymentexecution.domain.event.PaymentRequested;
-import com.arcpay.payment.paymentexecution.domain.exception.AgentNotActiveException;
-import com.arcpay.payment.paymentexecution.domain.exception.AgentNotFoundException;
-import com.arcpay.payment.paymentexecution.domain.exception.IdempotencyConflictException;
-import com.arcpay.payment.paymentexecution.domain.exception.InvalidPaymentRequestException;
-import com.arcpay.payment.paymentexecution.domain.exception.AgentNotOwnedException;
-import com.arcpay.payment.paymentexecution.domain.model.Payment;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
-import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
-import com.arcpay.payment.paymentexecution.domain.service.PaymentOrchestrationService;
-import com.arcpay.platform.api.OwnerPrincipal;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.UUID;
-
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AGENT_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_OWNER_EMAIL;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_OWNER_ID;
@@ -35,6 +14,26 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+
+import com.arcpay.payment.paymentexecution.domain.agent.AgentAuthorization;
+import com.arcpay.payment.paymentexecution.domain.event.PaymentRequested;
+import com.arcpay.payment.paymentexecution.domain.exception.AgentNotActiveException;
+import com.arcpay.payment.paymentexecution.domain.exception.AgentNotFoundException;
+import com.arcpay.payment.paymentexecution.domain.exception.AgentNotOwnedException;
+import com.arcpay.payment.paymentexecution.domain.exception.IdempotencyConflictException;
+import com.arcpay.payment.paymentexecution.domain.exception.InvalidPaymentRequestException;
+import com.arcpay.payment.paymentexecution.domain.model.Payment;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
+import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
+import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
+import com.arcpay.payment.paymentexecution.domain.service.PaymentOrchestrationService;
+import com.arcpay.platform.api.OwnerPrincipal;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentCreationServiceTest {
@@ -65,17 +64,17 @@ class PaymentCreationServiceTest {
         var pending = somePayment(PaymentStatus.PENDING);
         given(agentAuthorization.verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID))
                 .willReturn(someAgentInfo("ACTIVE"));
-        given(paymentOrchestrationService.newPayment(eqIgnoringTimestamps(
-                com.arcpay.payment.paymentexecution.domain.model.PaymentRequest.builder()
-                        .agentId(SOME_AGENT_ID)
-                        .ownerId(SOME_OWNER_ID)
-                        .idempotencyKey(request.idempotencyKey())
-                        .recipientAddress(request.recipientAddress())
-                        .amount(request.amount())
-                        .currency(request.currency())
-                        .memo(request.memo())
-                        .metadata(request.metadata())
-                        .build())))
+        given(paymentOrchestrationService.newPayment(
+                        eqIgnoringTimestamps(com.arcpay.payment.paymentexecution.domain.model.PaymentRequest.builder()
+                                .agentId(SOME_AGENT_ID)
+                                .ownerId(SOME_OWNER_ID)
+                                .idempotencyKey(request.idempotencyKey())
+                                .recipientAddress(request.recipientAddress())
+                                .amount(request.amount())
+                                .currency(request.currency())
+                                .memo(request.memo())
+                                .metadata(request.metadata())
+                                .build())))
                 .willReturn(pending);
         given(paymentRepository.save(pending)).willReturn(pending);
 
@@ -91,21 +90,23 @@ class PaymentCreationServiceTest {
     void shouldReturnReplayWithoutPublishingWhenIdempotentReplay() {
         // given
         var request = someCreatePaymentRequest();
-        var pending = somePayment(PaymentStatus.PENDING).toBuilder().paymentId(UUID.randomUUID()).build();
+        var pending = somePayment(PaymentStatus.PENDING).toBuilder()
+                .paymentId(UUID.randomUUID())
+                .build();
         var existing = somePayment(PaymentStatus.SCREENING);
         given(agentAuthorization.verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID))
                 .willReturn(someAgentInfo("ACTIVE"));
-        given(paymentOrchestrationService.newPayment(eqIgnoringTimestamps(
-                com.arcpay.payment.paymentexecution.domain.model.PaymentRequest.builder()
-                        .agentId(SOME_AGENT_ID)
-                        .ownerId(SOME_OWNER_ID)
-                        .idempotencyKey(request.idempotencyKey())
-                        .recipientAddress(request.recipientAddress())
-                        .amount(request.amount())
-                        .currency(request.currency())
-                        .memo(request.memo())
-                        .metadata(request.metadata())
-                        .build())))
+        given(paymentOrchestrationService.newPayment(
+                        eqIgnoringTimestamps(com.arcpay.payment.paymentexecution.domain.model.PaymentRequest.builder()
+                                .agentId(SOME_AGENT_ID)
+                                .ownerId(SOME_OWNER_ID)
+                                .idempotencyKey(request.idempotencyKey())
+                                .recipientAddress(request.recipientAddress())
+                                .amount(request.amount())
+                                .currency(request.currency())
+                                .memo(request.memo())
+                                .metadata(request.metadata())
+                                .build())))
                 .willReturn(pending);
         given(paymentRepository.save(pending)).willReturn(existing);
 
@@ -124,7 +125,8 @@ class PaymentCreationServiceTest {
         var pending = somePayment(PaymentStatus.PENDING);
         given(agentAuthorization.verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID))
                 .willReturn(someAgentInfo("ACTIVE"));
-        given(paymentOrchestrationService.newPayment(org.mockito.ArgumentMatchers.any())).willReturn(pending);
+        given(paymentOrchestrationService.newPayment(org.mockito.ArgumentMatchers.any()))
+                .willReturn(pending);
         given(paymentRepository.save(pending)).willThrow(new IdempotencyConflictException("conflict"));
 
         // when / then

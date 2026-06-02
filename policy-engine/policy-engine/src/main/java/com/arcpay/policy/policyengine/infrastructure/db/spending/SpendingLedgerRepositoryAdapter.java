@@ -3,15 +3,14 @@ package com.arcpay.policy.policyengine.infrastructure.db.spending;
 import com.arcpay.policy.policyengine.domain.model.SpendingLedgerEntry;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
 import com.arcpay.policy.policyengine.domain.port.SpendingLedgerRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -39,7 +38,8 @@ class SpendingLedgerRepositoryAdapter implements SpendingLedgerRepository {
         var monthlyCutoff = now.minus(30, ChronoUnit.DAYS);
         var velocityCutoff = now.minus(velocityMinutes, ChronoUnit.MINUTES);
 
-        var result = jpaRepository.getSpendingSummary(agentId, dailyCutoff, weeklyCutoff, monthlyCutoff, velocityCutoff);
+        var result =
+                jpaRepository.getSpendingSummary(agentId, dailyCutoff, weeklyCutoff, monthlyCutoff, velocityCutoff);
 
         if (result == null || result.length == 0 || result[0] == null) {
             return SpendingSummary.builder()

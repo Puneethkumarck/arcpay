@@ -1,12 +1,11 @@
 package com.arcpay.policy.policyengine.infrastructure.db.spending;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 interface SpendingLedgerJpaRepository extends JpaRepository<SpendingLedgerEntity, UUID> {
 
@@ -20,9 +19,10 @@ interface SpendingLedgerJpaRepository extends JpaRepository<SpendingLedgerEntity
                    MAX(s.executed_at) as lastTransactionAt
             FROM spending_ledger s WHERE s.agent_id = :agentId
             """, nativeQuery = true)
-    Object[] getSpendingSummary(@Param("agentId") UUID agentId,
-                                @Param("dailyCutoff") Instant dailyCutoff,
-                                @Param("weeklyCutoff") Instant weeklyCutoff,
-                                @Param("monthlyCutoff") Instant monthlyCutoff,
-                                @Param("velocityCutoff") Instant velocityCutoff);
+    Object[] getSpendingSummary(
+            @Param("agentId") UUID agentId,
+            @Param("dailyCutoff") Instant dailyCutoff,
+            @Param("weeklyCutoff") Instant weeklyCutoff,
+            @Param("monthlyCutoff") Instant monthlyCutoff,
+            @Param("velocityCutoff") Instant velocityCutoff);
 }

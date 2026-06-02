@@ -1,11 +1,11 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.owner.mapper;
 
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.someOwnerEntity;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 class OwnerEntityMapperTest {
 
@@ -20,9 +20,7 @@ class OwnerEntityMapperTest {
         var result = mapper.mapToEntity(owner);
 
         // then
-        assertThat(result)
-                .usingRecursiveComparison()
-                .isEqualTo(someOwnerEntity());
+        assertThat(result).usingRecursiveComparison().isEqualTo(someOwnerEntity());
     }
 
     @Test
@@ -34,8 +32,6 @@ class OwnerEntityMapperTest {
         var result = mapper.mapToDomain(entity);
 
         // then
-        assertThat(result)
-                .usingRecursiveComparison()
-                .isEqualTo(SOME_OWNER);
+        assertThat(result).usingRecursiveComparison().isEqualTo(SOME_OWNER);
     }
 }

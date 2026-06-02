@@ -1,10 +1,15 @@
 package com.arcpay.identity.agentidentity.domain.agent;
 
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.identity.agentidentity.domain.exception.AgentNameDuplicateException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidAgentNameException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidPolicyHashException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidPurposeException;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,12 +18,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class AgentValidatorTest {
@@ -38,15 +37,16 @@ class AgentValidatorTest {
     @Test
     void shouldAcceptValidRegistration() {
         // given / when / then
-        assertThatNoException().isThrownBy(
-                () -> agentValidator.validateRegistration(SOME_OWNER_ID, VALID_NAME, VALID_PURPOSE, null));
+        assertThatNoException()
+                .isThrownBy(() -> agentValidator.validateRegistration(SOME_OWNER_ID, VALID_NAME, VALID_PURPOSE, null));
     }
 
     @Test
     void shouldAcceptValidRegistrationWithPolicyHash() {
         // given / when / then
-        assertThatNoException().isThrownBy(
-                () -> agentValidator.validateRegistration(SOME_OWNER_ID, VALID_NAME, VALID_PURPOSE, VALID_POLICY_HASH));
+        assertThatNoException()
+                .isThrownBy(() -> agentValidator.validateRegistration(
+                        SOME_OWNER_ID, VALID_NAME, VALID_PURPOSE, VALID_POLICY_HASH));
     }
 
     @ParameterizedTest
@@ -86,8 +86,8 @@ class AgentValidatorTest {
     @ValueSource(strings = {"my-agent", "my_agent", "Agent123", "a-b-c"})
     void shouldAcceptValidName(String name) {
         // given / when / then
-        assertThatNoException().isThrownBy(
-                () -> agentValidator.validateRegistration(SOME_OWNER_ID, name, VALID_PURPOSE, null));
+        assertThatNoException()
+                .isThrownBy(() -> agentValidator.validateRegistration(SOME_OWNER_ID, name, VALID_PURPOSE, null));
     }
 
     @ParameterizedTest
@@ -111,8 +111,8 @@ class AgentValidatorTest {
     @Test
     void shouldAcceptNullPolicyHash() {
         // given / when / then
-        assertThatNoException().isThrownBy(
-                () -> agentValidator.validateRegistration(SOME_OWNER_ID, VALID_NAME, VALID_PURPOSE, null));
+        assertThatNoException()
+                .isThrownBy(() -> agentValidator.validateRegistration(SOME_OWNER_ID, VALID_NAME, VALID_PURPOSE, null));
     }
 
     @ParameterizedTest
@@ -126,7 +126,8 @@ class AgentValidatorTest {
     @Test
     void shouldRejectDuplicateNameForSameOwner() {
         // given
-        given(agentRepository.existsByOwnerIdAndNameIgnoreCase(SOME_OWNER_ID, VALID_NAME)).willReturn(true);
+        given(agentRepository.existsByOwnerIdAndNameIgnoreCase(SOME_OWNER_ID, VALID_NAME))
+                .willReturn(true);
 
         // when / then
         assertThatThrownBy(() -> agentValidator.validateRegistration(SOME_OWNER_ID, VALID_NAME, VALID_PURPOSE, null))
@@ -147,8 +148,8 @@ class AgentValidatorTest {
     @Test
     void shouldAcceptNullFieldsOnUpdate() {
         // given / when / then
-        assertThatNoException().isThrownBy(
-                () -> agentValidator.validateUpdate(SOME_OWNER_ID, SOME_AGENT_ID, null, null));
+        assertThatNoException()
+                .isThrownBy(() -> agentValidator.validateUpdate(SOME_OWNER_ID, SOME_AGENT_ID, null, null));
     }
 
     @Test

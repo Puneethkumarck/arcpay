@@ -1,5 +1,10 @@
 package com.arcpay.compliance.infrastructure.onchain;
 
+import java.math.BigInteger;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -13,12 +18,6 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.EthLog;
-
-import java.math.BigInteger;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 @Slf4j
 @Component
@@ -59,7 +58,8 @@ class UsdcTransferLogScanner {
             BigInteger toBlock,
             String recipientAddress,
             String recipientTopic,
-            boolean recipientIsFrom) throws Exception {
+            boolean recipientIsFrom)
+            throws Exception {
         var filter = new EthFilter(
                 DefaultBlockParameter.valueOf(fromBlock),
                 DefaultBlockParameter.valueOf(toBlock),

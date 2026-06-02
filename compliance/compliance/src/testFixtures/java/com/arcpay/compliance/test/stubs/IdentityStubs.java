@@ -1,12 +1,12 @@
 package com.arcpay.compliance.test.stubs;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_EMAIL;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
 
 public final class IdentityStubs {
 

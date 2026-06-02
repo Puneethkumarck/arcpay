@@ -1,8 +1,7 @@
 package com.arcpay.settlement.infrastructure.web3j;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.math.BigInteger;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "arcpay.contract")
 record ReceiptContractProperties(
@@ -10,8 +9,7 @@ record ReceiptContractProperties(
         long chainId,
         BigInteger gasLimit,
         BigInteger gasPrice,
-        BigInteger lowBalanceThresholdWei
-) {
+        BigInteger lowBalanceThresholdWei) {
 
     private static final long DEFAULT_CHAIN_ID = 999L;
     private static final BigInteger DEFAULT_GAS_LIMIT = BigInteger.valueOf(150_000L);

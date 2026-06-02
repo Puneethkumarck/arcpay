@@ -1,36 +1,5 @@
 package com.arcpay.compliance.application.controller;
 
-import com.arcpay.compliance.api.ErrorCodes;
-import com.arcpay.compliance.application.dto.HoldReviewResponse;
-import com.arcpay.compliance.application.dto.ReviewDecisionRequest;
-import com.arcpay.compliance.domain.event.ScreeningApproved;
-import com.arcpay.compliance.domain.event.ScreeningRejected;
-import com.arcpay.compliance.domain.model.ReviewState;
-import com.arcpay.compliance.domain.port.HoldReviewStore;
-import com.arcpay.compliance.domain.port.OwnerResolver;
-import com.arcpay.compliance.domain.port.ScreeningStore;
-import com.arcpay.compliance.test.RestControllerAbstractTest;
-import com.arcpay.platform.api.ApiError;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import tools.jackson.databind.json.JsonMapper;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_DECISION_REASON;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_HOLD_REVIEW_PENDING;
@@ -48,6 +17,36 @@ import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.arcpay.compliance.api.ErrorCodes;
+import com.arcpay.compliance.application.dto.HoldReviewResponse;
+import com.arcpay.compliance.application.dto.ReviewDecisionRequest;
+import com.arcpay.compliance.domain.event.ScreeningApproved;
+import com.arcpay.compliance.domain.event.ScreeningRejected;
+import com.arcpay.compliance.domain.model.ReviewState;
+import com.arcpay.compliance.domain.port.HoldReviewStore;
+import com.arcpay.compliance.domain.port.OwnerResolver;
+import com.arcpay.compliance.domain.port.ScreeningStore;
+import com.arcpay.compliance.test.RestControllerAbstractTest;
+import com.arcpay.platform.api.ApiError;
+import java.time.Duration;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import tools.jackson.databind.json.JsonMapper;
 
 class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
 
@@ -92,13 +91,17 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, HoldReviewResponse.class);
         assertThat(actual.decidedAt()).isNotNull();
-        assertThat(actual).usingRecursiveComparison().ignoringFields("decidedAt").isEqualTo(
-                HoldReviewResponse.from(SOME_HOLD_REVIEW_PENDING).toBuilder()
+        assertThat(actual)
+                .usingRecursiveComparison()
+                .ignoringFields("decidedAt")
+                .isEqualTo(HoldReviewResponse.from(SOME_HOLD_REVIEW_PENDING).toBuilder()
                         .state(ReviewState.APPROVED)
                         .reviewerPrincipal(SOME_OFFICER_EMAIL)
                         .reviewerRole("COMPLIANCE_OFFICER")
@@ -122,13 +125,17 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, HoldReviewResponse.class);
         assertThat(actual.decidedAt()).isNotNull();
-        assertThat(actual).usingRecursiveComparison().ignoringFields("decidedAt").isEqualTo(
-                HoldReviewResponse.from(SOME_HOLD_REVIEW_PENDING).toBuilder()
+        assertThat(actual)
+                .usingRecursiveComparison()
+                .ignoringFields("decidedAt")
+                .isEqualTo(HoldReviewResponse.from(SOME_HOLD_REVIEW_PENDING).toBuilder()
                         .state(ReviewState.REJECTED)
                         .reviewerPrincipal(SOME_OFFICER_EMAIL)
                         .reviewerRole("COMPLIANCE_OFFICER")
@@ -151,7 +158,9 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         assertReasonInvalid(response);
@@ -169,7 +178,9 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         assertReasonInvalid(response);
@@ -187,7 +198,9 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         assertCode(response, ErrorCodes.MALFORMED_REQUEST, HttpStatus.BAD_REQUEST);
@@ -210,7 +223,9 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isConflict())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         assertCode(response, ErrorCodes.HOLD_ALREADY_DECIDED, HttpStatus.CONFLICT);
@@ -227,7 +242,9 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isNotFound())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         assertCode(response, ErrorCodes.HOLD_NOT_FOUND, HttpStatus.NOT_FOUND);
@@ -246,7 +263,9 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isForbidden())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         assertCode(response, ErrorCodes.NOT_AUTHORIZED, HttpStatus.FORBIDDEN);
@@ -278,10 +297,13 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
 
     private void assertCode(String response, String code, HttpStatus status) {
         var actual = jsonMapper.readValue(response, ApiError.class);
-        assertThat(actual).usingRecursiveComparison().ignoringFields("message", "details").isEqualTo(ApiError.builder()
-                .code(code)
-                .status(status.getReasonPhrase())
-                .build());
+        assertThat(actual)
+                .usingRecursiveComparison()
+                .ignoringFields("message", "details")
+                .isEqualTo(ApiError.builder()
+                        .code(code)
+                        .status(status.getReasonPhrase())
+                        .build());
     }
 
     private String holdReviewState() {
@@ -294,7 +316,8 @@ class HoldReviewControllerIntegrationTest extends RestControllerAbstractTest {
         try (var consumer = newConsumer()) {
             consumer.subscribe(List.of(topic));
             var captured = new AtomicReference<T>();
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (var record : consumer.poll(Duration.ofSeconds(2))) {
                             if (SOME_PAYMENT_ID.toString().equals(record.key())) {

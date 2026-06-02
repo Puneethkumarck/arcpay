@@ -1,16 +1,15 @@
 package com.arcpay.payment.paymentexecution.infrastructure.client.policy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.payment.paymentexecution.api.model.PolicyResult;
 import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
 import com.arcpay.policy.policyengine.api.model.RuleResultResponse;
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 class PolicyResultMapperTest {
 
@@ -36,10 +35,8 @@ class PolicyResultMapperTest {
         var result = mapper.toDomain(response);
 
         // then
-        var expected = PolicyResult.builder()
-                .verdict("APPROVED")
-                .rulesEvaluated(2)
-                .build();
+        var expected =
+                PolicyResult.builder().verdict("APPROVED").rulesEvaluated(2).build();
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
 
@@ -55,10 +52,8 @@ class PolicyResultMapperTest {
         var result = mapper.toDomain(response);
 
         // then
-        var expected = PolicyResult.builder()
-                .verdict("REJECTED")
-                .rulesEvaluated(0)
-                .build();
+        var expected =
+                PolicyResult.builder().verdict("REJECTED").rulesEvaluated(0).build();
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
 }

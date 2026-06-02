@@ -1,23 +1,22 @@
 package com.arcpay.payment.paymentexecution.application.stream;
 
-import com.arcpay.payment.paymentexecution.domain.event.PaymentRequested;
-import com.arcpay.payment.paymentexecution.domain.saga.PaymentExecutionWorkflow;
-import io.temporal.api.enums.v1.WorkflowIdReusePolicy;
-import io.temporal.client.WorkflowClient;
-import io.temporal.client.WorkflowOptions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Duration;
-
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.somePaymentRequested;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+
+import com.arcpay.payment.paymentexecution.domain.event.PaymentRequested;
+import com.arcpay.payment.paymentexecution.domain.saga.PaymentExecutionWorkflow;
+import io.temporal.api.enums.v1.WorkflowIdReusePolicy;
+import io.temporal.client.WorkflowClient;
+import io.temporal.client.WorkflowOptions;
+import java.time.Duration;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentExecutionTriggerTest {

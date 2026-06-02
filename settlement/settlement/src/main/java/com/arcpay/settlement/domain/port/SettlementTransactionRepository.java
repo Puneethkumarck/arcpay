@@ -1,7 +1,6 @@
 package com.arcpay.settlement.domain.port;
 
 import com.arcpay.settlement.domain.model.SettlementTransaction;
-
 import java.util.Optional;
 import java.util.UUID;
 

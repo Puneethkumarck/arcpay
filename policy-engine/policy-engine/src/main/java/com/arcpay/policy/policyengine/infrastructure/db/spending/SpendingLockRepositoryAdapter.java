@@ -1,10 +1,9 @@
 package com.arcpay.policy.policyengine.infrastructure.db.spending;
 
 import com.arcpay.policy.policyengine.domain.port.SpendingLockRepository;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor

@@ -1,15 +1,20 @@
 package com.arcpay.identity.agentidentity.application.controller.agent;
 
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.arcpay.identity.agentidentity.api.model.AgentResponse;
 import com.arcpay.identity.agentidentity.api.model.AgentStatusEnum;
-import com.arcpay.platform.api.ApiError;
 import com.arcpay.identity.agentidentity.api.model.ProvisioningStatusResponse;
 import com.arcpay.identity.agentidentity.api.model.ProvisioningStepResponse;
 import com.arcpay.identity.agentidentity.api.model.StepStatusEnum;
 import com.arcpay.identity.agentidentity.application.controller.agent.handler.IdempotencyHandler;
-import com.arcpay.identity.agentidentity.application.controller.agent.mapper.AgentResponseMapper;
-import com.arcpay.platform.api.OwnerPrincipal;
-import com.arcpay.platform.infrastructure.security.Roles;
 import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
 import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
 import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
@@ -19,25 +24,18 @@ import com.arcpay.identity.agentidentity.domain.model.StepStatus;
 import com.arcpay.identity.agentidentity.domain.owner.OwnerCommandHandler;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.test.RestControllerAbstractTest;
-import tools.jackson.databind.json.JsonMapper;
+import com.arcpay.platform.api.ApiError;
+import com.arcpay.platform.api.OwnerPrincipal;
+import com.arcpay.platform.infrastructure.security.Roles;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.List;
-import java.util.UUID;
-
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import tools.jackson.databind.json.JsonMapper;
 
 class AgentControllerIntegrationTest extends RestControllerAbstractTest {
 
@@ -74,10 +72,12 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
         given(agentQueryHandler.getAgent(agent.agentId(), OWNER_ID)).willReturn(agent);
 
         // when
-        var response = mockMvc.perform(get("/api/v1/agents/{agentId}", agent.agentId())
-                        .with(authentication(ownerAuth())))
+        var response = mockMvc.perform(
+                        get("/api/v1/agents/{agentId}", agent.agentId()).with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, AgentResponse.class);
@@ -102,14 +102,14 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
     void shouldReturn404ForNonExistentAgent() throws Exception {
         // given
         var agentId = UUID.randomUUID();
-        given(agentQueryHandler.getAgent(agentId, OWNER_ID))
-                .willThrow(new AgentNotFoundException(agentId));
+        given(agentQueryHandler.getAgent(agentId, OWNER_ID)).willThrow(new AgentNotFoundException(agentId));
 
         // when
-        var response = mockMvc.perform(get("/api/v1/agents/{agentId}", agentId)
-                        .with(authentication(ownerAuth())))
+        var response = mockMvc.perform(get("/api/v1/agents/{agentId}", agentId).with(authentication(ownerAuth())))
                 .andExpect(status().isNotFound())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -120,14 +120,14 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
     void shouldReturn403ForWrongOwner() throws Exception {
         // given
         var agentId = UUID.randomUUID();
-        given(agentQueryHandler.getAgent(agentId, OWNER_ID))
-                .willThrow(new ForbiddenException("agent", OWNER_ID));
+        given(agentQueryHandler.getAgent(agentId, OWNER_ID)).willThrow(new ForbiddenException("agent", OWNER_ID));
 
         // when
-        var response = mockMvc.perform(get("/api/v1/agents/{agentId}", agentId)
-                        .with(authentication(ownerAuth())))
+        var response = mockMvc.perform(get("/api/v1/agents/{agentId}", agentId).with(authentication(ownerAuth())))
                 .andExpect(status().isForbidden())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -145,7 +145,9 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
         var response = mockMvc.perform(post("/api/v1/agents/{agentId}/deactivate", agent.agentId())
                         .with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, AgentResponse.class);
@@ -177,7 +179,9 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
         var response = mockMvc.perform(post("/api/v1/agents/{agentId}/reactivate", agent.agentId())
                         .with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, AgentResponse.class);
@@ -214,7 +218,9 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
                                 {"name": "new-name", "purpose": "new-purpose"}
                                 """))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, AgentResponse.class);
@@ -238,26 +244,25 @@ class AgentControllerIntegrationTest extends RestControllerAbstractTest {
     @Test
     void shouldReturn403ForUnauthenticatedRequest() throws Exception {
         // when / then
-        mockMvc.perform(get("/api/v1/agents/{agentId}", UUID.randomUUID()))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/agents/{agentId}", UUID.randomUUID())).andExpect(status().isForbidden());
     }
 
     @Test
     void shouldGetProvisioningStatus() throws Exception {
         // given
         var agent = SOME_AGENT_ACTIVE;
-        var provStatus = new ProvisioningStatus(
-                agent.agentId(),
-                agent.status(),
-                StepStatus.COMPLETED,
-                StepStatus.COMPLETED);
-        given(agentQueryHandler.getProvisioningStatus(agent.agentId(), OWNER_ID)).willReturn(provStatus);
+        var provStatus =
+                new ProvisioningStatus(agent.agentId(), agent.status(), StepStatus.COMPLETED, StepStatus.COMPLETED);
+        given(agentQueryHandler.getProvisioningStatus(agent.agentId(), OWNER_ID))
+                .willReturn(provStatus);
 
         // when
-        var response = mockMvc.perform(get("/api/v1/agents/{agentId}/status", agent.agentId())
-                        .with(authentication(ownerAuth())))
+        var response = mockMvc.perform(
+                        get("/api/v1/agents/{agentId}/status", agent.agentId()).with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ProvisioningStatusResponse.class);

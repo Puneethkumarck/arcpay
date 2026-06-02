@@ -7,6 +7,8 @@ import com.arcpay.compliance.domain.exception.ScreeningNotFoundException;
 import com.arcpay.compliance.domain.model.ReviewState;
 import com.arcpay.compliance.domain.port.HoldReviewStore;
 import com.arcpay.compliance.domain.port.ScreeningStore;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -14,9 +16,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -31,7 +30,8 @@ public class ScreeningQueryController {
     @GetMapping("/compliance/screenings/{paymentId}")
     public ScreeningQueryResponse getScreening(@PathVariable UUID paymentId) {
         log.info("Screening query requested paymentId={}", paymentId);
-        return screeningStore.findByPaymentId(paymentId)
+        return screeningStore
+                .findByPaymentId(paymentId)
                 .map(screeningQueryMapper::toApi)
                 .orElseThrow(() -> new ScreeningNotFoundException(paymentId));
     }
@@ -48,7 +48,8 @@ public class ScreeningQueryController {
     @GetMapping("/compliance/holds/{paymentId}")
     public HoldReviewResponse getHold(@PathVariable UUID paymentId) {
         log.info("Hold query requested paymentId={}", paymentId);
-        return holdReviewStore.findByPaymentId(paymentId)
+        return holdReviewStore
+                .findByPaymentId(paymentId)
                 .map(HoldReviewResponse::from)
                 .orElseThrow(() -> new HoldNotFoundException(paymentId));
     }

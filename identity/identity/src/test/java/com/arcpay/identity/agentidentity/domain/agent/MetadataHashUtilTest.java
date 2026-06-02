@@ -1,12 +1,11 @@
 package com.arcpay.identity.agentidentity.domain.agent;
 
-import org.junit.jupiter.api.Test;
-import org.web3j.crypto.Hash;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.web3j.crypto.Hash;
 
 class MetadataHashUtilTest {
 

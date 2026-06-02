@@ -1,20 +1,19 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.owner;
 
-import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
-import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.Locale;
-
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_CHECKSUMMED_WALLET;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_EMAIL;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
+import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
+import java.time.Instant;
+import java.util.Locale;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
 class OwnerRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
@@ -79,5 +78,4 @@ class OwnerRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
         // then
         assertThat(result).isTrue();
     }
-
 }

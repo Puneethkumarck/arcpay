@@ -10,14 +10,13 @@ import com.arcpay.compliance.domain.port.RiskSignalProvider;
 import com.arcpay.compliance.domain.port.SanctionsSetProvider;
 import com.arcpay.compliance.domain.port.ScreeningEngine;
 import com.github.f4b6a3.uuid.UuidCreator;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -47,8 +46,15 @@ class ScreeningService implements ScreeningEngine {
 
         if (sanctionsSet != null && sanctionsSet.contains(normalized)) {
             log.info("Sanctions match for paymentId={} recipient={}", paymentId, normalized);
-            return assemble(paymentId, agentId, normalized, Verdict.BLOCK, MAX_RISK_SCORE,
-                    List.of(sanctionsMatchCheck(listVersionId)), listVersionId, start);
+            return assemble(
+                    paymentId,
+                    agentId,
+                    normalized,
+                    Verdict.BLOCK,
+                    MAX_RISK_SCORE,
+                    List.of(sanctionsMatchCheck(listVersionId)),
+                    listVersionId,
+                    start);
         }
 
         var checks = new ArrayList<ScreeningCheck>();

@@ -1,15 +1,15 @@
 package com.arcpay.compliance.infrastructure.db;
 
+import static com.arcpay.platform.test.TestUtils.eqIgnoring;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static com.arcpay.platform.test.TestUtils.eqIgnoring;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class WatchlistStoreAdapterTest {
@@ -83,7 +83,8 @@ class WatchlistStoreAdapterTest {
     @Test
     void shouldReturnAllAddresses() {
         // given
-        var entity = WatchlistAddressEntity.builder().address(NORMALIZED_ADDRESS).build();
+        var entity =
+                WatchlistAddressEntity.builder().address(NORMALIZED_ADDRESS).build();
         given(watchlistAddressRepository.findAll()).willReturn(java.util.List.of(entity));
 
         // when

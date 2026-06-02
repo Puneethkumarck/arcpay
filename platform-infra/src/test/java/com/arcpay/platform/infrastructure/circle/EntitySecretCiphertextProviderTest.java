@@ -1,27 +1,26 @@
 package com.arcpay.platform.infrastructure.circle;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.web.client.RestClient;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.OAEPParameterSpec;
-import javax.crypto.spec.PSource;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.spec.MGF1ParameterSpec;
-import java.util.Base64;
-import java.util.HexFormat;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.spec.MGF1ParameterSpec;
+import java.util.Base64;
+import java.util.HexFormat;
+import javax.crypto.Cipher;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestClient;
 
 class EntitySecretCiphertextProviderTest {
 
@@ -68,8 +67,7 @@ class EntitySecretCiphertextProviderTest {
         var ciphertext = provider.generate();
 
         // when / then
-        assertThatThrownBy(() -> decrypt(ciphertext, mgf1("SHA-1")))
-                .isInstanceOf(Exception.class);
+        assertThatThrownBy(() -> decrypt(ciphertext, mgf1("SHA-1"))).isInstanceOf(Exception.class);
     }
 
     @Test
@@ -95,7 +93,8 @@ class EntitySecretCiphertextProviderTest {
     void shouldRejectEntitySecretThatIsNotThirtyTwoBytes() {
         // given
         var shortSecretProvider = new EntitySecretCiphertextProvider(
-                "0102030405", RestClient.builder().baseUrl(circleServer.baseUrl()).build());
+                "0102030405",
+                RestClient.builder().baseUrl(circleServer.baseUrl()).build());
 
         // when / then
         assertThatThrownBy(shortSecretProvider::generate)
@@ -122,8 +121,7 @@ class EntitySecretCiphertextProviderTest {
     }
 
     private OAEPParameterSpec mgf1(String mgfHash) {
-        return new OAEPParameterSpec("SHA-256", "MGF1",
-                new MGF1ParameterSpec(mgfHash), PSource.PSpecified.DEFAULT);
+        return new OAEPParameterSpec("SHA-256", "MGF1", new MGF1ParameterSpec(mgfHash), PSource.PSpecified.DEFAULT);
     }
 
     private void stubEntityPublicKey(String pemPublicKey) {

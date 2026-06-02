@@ -2,9 +2,8 @@ package com.arcpay.settlement.application.transfer.mapper;
 
 import com.arcpay.settlement.api.model.TransferInitiatedResponse;
 import com.arcpay.settlement.domain.model.TransferSubmission;
-import org.springframework.stereotype.Component;
-
 import java.util.UUID;
+import org.springframework.stereotype.Component;
 
 @Component
 public class TransferInitiatedResponseMapper {

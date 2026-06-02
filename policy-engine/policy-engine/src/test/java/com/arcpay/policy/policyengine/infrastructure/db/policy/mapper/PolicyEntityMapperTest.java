@@ -1,17 +1,16 @@
 package com.arcpay.policy.policyengine.infrastructure.db.policy.mapper;
 
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY;
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_RULES;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.infrastructure.db.policy.PolicyEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
-
-import java.util.List;
-
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_RULES;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class PolicyEntityMapperTest {
 
@@ -73,8 +72,8 @@ class PolicyEntityMapperTest {
         var json = mapper.rulesToJson(rules);
 
         // then
-        var deserialized = objectMapper.readValue(json, objectMapper.getTypeFactory()
-                .constructCollectionType(List.class, PolicyRule.class));
+        var deserialized = objectMapper.readValue(
+                json, objectMapper.getTypeFactory().constructCollectionType(List.class, PolicyRule.class));
         assertThat(deserialized).usingRecursiveComparison().isEqualTo(rules);
     }
 

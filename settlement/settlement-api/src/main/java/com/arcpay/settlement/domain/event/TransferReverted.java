@@ -1,17 +1,12 @@
 package com.arcpay.settlement.domain.event;
 
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
-public record TransferReverted(
-        UUID paymentId,
-        String reason,
-        Instant revertedAt
-) implements SettlementEvent {
+public record TransferReverted(UUID paymentId, String reason, Instant revertedAt) implements SettlementEvent {
 
     public static final String TOPIC = "transfer.reverted";
 

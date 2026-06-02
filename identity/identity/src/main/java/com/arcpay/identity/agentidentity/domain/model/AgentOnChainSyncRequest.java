@@ -1,17 +1,12 @@
 package com.arcpay.identity.agentidentity.domain.model;
 
-import lombok.Builder;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
-public record AgentOnChainSyncRequest(
-        UUID agentId,
-        OnChainOperation operation,
-        Map<String, String> parameters
-) {
+public record AgentOnChainSyncRequest(UUID agentId, OnChainOperation operation, Map<String, String> parameters) {
 
     public AgentOnChainSyncRequest {
         Objects.requireNonNull(agentId, "agentId must not be null");

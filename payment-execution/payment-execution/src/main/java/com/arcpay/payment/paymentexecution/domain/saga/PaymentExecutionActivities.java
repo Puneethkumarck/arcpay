@@ -4,7 +4,6 @@ import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
 import io.temporal.activity.ActivityInterface;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

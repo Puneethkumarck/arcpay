@@ -1,20 +1,13 @@
 package com.arcpay.payment.paymentexecution.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record PaymentExecutionInput(
-        UUID paymentId,
-        UUID agentId,
-        String walletId,
-        String recipient,
-        BigDecimal amount,
-        String memo
-) {
+        UUID paymentId, UUID agentId, String walletId, String recipient, BigDecimal amount, String memo) {
 
     public PaymentExecutionInput {
         Objects.requireNonNull(paymentId, "paymentId must not be null");

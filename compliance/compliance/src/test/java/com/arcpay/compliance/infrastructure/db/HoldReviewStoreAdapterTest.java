@@ -1,6 +1,16 @@
 package com.arcpay.compliance.infrastructure.db;
 
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_HOLD_REVIEW_PENDING;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_PAYMENT_ID;
+import static com.arcpay.platform.test.TestUtils.eqIgnoring;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.springframework.data.domain.Sort.Direction.DESC;
+
 import com.arcpay.compliance.domain.model.ReviewState;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,18 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.springframework.data.domain.Sort.Direction.DESC;
-
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_HOLD_REVIEW_PENDING;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_PAYMENT_ID;
-import static com.arcpay.platform.test.TestUtils.eqIgnoring;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class HoldReviewStoreAdapterTest {
@@ -95,7 +93,8 @@ class HoldReviewStoreAdapterTest {
         // given
         var entity = holdReviewMapper.mapToEntity(SOME_HOLD_REVIEW_PENDING);
         var boundedPage = PageRequest.of(0, 200, Sort.by(DESC, "createdAt"));
-        given(holdReviewRepository.findByState(ReviewState.PENDING, boundedPage)).willReturn(List.of(entity));
+        given(holdReviewRepository.findByState(ReviewState.PENDING, boundedPage))
+                .willReturn(List.of(entity));
 
         // when
         var result = adapter.findByStateOrderByCreatedAtDesc(ReviewState.PENDING);

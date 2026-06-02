@@ -1,12 +1,11 @@
 package com.arcpay.compliance.domain.event;
 
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 class PaymentScreeningRequestedTest {
 

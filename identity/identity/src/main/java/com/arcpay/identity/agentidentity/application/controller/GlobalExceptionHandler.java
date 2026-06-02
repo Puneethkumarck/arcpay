@@ -1,7 +1,6 @@
 package com.arcpay.identity.agentidentity.application.controller;
 
 import com.arcpay.identity.agentidentity.api.ErrorCodes;
-import com.arcpay.platform.api.ApiError;
 import com.arcpay.identity.agentidentity.domain.exception.AgentNameDuplicateException;
 import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
 import com.arcpay.identity.agentidentity.domain.exception.AgentNotInExpectedStateException;
@@ -16,17 +15,17 @@ import com.arcpay.identity.agentidentity.domain.exception.MissingIdempotencyKeyE
 import com.arcpay.identity.agentidentity.domain.exception.OwnerEmailAlreadyExistsException;
 import com.arcpay.identity.agentidentity.domain.exception.OwnerNotFoundException;
 import com.arcpay.identity.agentidentity.domain.exception.OwnerWalletAlreadyExistsException;
+import com.arcpay.platform.api.ApiError;
 import jakarta.validation.ConstraintViolationException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -43,21 +42,21 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
-            OwnerEmailAlreadyExistsException.class,
-            OwnerWalletAlreadyExistsException.class,
-            AgentNameDuplicateException.class,
-            AgentNotInExpectedStateException.class
+        OwnerEmailAlreadyExistsException.class,
+        OwnerWalletAlreadyExistsException.class,
+        AgentNameDuplicateException.class,
+        AgentNotInExpectedStateException.class
     })
     public ResponseEntity<ApiError> handleConflict(RuntimeException ex) {
         return toError(ex, ErrorCodes.CONFLICT, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler({
-            InvalidEmailException.class,
-            InvalidWalletAddressException.class,
-            InvalidAgentNameException.class,
-            InvalidPolicyHashException.class,
-            InvalidPurposeException.class
+        InvalidEmailException.class,
+        InvalidWalletAddressException.class,
+        InvalidAgentNameException.class,
+        InvalidPolicyHashException.class,
+        InvalidPurposeException.class
     })
     public ResponseEntity<ApiError> handleBadRequest(RuntimeException ex) {
         return toError(ex, ErrorCodes.BAD_REQUEST, HttpStatus.BAD_REQUEST);
@@ -72,8 +71,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
         var errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.groupingBy(
-                        fe -> fe.getField(),
-                        Collectors.mapping(fe -> fe.getDefaultMessage(), Collectors.toList())));
+                        fe -> fe.getField(), Collectors.mapping(fe -> fe.getDefaultMessage(), Collectors.toList())));
         return toErrorWithDetail("Validation failed", ErrorCodes.BAD_REQUEST, HttpStatus.BAD_REQUEST, errors);
     }
 
@@ -99,8 +97,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
-        return toError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                ErrorCodes.INTERNAL_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        return toError(
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                ErrorCodes.INTERNAL_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseEntity<ApiError> toError(Exception ex, String code, HttpStatus status) {
@@ -116,8 +116,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(error);
     }
 
-    private ResponseEntity<ApiError> toErrorWithDetail(String message, String code, HttpStatus status,
-                                                       Map<String, List<String>> errors) {
+    private ResponseEntity<ApiError> toErrorWithDetail(
+            String message, String code, HttpStatus status, Map<String, List<String>> errors) {
         var detail = ApiError.Detail.builder().errors(errors).build();
         var error = ApiError.builder()
                 .code(code)

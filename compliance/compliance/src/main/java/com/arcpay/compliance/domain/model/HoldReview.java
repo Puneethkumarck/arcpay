@@ -2,11 +2,10 @@ package com.arcpay.compliance.domain.model;
 
 import com.arcpay.compliance.domain.exception.HoldAlreadyDecidedException;
 import com.arcpay.compliance.domain.exception.ReviewReasonInvalidException;
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record HoldReview(
@@ -19,8 +18,7 @@ public record HoldReview(
         String reviewerRole,
         String reason,
         Instant createdAt,
-        Instant decidedAt
-) {
+        Instant decidedAt) {
 
     private static final int MINIMUM_REASON_LENGTH = 10;
 

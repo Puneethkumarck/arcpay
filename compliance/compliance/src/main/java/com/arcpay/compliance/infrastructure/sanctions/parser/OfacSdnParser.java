@@ -1,12 +1,11 @@
 package com.arcpay.compliance.infrastructure.sanctions.parser;
 
+import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_SDN;
+
 import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
 import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
-
-import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_SDN;
+import org.springframework.stereotype.Component;
 
 @Component
 public class OfacSdnParser implements SanctionsFeedParser {

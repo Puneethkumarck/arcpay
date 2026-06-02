@@ -6,11 +6,10 @@ import com.arcpay.policy.policyengine.infrastructure.db.policy.PolicyEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PolicyEntityMapper {

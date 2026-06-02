@@ -4,10 +4,9 @@ import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-import org.springframework.stereotype.Component;
-
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import org.springframework.stereotype.Component;
 
 @Component
 public class TimeWindowEvaluator implements RuleEvaluator<PolicyRule.TimeWindow> {
@@ -38,8 +37,8 @@ public class TimeWindowEvaluator implements RuleEvaluator<PolicyRule.TimeWindow>
         return RuleEvaluationResult.builder()
                 .ruleType(RULE_TYPE)
                 .verdict(RuleVerdict.FAIL)
-                .message("Transaction outside allowed time window (%d-%d UTC, %s)".formatted(
-                        rule.startHour(), rule.endHour(), rule.daysOfWeek()))
+                .message("Transaction outside allowed time window (%d-%d UTC, %s)"
+                        .formatted(rule.startHour(), rule.endHour(), rule.daysOfWeek()))
                 .build();
     }
 }

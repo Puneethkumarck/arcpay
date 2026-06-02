@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public record AgentRegistrationRequested(UUID agentId, UUID ownerId, String name, String purpose,
-                                         String metadataHash, Instant requestedAt) {
+public record AgentRegistrationRequested(
+        UUID agentId, UUID ownerId, String name, String purpose, String metadataHash, Instant requestedAt) {
 
     public static final String TOPIC = "agent.registration-requested";
 

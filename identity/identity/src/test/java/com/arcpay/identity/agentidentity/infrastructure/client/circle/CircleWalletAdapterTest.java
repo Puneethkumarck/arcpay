@@ -1,21 +1,5 @@
 package com.arcpay.identity.agentidentity.infrastructure.client.circle;
 
-import com.arcpay.platform.infrastructure.circle.EntitySecretCiphertextProvider;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.mock.http.client.MockClientHttpRequest;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.client.RequestMatcher;
-import org.springframework.web.client.RestClient;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import static com.arcpay.identity.agentidentity.fixtures.CircleKeyFixtures.SOME_ENTITY_SECRET_HEX;
 import static com.arcpay.identity.agentidentity.fixtures.CircleKeyFixtures.entityPublicKeyResponseJson;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,11 +12,30 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import com.arcpay.platform.infrastructure.circle.EntitySecretCiphertextProvider;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.mock.http.client.MockClientHttpRequest;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.client.RequestMatcher;
+import org.springframework.web.client.RestClient;
+
 class CircleWalletAdapterTest {
 
     private static final CircleApiProperties PROPERTIES = new CircleApiProperties(
-            "https://api.circle.com", "test-api-key", "wallet-set-1", "ARC",
-            SOME_ENTITY_SECRET_HEX, new CircleApiProperties.Timeout(5000, 10000));
+            "https://api.circle.com",
+            "test-api-key",
+            "wallet-set-1",
+            "ARC",
+            SOME_ENTITY_SECRET_HEX,
+            new CircleApiProperties.Timeout(5000, 10000));
 
     private static final String WALLETS_URL = "https://api.circle.com/v1/w3s/developer/wallets";
     private static final String PUBLIC_KEY_URL = "https://api.circle.com/v1/w3s/config/entity/publicKey";
@@ -44,17 +47,20 @@ class CircleWalletAdapterTest {
 
     @BeforeEach
     void setUp() {
-        var builder = RestClient.builder().baseUrl(PROPERTIES.baseUrl())
+        var builder = RestClient.builder()
+                .baseUrl(PROPERTIES.baseUrl())
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + PROPERTIES.apiKey())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        mockServer = MockRestServiceServer.bindTo(builder).ignoreExpectOrder(true).build();
+        mockServer =
+                MockRestServiceServer.bindTo(builder).ignoreExpectOrder(true).build();
         var restClient = builder.build();
         var ciphertextProvider = new EntitySecretCiphertextProvider(SOME_ENTITY_SECRET_HEX, restClient);
         adapter = new CircleWalletAdapter(PROPERTIES, restClient, ciphertextProvider);
     }
 
     private void stubEntityPublicKey() {
-        mockServer.expect(requestTo(PUBLIC_KEY_URL))
+        mockServer
+                .expect(requestTo(PUBLIC_KEY_URL))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess(entityPublicKeyResponseJson(), MediaType.APPLICATION_JSON));
     }
@@ -64,7 +70,8 @@ class CircleWalletAdapterTest {
         // given
         var agentId = UUID.fromString("019718a0-5678-7def-8000-abcdef567890");
         stubEntityPublicKey();
-        mockServer.expect(requestTo(WALLETS_URL))
+        mockServer
+                .expect(requestTo(WALLETS_URL))
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess("""
                         {
@@ -92,8 +99,7 @@ class CircleWalletAdapterTest {
         // given
         var agentId = UUID.randomUUID();
         stubEntityPublicKey();
-        mockServer.expect(requestTo(WALLETS_URL))
-                .andRespond(withSuccess("""
+        mockServer.expect(requestTo(WALLETS_URL)).andRespond(withSuccess("""
                         {
                             "data": {
                                 "wallets": [{
@@ -117,7 +123,8 @@ class CircleWalletAdapterTest {
         // given
         var agentId = UUID.fromString("019718a0-5678-7def-8000-abcdef567890");
         stubEntityPublicKey();
-        mockServer.expect(requestTo(WALLETS_URL))
+        mockServer
+                .expect(requestTo(WALLETS_URL))
                 .andExpect(content().json("""
                         {"idempotencyKey": "019718a0-5678-7def-8000-abcdef567890"}
                         """))
@@ -137,7 +144,8 @@ class CircleWalletAdapterTest {
         // given
         var agentId = UUID.randomUUID();
         stubEntityPublicKey();
-        mockServer.expect(requestTo(WALLETS_URL))
+        mockServer
+                .expect(requestTo(WALLETS_URL))
                 .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer test-api-key"))
                 .andRespond(withSuccess("""
                         {"data": {"wallets": [{"id": "w-1", "address": "0xabc", "blockchain": "ARC"}]}}
@@ -156,7 +164,8 @@ class CircleWalletAdapterTest {
         var agentId = UUID.randomUUID();
         var capturedBody = new ArrayList<String>();
         stubEntityPublicKey();
-        mockServer.expect(requestTo(WALLETS_URL))
+        mockServer
+                .expect(requestTo(WALLETS_URL))
                 .andExpect(captureBody(capturedBody))
                 .andRespond(withSuccess("""
                         {"data": {"wallets": [{"id": "w-1", "address": "0xabc", "blockchain": "ARC"}]}}
@@ -174,10 +183,12 @@ class CircleWalletAdapterTest {
         // given
         var capturedBodies = new ArrayList<String>();
         stubEntityPublicKey();
-        mockServer.expect(once(), requestTo(WALLETS_URL))
+        mockServer
+                .expect(once(), requestTo(WALLETS_URL))
                 .andExpect(captureBody(capturedBodies))
                 .andRespond(withSuccess(walletResponse("w-1"), MediaType.APPLICATION_JSON));
-        mockServer.expect(once(), requestTo(WALLETS_URL))
+        mockServer
+                .expect(once(), requestTo(WALLETS_URL))
                 .andExpect(captureBody(capturedBodies))
                 .andRespond(withSuccess(walletResponse("w-2"), MediaType.APPLICATION_JSON));
 
@@ -198,8 +209,7 @@ class CircleWalletAdapterTest {
         // given
         var agentId = UUID.randomUUID();
         stubEntityPublicKey();
-        mockServer.expect(requestTo(WALLETS_URL))
-                .andRespond(withServerError());
+        mockServer.expect(requestTo(WALLETS_URL)).andRespond(withServerError());
 
         // when / then
         assertThatThrownBy(() -> adapter.createWallet(agentId))
@@ -212,8 +222,7 @@ class CircleWalletAdapterTest {
         // given
         var agentId = UUID.randomUUID();
         stubEntityPublicKey();
-        mockServer.expect(requestTo(WALLETS_URL))
-                .andRespond(withSuccess("""
+        mockServer.expect(requestTo(WALLETS_URL)).andRespond(withSuccess("""
                         {"data": {"wallets": []}}
                         """, MediaType.APPLICATION_JSON));
 

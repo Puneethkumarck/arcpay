@@ -1,21 +1,20 @@
 package com.arcpay.identity.agentidentity.domain.model;
 
-import com.arcpay.identity.agentidentity.domain.exception.AgentNotInExpectedStateException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
-
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_FAILED;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_SUSPENDED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.arcpay.identity.agentidentity.domain.exception.AgentNotInExpectedStateException;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class AgentTest {
 
@@ -40,8 +39,7 @@ class AgentTest {
                 Arguments.of("status", (UnaryOperator<Agent.AgentBuilder>) b -> b.status(null)),
                 Arguments.of("metadataHash", (UnaryOperator<Agent.AgentBuilder>) b -> b.metadataHash(null)),
                 Arguments.of("createdAt", (UnaryOperator<Agent.AgentBuilder>) b -> b.createdAt(null)),
-                Arguments.of("updatedAt", (UnaryOperator<Agent.AgentBuilder>) b -> b.updatedAt(null))
-        );
+                Arguments.of("updatedAt", (UnaryOperator<Agent.AgentBuilder>) b -> b.updatedAt(null)));
     }
 
     @Test
@@ -77,7 +75,10 @@ class AgentTest {
     @Test
     void shouldTransitionToActiveViaWithOnChainRegistration() {
         // given
-        var agent = SOME_AGENT_ACTIVE.toBuilder().status(AgentStatus.WALLET_READY).onChainTxHash(null).build();
+        var agent = SOME_AGENT_ACTIVE.toBuilder()
+                .status(AgentStatus.WALLET_READY)
+                .onChainTxHash(null)
+                .build();
 
         // when
         var result = agent.withOnChainRegistration("0xdeadbeef");

@@ -1,14 +1,12 @@
 package com.arcpay.compliance.infrastructure.temporal;
 
+import static java.util.UUID.randomUUID;
+
 import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
 import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
 import com.arcpay.compliance.infrastructure.sanctions.parser.ParserRegistry;
 import io.temporal.failure.ApplicationFailure;
 import io.temporal.spring.boot.ActivityImpl;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -18,8 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
-
-import static java.util.UUID.randomUUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -50,23 +49,22 @@ class SanctionsIngestionActivitiesImpl implements SanctionsIngestionActivities {
 
     @Override
     public UUID validateSnapshot(Map<SanctionsSource, List<SanctionedAddressRecord>> recordsBySource) {
-        var totalRecords = recordsBySource.values().stream().mapToInt(List::size).sum();
+        var totalRecords =
+                recordsBySource.values().stream().mapToInt(List::size).sum();
         if (totalRecords < MINIMUM_RECORD_COUNT) {
-            throw ApplicationFailure.newNonRetryableFailure(
-                    "Sanctions snapshot is empty", "EMPTY_SNAPSHOT");
+            throw ApplicationFailure.newNonRetryableFailure("Sanctions snapshot is empty", "EMPTY_SNAPSHOT");
         }
         if (totalRecords > MAXIMUM_RECORD_COUNT) {
             throw ApplicationFailure.newNonRetryableFailure(
                     "Sanctions snapshot exceeds sanity bound: " + totalRecords, "OVERSIZED_SNAPSHOT");
         }
-        log.info("Validated sanctions snapshot with {} records across {} sources",
-                totalRecords, recordsBySource.size());
+        log.info(
+                "Validated sanctions snapshot with {} records across {} sources", totalRecords, recordsBySource.size());
         return randomUUID();
     }
 
     @Override
-    public void persistSnapshot(UUID versionId,
-                                Map<SanctionsSource, List<SanctionedAddressRecord>> recordsBySource) {
+    public void persistSnapshot(UUID versionId, Map<SanctionsSource, List<SanctionedAddressRecord>> recordsBySource) {
         var checksum = checksum(recordsBySource);
         snapshotWriter.persistSnapshot(versionId, checksum, recordsBySource);
         var now = Instant.now();

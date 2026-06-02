@@ -1,23 +1,5 @@
 package com.arcpay.compliance.application.stream;
 
-import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
-import com.arcpay.compliance.domain.event.ScreeningCompleted;
-import com.arcpay.compliance.domain.model.HoldReview;
-import com.arcpay.compliance.domain.model.ReviewState;
-import com.arcpay.compliance.domain.port.EventPublisher;
-import com.arcpay.compliance.domain.port.HoldReviewStore;
-import com.arcpay.compliance.domain.port.ScreeningEngine;
-import com.arcpay.compliance.domain.port.ScreeningStore;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Optional;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
@@ -29,6 +11,23 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.verifyNoInteractions;
+
+import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
+import com.arcpay.compliance.domain.event.ScreeningCompleted;
+import com.arcpay.compliance.domain.model.HoldReview;
+import com.arcpay.compliance.domain.model.ReviewState;
+import com.arcpay.compliance.domain.port.EventPublisher;
+import com.arcpay.compliance.domain.port.HoldReviewStore;
+import com.arcpay.compliance.domain.port.ScreeningEngine;
+import com.arcpay.compliance.domain.port.ScreeningStore;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class ScreeningRequestHandlerTest {
@@ -60,8 +59,7 @@ class ScreeningRequestHandlerTest {
     @Test
     void shouldReturnExistingResultOnDuplicatePaymentId() {
         // given
-        given(screeningStore.findByPaymentId(SOME_PAYMENT_ID))
-                .willReturn(Optional.of(SOME_SCREENING_RESULT_PASS));
+        given(screeningStore.findByPaymentId(SOME_PAYMENT_ID)).willReturn(Optional.of(SOME_SCREENING_RESULT_PASS));
 
         // when
         handler.handle(SOME_REQUEST);

@@ -2,12 +2,11 @@ package com.arcpay.settlement.application.webhook;
 
 import com.arcpay.settlement.domain.model.TransferNotification;
 import com.arcpay.settlement.domain.model.TransferState;
+import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.math.BigDecimal;
 
 @Component
 @RequiredArgsConstructor

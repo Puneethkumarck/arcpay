@@ -23,10 +23,10 @@ class AgentOnChainSyncActivitiesImpl implements AgentOnChainSyncActivities {
         switch (request.operation()) {
             case DEACTIVATE -> blockchainService.deactivateAgent(request.agentId());
             case REACTIVATE -> blockchainService.reactivateAgent(request.agentId());
-            case UPDATE_METADATA -> blockchainService.updateMetadata(
-                    request.agentId(), requireParameter(request, "metadataHash"));
-            case UPDATE_POLICY -> blockchainService.updatePolicy(
-                    request.agentId(), requireParameter(request, "policyHash"));
+            case UPDATE_METADATA ->
+                blockchainService.updateMetadata(request.agentId(), requireParameter(request, "metadataHash"));
+            case UPDATE_POLICY ->
+                blockchainService.updatePolicy(request.agentId(), requireParameter(request, "policyHash"));
         }
         log.info("Chain sync complete agentId={} operation={}", request.agentId(), request.operation());
     }

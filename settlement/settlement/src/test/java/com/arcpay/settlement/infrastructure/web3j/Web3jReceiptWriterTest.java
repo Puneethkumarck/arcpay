@@ -1,7 +1,28 @@
 package com.arcpay.settlement.infrastructure.web3j;
 
+import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.someReceiptCommand;
+import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.someReceiptCommandWithoutMemo;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.lenient;
+
 import com.arcpay.settlement.domain.model.ReceiptCommand;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -21,28 +42,6 @@ import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.tx.FastRawTransactionManager;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.someReceiptCommand;
-import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.someReceiptCommandWithoutMemo;
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.lenient;
-
 @ExtendWith(MockitoExtension.class)
 class Web3jReceiptWriterTest {
 
@@ -52,7 +51,8 @@ class Web3jReceiptWriterTest {
     private static final BigInteger GAS_PRICE = BigInteger.valueOf(1_000_000_000L);
     private static final BigInteger GAS_LIMIT = BigInteger.valueOf(150_000L);
     private static final BigInteger LOW_BALANCE_THRESHOLD = BigInteger.valueOf(1_000L);
-    private static final long FIXED_EPOCH_SECONDS = Instant.parse("2026-05-30T10:00:00Z").getEpochSecond();
+    private static final long FIXED_EPOCH_SECONDS =
+            Instant.parse("2026-05-30T10:00:00Z").getEpochSecond();
     private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2026-05-30T10:00:00Z"), ZoneOffset.UTC);
     private static final byte[] ZERO_HASH = new byte[32];
 
@@ -101,7 +101,8 @@ class Web3jReceiptWriterTest {
     private void stubBalance(String balanceHex) throws IOException {
         var balanceResponse = new EthGetBalance();
         balanceResponse.setResult(balanceHex);
-        lenient().when(web3j.ethGetBalance(GAS_WALLET_ADDRESS, DefaultBlockParameter.valueOf("latest")))
+        lenient()
+                .when(web3j.ethGetBalance(GAS_WALLET_ADDRESS, DefaultBlockParameter.valueOf("latest")))
                 .thenReturn(balanceRequest);
         lenient().when(balanceRequest.send()).thenReturn(balanceResponse);
         lenient().when(transactionManager.getFromAddress()).thenReturn(GAS_WALLET_ADDRESS);
@@ -119,8 +120,8 @@ class Web3jReceiptWriterTest {
         stubBalance("0xffff");
         var command = someReceiptCommand();
         var memoHash = Hash.sha3(command.memo().getBytes(StandardCharsets.UTF_8));
-        given(transactionManager.sendTransaction(GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS,
-                expectedData(command, memoHash), BigInteger.ZERO))
+        given(transactionManager.sendTransaction(
+                        GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS, expectedData(command, memoHash), BigInteger.ZERO))
                 .willReturn(successResponse());
 
         // when
@@ -135,8 +136,8 @@ class Web3jReceiptWriterTest {
         // given
         stubBalance("0xffff");
         var command = someReceiptCommandWithoutMemo();
-        given(transactionManager.sendTransaction(GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS,
-                expectedData(command, ZERO_HASH), BigInteger.ZERO))
+        given(transactionManager.sendTransaction(
+                        GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS, expectedData(command, ZERO_HASH), BigInteger.ZERO))
                 .willReturn(successResponse());
 
         // when
@@ -152,8 +153,8 @@ class Web3jReceiptWriterTest {
         stubBalance("0xffff");
         var command = someReceiptCommand();
         var memoHash = Hash.sha3(command.memo().getBytes(StandardCharsets.UTF_8));
-        given(transactionManager.sendTransaction(GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS,
-                expectedData(command, memoHash), BigInteger.ZERO))
+        given(transactionManager.sendTransaction(
+                        GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS, expectedData(command, memoHash), BigInteger.ZERO))
                 .willThrow(new IOException("rpc unreachable"));
 
         // when
@@ -172,8 +173,8 @@ class Web3jReceiptWriterTest {
         var memoHash = Hash.sha3(command.memo().getBytes(StandardCharsets.UTF_8));
         var errored = new EthSendTransaction();
         errored.setError(new Response.Error(-32000, "nonce too low"));
-        given(transactionManager.sendTransaction(GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS,
-                expectedData(command, memoHash), BigInteger.ZERO))
+        given(transactionManager.sendTransaction(
+                        GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS, expectedData(command, memoHash), BigInteger.ZERO))
                 .willReturn(errored);
 
         // when
@@ -189,15 +190,18 @@ class Web3jReceiptWriterTest {
         stubBalance("0x1");
         var command = someReceiptCommand();
         var memoHash = Hash.sha3(command.memo().getBytes(StandardCharsets.UTF_8));
-        given(transactionManager.sendTransaction(GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS,
-                expectedData(command, memoHash), BigInteger.ZERO))
+        given(transactionManager.sendTransaction(
+                        GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS, expectedData(command, memoHash), BigInteger.ZERO))
                 .willReturn(successResponse());
 
         // when
         writer().writeReceipt(command);
 
         // then
-        assertThat(meterRegistry.counter("settlement.receipt.gas_wallet.low_balance").count()).isEqualTo(1.0);
+        assertThat(meterRegistry
+                        .counter("settlement.receipt.gas_wallet.low_balance")
+                        .count())
+                .isEqualTo(1.0);
     }
 
     @Test
@@ -208,8 +212,8 @@ class Web3jReceiptWriterTest {
         var command = someReceiptCommand();
         var memoHash = Hash.sha3(command.memo().getBytes(StandardCharsets.UTF_8));
         stubBalance("0xffff");
-        given(transactionManager.sendTransaction(GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS,
-                expectedData(command, memoHash), BigInteger.ZERO))
+        given(transactionManager.sendTransaction(
+                        GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS, expectedData(command, memoHash), BigInteger.ZERO))
                 .willAnswer(invocation -> {
                     if (concurrentEntries.incrementAndGet() > 1) {
                         nonceCollision.set(true);

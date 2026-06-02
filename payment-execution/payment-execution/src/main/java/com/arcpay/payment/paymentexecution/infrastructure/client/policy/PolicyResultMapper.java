@@ -2,11 +2,10 @@ package com.arcpay.payment.paymentexecution.infrastructure.client.policy;
 
 import com.arcpay.payment.paymentexecution.api.model.PolicyResult;
 import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PolicyResultMapper {

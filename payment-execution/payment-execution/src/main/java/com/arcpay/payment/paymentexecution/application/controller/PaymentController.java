@@ -9,6 +9,7 @@ import com.arcpay.payment.paymentexecution.application.service.PaymentQueryServi
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 import com.arcpay.platform.api.OwnerPrincipal;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -25,8 +26,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -40,8 +39,7 @@ public class PaymentController {
 
     @PostMapping
     public ResponseEntity<PaymentResponse> createPayment(
-            @AuthenticationPrincipal OwnerPrincipal principal,
-            @Valid @RequestBody CreatePaymentRequest request) {
+            @AuthenticationPrincipal OwnerPrincipal principal, @Valid @RequestBody CreatePaymentRequest request) {
         log.info("Payment create requested agentId={} ownerId={}", request.agentId(), principal.ownerId());
         var result = paymentCreationService.create(principal, request);
         var status = result.created() ? HttpStatus.ACCEPTED : HttpStatus.OK;
@@ -49,9 +47,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{paymentId}")
-    public PaymentResponse getPayment(
-            @AuthenticationPrincipal OwnerPrincipal principal,
-            @PathVariable UUID paymentId) {
+    public PaymentResponse getPayment(@AuthenticationPrincipal OwnerPrincipal principal, @PathVariable UUID paymentId) {
         var payment = paymentQueryService.getPayment(paymentId, principal.ownerId());
         return paymentResponseMapper.toApi(payment);
     }

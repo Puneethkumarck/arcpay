@@ -1,18 +1,17 @@
 package com.arcpay.identity.agentidentity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import com.arcpay.identity.agentidentity.test.BusinessTest;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.Map;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class IdempotencyBusinessTest extends BusinessTest {
 
@@ -45,7 +44,8 @@ class IdempotencyBusinessTest extends BusinessTest {
                 """.formatted("c".repeat(64));
 
         // when — first request
-        var firstResponse = restClient().post()
+        var firstResponse = restClient()
+                .post()
                 .uri("/api/v1/agents")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + apiKey)
@@ -57,7 +57,8 @@ class IdempotencyBusinessTest extends BusinessTest {
         assertThat(firstResponse.getStatusCode().value()).isEqualTo(201);
 
         // when — second request with same idempotency key
-        var secondResponse = restClient().post()
+        var secondResponse = restClient()
+                .post()
                 .uri("/api/v1/agents")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + apiKey)
@@ -73,7 +74,8 @@ class IdempotencyBusinessTest extends BusinessTest {
 
     @SuppressWarnings("unchecked")
     private String registerOwner() {
-        var response = restClient().post()
+        var response = restClient()
+                .post()
                 .uri("/api/v1/owners/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""

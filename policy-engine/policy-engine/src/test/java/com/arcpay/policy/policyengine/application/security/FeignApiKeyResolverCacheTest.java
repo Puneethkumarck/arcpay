@@ -1,22 +1,5 @@
 package com.arcpay.policy.policyengine.application.security;
 
-import com.arcpay.identity.client.IdentityServiceClient;
-import com.arcpay.platform.api.OwnerPrincipal;
-import com.arcpay.platform.infrastructure.security.ApiKeyResolver;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.caffeine.CaffeineCacheManager;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import java.time.Duration;
-import java.util.Optional;
-
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_API_KEY_HASH;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_EMAIL;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_OWNER_ID;
@@ -26,6 +9,22 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 import static org.mockito.Mockito.mock;
+
+import com.arcpay.identity.client.IdentityServiceClient;
+import com.arcpay.platform.api.OwnerPrincipal;
+import com.arcpay.platform.infrastructure.security.ApiKeyResolver;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.time.Duration;
+import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 class FeignApiKeyResolverCacheTest {
 
@@ -49,8 +48,7 @@ class FeignApiKeyResolverCacheTest {
     @Test
     void shouldCacheResultsAndNotCallIdentityTwiceForSameHash() {
         // given
-        given(IDENTITY_CLIENT.resolveApiKey(SOME_API_KEY_HASH))
-                .willReturn(Optional.of(SOME_OWNER_PRINCIPAL_RESPONSE));
+        given(IDENTITY_CLIENT.resolveApiKey(SOME_API_KEY_HASH)).willReturn(Optional.of(SOME_OWNER_PRINCIPAL_RESPONSE));
         // @EnableCaching produces a JDK proxy of the ApiKeyResolver interface, so fetch by interface
         ApiKeyResolver resolver = context.getBean(ApiKeyResolver.class);
 
@@ -72,9 +70,7 @@ class FeignApiKeyResolverCacheTest {
         @Bean
         public CacheManager cacheManager() {
             var manager = new CaffeineCacheManager("apiKeyResolution");
-            manager.setCaffeine(Caffeine.newBuilder()
-                    .maximumSize(1000)
-                    .expireAfterWrite(Duration.ofSeconds(60)));
+            manager.setCaffeine(Caffeine.newBuilder().maximumSize(1000).expireAfterWrite(Duration.ofSeconds(60)));
             return manager;
         }
 

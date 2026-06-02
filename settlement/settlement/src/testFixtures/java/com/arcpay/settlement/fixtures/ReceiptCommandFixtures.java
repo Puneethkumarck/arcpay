@@ -1,7 +1,6 @@
 package com.arcpay.settlement.fixtures;
 
 import com.arcpay.settlement.domain.model.ReceiptCommand;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -13,8 +12,7 @@ public final class ReceiptCommandFixtures {
     public static final BigDecimal SOME_RECEIPT_AMOUNT = new BigDecimal("12.500000");
     public static final String SOME_MEMO = "invoice-4815";
 
-    private ReceiptCommandFixtures() {
-    }
+    private ReceiptCommandFixtures() {}
 
     public static ReceiptCommand someReceiptCommand() {
         return ReceiptCommand.builder()
@@ -27,8 +25,6 @@ public final class ReceiptCommandFixtures {
     }
 
     public static ReceiptCommand someReceiptCommandWithoutMemo() {
-        return someReceiptCommand().toBuilder()
-                .memo(null)
-                .build();
+        return someReceiptCommand().toBuilder().memo(null).build();
     }
 }

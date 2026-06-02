@@ -1,5 +1,18 @@
 package com.arcpay.policy.policyengine.application.controller.internal;
 
+import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.SOME_AGENT;
+import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.SOME_HELD_RESERVATION;
+import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.SOME_REQUESTED_AT;
+import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.SOME_RESERVE_REQUEST;
+import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.evaluationResult;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AGENT_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AMOUNT;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_PAYMENT_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_RECIPIENT;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.policy.policyengine.api.model.ReservationResponse;
 import com.arcpay.policy.policyengine.application.controller.internal.mapper.ReservationResponseMapper;
 import com.arcpay.policy.policyengine.application.controller.mapper.EvaluationResponseMapper;
@@ -7,6 +20,7 @@ import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
 import com.arcpay.policy.policyengine.domain.spending.ReservationService;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,26 +28,12 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
-import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.SOME_AGENT;
-import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.SOME_HELD_RESERVATION;
-import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.SOME_RESERVE_REQUEST;
-import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.evaluationResult;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AGENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AMOUNT;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_PAYMENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_RECIPIENT;
-import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.SOME_REQUESTED_AT;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-
 @ExtendWith(MockitoExtension.class)
 class InternalReservationControllerTest {
 
     @Mock
     private AgentServiceClient agentServiceClient;
+
     @Mock
     private ReservationService reservationService;
 
@@ -52,7 +52,8 @@ class InternalReservationControllerTest {
     void shouldReserveAndReturnEvaluationResponse() {
         // given
         given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
-        given(reservationService.reserve(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT))
+        given(reservationService.reserve(
+                        SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT))
                 .willReturn(evaluationResult(PolicyVerdict.APPROVED));
 
         // when
@@ -70,8 +71,7 @@ class InternalReservationControllerTest {
 
         // when
         // then
-        assertThatThrownBy(() -> controller.reserve(SOME_RESERVE_REQUEST))
-                .isInstanceOf(AgentNotFoundException.class);
+        assertThatThrownBy(() -> controller.reserve(SOME_RESERVE_REQUEST)).isInstanceOf(AgentNotFoundException.class);
     }
 
     @Test

@@ -1,10 +1,5 @@
 package com.arcpay.platform.infrastructure.circle;
 
-import org.springframework.web.client.RestClient;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.OAEPParameterSpec;
-import javax.crypto.spec.PSource;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.MGF1ParameterSpec;
@@ -12,6 +7,10 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.crypto.Cipher;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
+import org.springframework.web.client.RestClient;
 
 public class EntitySecretCiphertextProvider {
 
@@ -33,10 +32,7 @@ public class EntitySecretCiphertextProvider {
         var entitySecret = decodeEntitySecret();
         try {
             var spec = new OAEPParameterSpec(
-                    "SHA-256",
-                    "MGF1",
-                    new MGF1ParameterSpec("SHA-256"),
-                    PSource.PSpecified.DEFAULT);
+                    "SHA-256", "MGF1", new MGF1ParameterSpec("SHA-256"), PSource.PSpecified.DEFAULT);
             var cipher = Cipher.getInstance(TRANSFORMATION);
             cipher.init(Cipher.ENCRYPT_MODE, circlePublicKey(), spec);
             return Base64.getEncoder().encodeToString(cipher.doFinal(entitySecret));
@@ -69,7 +65,8 @@ public class EntitySecretCiphertextProvider {
     }
 
     private PublicKey fetchPublicKey() {
-        var response = restClient.get()
+        var response = restClient
+                .get()
                 .uri("/v1/w3s/config/entity/publicKey")
                 .retrieve()
                 .body(PublicKeyResponse.class);
@@ -82,10 +79,7 @@ public class EntitySecretCiphertextProvider {
     }
 
     private PublicKey parsePublicKey(String pem) {
-        var base64 = pem
-                .replace(PEM_HEADER, "")
-                .replace(PEM_FOOTER, "")
-                .replaceAll("\\s", "");
+        var base64 = pem.replace(PEM_HEADER, "").replace(PEM_FOOTER, "").replaceAll("\\s", "");
         try {
             var decoded = Base64.getDecoder().decode(base64);
             return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decoded));

@@ -25,10 +25,7 @@ public class OwnerCommandHandler {
         var result = ownerCreationService.createOwner(email, walletAddress);
         var savedOwner = ownerRepository.save(result.owner());
         eventPublisher.publish(new OwnerRegistered(
-                savedOwner.ownerId(),
-                savedOwner.email(),
-                savedOwner.walletAddress(),
-                savedOwner.createdAt()));
+                savedOwner.ownerId(), savedOwner.email(), savedOwner.walletAddress(), savedOwner.createdAt()));
         log.info("Owner registered ownerId={}", savedOwner.ownerId());
         return new OwnerWithApiKey(savedOwner, result.rawApiKey());
     }

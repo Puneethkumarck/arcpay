@@ -1,13 +1,13 @@
 package com.arcpay.settlement.application.read.mapper;
 
-import com.arcpay.settlement.api.model.BalanceResponse;
-import org.junit.jupiter.api.Test;
-
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_BALANCE_AMOUNT;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_USDC_TOKEN_ADDRESS;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_WALLET_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someWalletBalance;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.settlement.api.model.BalanceResponse;
+import org.junit.jupiter.api.Test;
 
 class BalanceResponseMapperTest {
 

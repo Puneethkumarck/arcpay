@@ -1,5 +1,18 @@
 package com.arcpay.compliance;
 
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_WATCHLIST_ADDRESS;
+import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OFFICER_EMAIL;
+import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_EMAIL;
+import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.awaitility.Awaitility.await;
+
 import com.arcpay.compliance.api.ErrorCodes;
 import com.arcpay.compliance.application.dto.ReviewDecisionRequest;
 import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
@@ -15,6 +28,13 @@ import com.arcpay.platform.api.ApiError;
 import com.arcpay.platform.infrastructure.security.ApiKeyAuthFilter;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -33,27 +53,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.HttpClientErrorException;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_WATCHLIST_ADDRESS;
-import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OFFICER_EMAIL;
-import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_EMAIL;
-import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowableOfType;
-import static org.awaitility.Awaitility.await;
 
 @TestPropertySource(properties = "compliance.sanctions.poll-interval-ms=500")
 class HoldReviewWorkflowTest extends BusinessTest {
@@ -119,7 +118,8 @@ class HoldReviewWorkflowTest extends BusinessTest {
         var paymentId = createHold();
 
         // when
-        var response = restClient().post()
+        var response = restClient()
+                .post()
                 .uri("/compliance/holds/{paymentId}/approve", paymentId)
                 .header("Authorization", "Bearer " + OFFICER_API_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -140,8 +140,7 @@ class HoldReviewWorkflowTest extends BusinessTest {
                         .reason("Counterparty verified via off-chain KYC.")
                         .decidedAt(Instant.EPOCH)
                         .build());
-        identityServer.verify(0, getRequestedFor(urlPathEqualTo(
-                "/api/v1/internal/agents/" + SOME_AGENT_ID)));
+        identityServer.verify(0, getRequestedFor(urlPathEqualTo("/api/v1/internal/agents/" + SOME_AGENT_ID)));
     }
 
     @Test
@@ -150,7 +149,8 @@ class HoldReviewWorkflowTest extends BusinessTest {
         var paymentId = createHold();
 
         // when
-        var response = restClient().post()
+        var response = restClient()
+                .post()
                 .uri("/compliance/holds/{paymentId}/approve", paymentId)
                 .header("Authorization", "Bearer " + OWNER_API_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -171,8 +171,7 @@ class HoldReviewWorkflowTest extends BusinessTest {
                         .reason("Owner confirms this is a legitimate vendor payout.")
                         .decidedAt(Instant.EPOCH)
                         .build());
-        identityServer.verify(getRequestedFor(urlPathEqualTo(
-                "/api/v1/internal/agents/" + SOME_AGENT_ID)));
+        identityServer.verify(getRequestedFor(urlPathEqualTo("/api/v1/internal/agents/" + SOME_AGENT_ID)));
     }
 
     @Test
@@ -181,13 +180,16 @@ class HoldReviewWorkflowTest extends BusinessTest {
         var paymentId = createHold();
 
         // when
-        var error = catchThrowableOfType(HttpClientErrorException.class, () -> restClient().post()
-                .uri("/compliance/holds/{paymentId}/approve", paymentId)
-                .header("Authorization", "Bearer " + OTHER_OWNER_API_KEY)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(new ReviewDecisionRequest("Attempting to approve another owner's hold."))
-                .retrieve()
-                .toBodilessEntity());
+        var error = catchThrowableOfType(
+                HttpClientErrorException.class,
+                () -> restClient()
+                        .post()
+                        .uri("/compliance/holds/{paymentId}/approve", paymentId)
+                        .header("Authorization", "Bearer " + OTHER_OWNER_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(new ReviewDecisionRequest("Attempting to approve another owner's hold."))
+                        .retrieve()
+                        .toBodilessEntity());
 
         // then
         assertThat(error.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
@@ -201,7 +203,8 @@ class HoldReviewWorkflowTest extends BusinessTest {
         var paymentId = createHold();
 
         // when
-        var response = restClient().post()
+        var response = restClient()
+                .post()
                 .uri("/compliance/holds/{paymentId}/reject", paymentId)
                 .header("Authorization", "Bearer " + OFFICER_API_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -229,13 +232,16 @@ class HoldReviewWorkflowTest extends BusinessTest {
         var paymentId = createHold();
 
         // when
-        var error = catchThrowableOfType(HttpClientErrorException.class, () -> restClient().post()
-                .uri("/compliance/holds/{paymentId}/approve", paymentId)
-                .header("Authorization", "Bearer " + OFFICER_API_KEY)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body("{\"reason\":\"Short\"}")
-                .retrieve()
-                .toBodilessEntity());
+        var error = catchThrowableOfType(
+                HttpClientErrorException.class,
+                () -> restClient()
+                        .post()
+                        .uri("/compliance/holds/{paymentId}/approve", paymentId)
+                        .header("Authorization", "Bearer " + OFFICER_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"reason\":\"Short\"}")
+                        .retrieve()
+                        .toBodilessEntity());
 
         // then
         assertThat(error.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -246,7 +252,8 @@ class HoldReviewWorkflowTest extends BusinessTest {
     void shouldReturnConflictWhenHoldAlreadyDecided() {
         // given
         var paymentId = createHold();
-        restClient().post()
+        restClient()
+                .post()
                 .uri("/compliance/holds/{paymentId}/approve", paymentId)
                 .header("Authorization", "Bearer " + OFFICER_API_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -255,13 +262,16 @@ class HoldReviewWorkflowTest extends BusinessTest {
                 .toBodilessEntity();
 
         // when
-        var error = catchThrowableOfType(HttpClientErrorException.class, () -> restClient().post()
-                .uri("/compliance/holds/{paymentId}/reject", paymentId)
-                .header("Authorization", "Bearer " + OFFICER_API_KEY)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(new ReviewDecisionRequest("Trying to reject an already-approved hold."))
-                .retrieve()
-                .toBodilessEntity());
+        var error = catchThrowableOfType(
+                HttpClientErrorException.class,
+                () -> restClient()
+                        .post()
+                        .uri("/compliance/holds/{paymentId}/reject", paymentId)
+                        .header("Authorization", "Bearer " + OFFICER_API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(new ReviewDecisionRequest("Trying to reject an already-approved hold."))
+                        .retrieve()
+                        .toBodilessEntity());
 
         // then
         assertThat(error.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
@@ -273,7 +283,9 @@ class HoldReviewWorkflowTest extends BusinessTest {
         awaitSanctionsLoaded(versionId);
         watchlistStore.addAddress(SOME_WATCHLIST_ADDRESS, "operator-flagged", "officer@arcpay.io");
         var paymentId = UuidCreator.getTimeOrderedEpoch();
-        kafkaTemplate.send(PaymentScreeningRequested.TOPIC, paymentId.toString(),
+        kafkaTemplate.send(
+                PaymentScreeningRequested.TOPIC,
+                paymentId.toString(),
                 PaymentScreeningRequested.builder()
                         .paymentId(paymentId)
                         .agentId(SOME_AGENT_ID)
@@ -283,7 +295,8 @@ class HoldReviewWorkflowTest extends BusinessTest {
                         .requestedAt(Instant.now())
                         .build());
         awaitVerdict(paymentId);
-        await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofMillis(200))
+        await().atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(200))
                 .until(() -> ReviewState.PENDING.name().equals(holdReviewState(paymentId)));
         return paymentId;
     }
@@ -323,7 +336,8 @@ class HoldReviewWorkflowTest extends BusinessTest {
     private void awaitVerdict(UUID paymentId) {
         try (var consumer = newConsumer("hold-verdict-probe")) {
             consumer.subscribe(List.of(ScreeningCompleted.TOPIC));
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (var record : consumer.poll(Duration.ofSeconds(2))) {
                             var event = jsonMapper.readValue(record.value(), ScreeningCompleted.class);
@@ -340,7 +354,8 @@ class HoldReviewWorkflowTest extends BusinessTest {
         try (var consumer = newConsumer("hold-event-probe")) {
             consumer.subscribe(List.of(topic));
             var captured = new AtomicReference<T>();
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (var record : consumer.poll(Duration.ofSeconds(2))) {
                             if (paymentId.toString().equals(record.key())) {
@@ -382,7 +397,8 @@ class HoldReviewWorkflowTest extends BusinessTest {
 
     private void awaitSanctionsLoaded(UUID versionId) {
         await().atMost(Duration.ofSeconds(10))
-                .until(() -> versionId.equals(sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
+                .until(() -> versionId.equals(
+                        sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
     }
 
     private UUID seedSanctions() {
@@ -391,11 +407,13 @@ class HoldReviewWorkflowTest extends BusinessTest {
                 "INSERT INTO sanctions_list_version "
                         + "(version_id, source, downloaded_at, record_count, checksum, status) "
                         + "VALUES (?, ?, now(), ?, ?, 'ACTIVE')",
-                versionId, "OFAC_SDN", 1, "checksum");
+                versionId,
+                "OFAC_SDN",
+                1,
+                "checksum");
         jdbcTemplate.update("DELETE FROM current_list_version WHERE id = 1");
         jdbcTemplate.update(
-                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())",
-                versionId);
+                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())", versionId);
         return versionId;
     }
 }

@@ -1,7 +1,6 @@
 package com.arcpay.platform.infrastructure.security;
 
 import com.arcpay.platform.api.OwnerPrincipal;
-
 import java.util.Optional;
 
 /**

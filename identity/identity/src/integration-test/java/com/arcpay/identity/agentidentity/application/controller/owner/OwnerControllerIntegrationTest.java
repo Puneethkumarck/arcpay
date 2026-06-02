@@ -1,5 +1,11 @@
 package com.arcpay.identity.agentidentity.application.controller.owner;
 
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.arcpay.identity.agentidentity.application.controller.agent.handler.IdempotencyHandler;
 import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
 import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
@@ -11,18 +17,11 @@ import com.arcpay.identity.agentidentity.domain.model.OwnerWithApiKey;
 import com.arcpay.identity.agentidentity.domain.owner.OwnerCommandHandler;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.test.RestControllerAbstractTest;
+import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.time.Instant;
-import java.util.UUID;
-
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class OwnerControllerIntegrationTest extends RestControllerAbstractTest {
 
@@ -139,7 +138,6 @@ class OwnerControllerIntegrationTest extends RestControllerAbstractTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("ARCPAY-IDENTITY-0001"));
 
-        then(ownerCommandHandler).should()
-                .registerOwner("bad-email", "0x1234567890abcdef1234567890abcdef12345678");
+        then(ownerCommandHandler).should().registerOwner("bad-email", "0x1234567890abcdef1234567890abcdef12345678");
     }
 }

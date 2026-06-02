@@ -7,16 +7,15 @@ import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.GasUsageRepository;
 import com.github.f4b6a3.uuid.UuidCreator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.web3j.protocol.Web3j;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.web3j.protocol.Web3j;
 
 @Slf4j
 @Component

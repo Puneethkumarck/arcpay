@@ -5,11 +5,10 @@ import com.arcpay.compliance.domain.port.OwnerResolver;
 import com.arcpay.identity.client.IdentityServiceCallException;
 import com.arcpay.identity.client.IdentityServiceClient;
 import feign.FeignException;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor

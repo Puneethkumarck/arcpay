@@ -1,14 +1,14 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.agent.mapper;
 
-import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
-import com.arcpay.identity.agentidentity.infrastructure.db.agent.AgentEntity;
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_FAILED;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import com.arcpay.identity.agentidentity.infrastructure.db.agent.AgentEntity;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 class AgentEntityMapperTest {
 

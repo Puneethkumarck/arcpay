@@ -1,20 +1,5 @@
 package com.arcpay.payment.paymentexecution;
 
-import com.arcpay.compliance.domain.event.ScreeningCompleted;
-import com.arcpay.compliance.domain.model.Verdict;
-import com.arcpay.payment.paymentexecution.api.model.PaymentResponse;
-import com.arcpay.payment.paymentexecution.domain.model.Payment;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-import com.arcpay.platform.infrastructure.security.ApiKeyAuthFilter;
-import com.arcpay.settlement.domain.event.TransferConfirmed;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AGENT_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_OWNER_EMAIL;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_OWNER_ID;
@@ -35,6 +20,19 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.arcpay.compliance.domain.event.ScreeningCompleted;
+import com.arcpay.compliance.domain.model.Verdict;
+import com.arcpay.payment.paymentexecution.api.model.PaymentResponse;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
+import com.arcpay.platform.infrastructure.security.ApiKeyAuthFilter;
+import com.arcpay.settlement.domain.event.TransferConfirmed;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+
 class PaymentApiE2ETest extends PaymentExecutionBusinessTest {
 
     private static final String OWNER_API_KEY = "owner-api-key-secret";
@@ -53,22 +51,28 @@ class PaymentApiE2ETest extends PaymentExecutionBusinessTest {
         stubCommitAccepted(policyServer, paymentId);
         stubTransferAccepted(settlementServer, paymentId);
         awaitStatus(paymentId, PaymentStatus.SCREENING);
-        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(),
+        kafkaTemplate.send(
+                ScreeningCompleted.TOPIC,
+                paymentId.toString(),
                 new ScreeningCompleted(paymentId, SOME_AGENT_ID, Verdict.PASS, 5, List.of(), null, Instant.now()));
         awaitStatus(paymentId, PaymentStatus.EXECUTING);
-        kafkaTemplate.send(TransferConfirmed.TOPIC, paymentId.toString(),
+        kafkaTemplate.send(
+                TransferConfirmed.TOPIC,
+                paymentId.toString(),
                 new TransferConfirmed(paymentId, SOME_TX_HASH, new BigDecimal("0.01"), Instant.now()));
         awaitStatus(paymentId, PaymentStatus.COMPLETED);
 
         // then
-        assertThat(created).usingRecursiveComparison()
+        assertThat(created)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "transactionHash")
                 .isEqualTo(PaymentResponse.builder()
                         .status("PENDING")
                         .transactionHash(null)
                         .build());
         var completed = loadPayment(paymentId);
-        assertThat(completed).usingRecursiveComparison()
+        assertThat(completed)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "txHash", "onChainRef", "ownerId")
                 .isEqualTo(somePayment(PaymentStatus.COMPLETED).toBuilder()
                         .paymentId(paymentId)
@@ -95,10 +99,14 @@ class PaymentApiE2ETest extends PaymentExecutionBusinessTest {
         // when
         var replay = postPayment(idempotencyKey, HttpStatus.OK);
         awaitStatus(paymentId, PaymentStatus.SCREENING);
-        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(),
+        kafkaTemplate.send(
+                ScreeningCompleted.TOPIC,
+                paymentId.toString(),
                 new ScreeningCompleted(paymentId, SOME_AGENT_ID, Verdict.PASS, 5, List.of(), null, Instant.now()));
         awaitStatus(paymentId, PaymentStatus.EXECUTING);
-        kafkaTemplate.send(TransferConfirmed.TOPIC, paymentId.toString(),
+        kafkaTemplate.send(
+                TransferConfirmed.TOPIC,
+                paymentId.toString(),
                 new TransferConfirmed(paymentId, SOME_TX_HASH, new BigDecimal("0.01"), Instant.now()));
         awaitStatus(paymentId, PaymentStatus.COMPLETED);
 
@@ -114,13 +122,15 @@ class PaymentApiE2ETest extends PaymentExecutionBusinessTest {
     }
 
     private PaymentResponse postPayment(String idempotencyKey, HttpStatus expectedStatus) {
-        return restClient().post()
+        return restClient()
+                .post()
                 .uri("/api/v1/payments")
                 .header("Authorization", "Bearer " + OWNER_API_KEY)
                 .header("Content-Type", "application/json")
                 .body(createBody(idempotencyKey))
                 .exchange((request, response) -> {
-                    assertThat(HttpStatus.valueOf(response.getStatusCode().value())).isEqualTo(expectedStatus);
+                    assertThat(HttpStatus.valueOf(response.getStatusCode().value()))
+                            .isEqualTo(expectedStatus);
                     return jsonMapper.readValue(response.getBody().readAllBytes(), PaymentResponse.class);
                 });
     }

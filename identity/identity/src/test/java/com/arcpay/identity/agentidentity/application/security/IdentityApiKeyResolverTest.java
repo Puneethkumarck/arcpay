@@ -1,20 +1,19 @@
 package com.arcpay.identity.agentidentity.application.security;
 
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+
+import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
 import com.arcpay.platform.api.OwnerPrincipal;
 import com.arcpay.platform.infrastructure.security.Roles;
-import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class IdentityApiKeyResolverTest {

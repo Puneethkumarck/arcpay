@@ -1,23 +1,22 @@
 package com.arcpay.policy.policyengine.application.controller.mapper;
 
-import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
-import com.arcpay.policy.policyengine.api.model.RuleResultResponse;
-import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
-import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
-import com.github.f4b6a3.uuid.UuidCreator;
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
-
 import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.FAIL_PER_TX;
 import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.PASS_DAILY;
 import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_RECIPIENT;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_POLICY_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
+import com.arcpay.policy.policyengine.api.model.RuleResultResponse;
+import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
+import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
+import com.github.f4b6a3.uuid.UuidCreator;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 class EvaluationResponseMapperTest {
 

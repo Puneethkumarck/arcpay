@@ -4,7 +4,6 @@ import com.arcpay.identity.agentidentity.domain.model.AgentOnChainSyncRequest;
 import com.arcpay.identity.agentidentity.domain.model.OnChainOperation;
 import io.temporal.workflow.WorkflowInterface;
 import io.temporal.workflow.WorkflowMethod;
-
 import java.util.UUID;
 
 @WorkflowInterface

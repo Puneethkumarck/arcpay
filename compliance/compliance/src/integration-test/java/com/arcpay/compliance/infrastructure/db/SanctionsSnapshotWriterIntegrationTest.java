@@ -1,22 +1,21 @@
 package com.arcpay.compliance.infrastructure.db;
 
-import com.arcpay.compliance.infrastructure.temporal.SanctionsSnapshotWriter;
-import com.arcpay.compliance.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 import static com.arcpay.compliance.fixtures.SanctionsIngestionFixtures.SOME_OFAC_SDN_RECORD;
 import static com.arcpay.compliance.fixtures.SanctionsIngestionFixtures.SOME_UN_RECORD;
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_SDN;
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.UN;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.compliance.infrastructure.temporal.SanctionsSnapshotWriter;
+import com.arcpay.compliance.test.FullContextIntegrationTest;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 class SanctionsSnapshotWriterIntegrationTest extends FullContextIntegrationTest {
 
@@ -69,8 +68,8 @@ class SanctionsSnapshotWriterIntegrationTest extends FullContextIntegrationTest 
         snapshotWriter.flipCurrentVersion(secondVersion);
 
         // then
-        var pointer = jdbcTemplate.queryForObject(
-                "SELECT version_id FROM current_list_version WHERE id = 1", UUID.class);
+        var pointer =
+                jdbcTemplate.queryForObject("SELECT version_id FROM current_list_version WHERE id = 1", UUID.class);
         assertThat(pointer).isEqualTo(secondVersion);
     }
 
@@ -84,10 +83,9 @@ class SanctionsSnapshotWriterIntegrationTest extends FullContextIntegrationTest 
         snapshotWriter.flipCurrentVersion(versionId);
 
         // then
-        var rowCount = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM current_list_version", Integer.class);
-        var pointer = jdbcTemplate.queryForObject(
-                "SELECT version_id FROM current_list_version WHERE id = 1", UUID.class);
+        var rowCount = jdbcTemplate.queryForObject("SELECT count(*) FROM current_list_version", Integer.class);
+        var pointer =
+                jdbcTemplate.queryForObject("SELECT version_id FROM current_list_version WHERE id = 1", UUID.class);
         assertThat(rowCount).isEqualTo(1);
         assertThat(pointer).isEqualTo(versionId);
     }

@@ -10,12 +10,11 @@ import io.temporal.spring.boot.WorkflowImpl;
 import io.temporal.workflow.Async;
 import io.temporal.workflow.Promise;
 import io.temporal.workflow.Workflow;
-import org.slf4j.Logger;
-
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
 
 @WorkflowImpl(taskQueues = "ComplianceTaskQueue")
 class SanctionsIngestionWorkflowImpl implements SanctionsIngestionWorkflow {
@@ -38,9 +37,8 @@ class SanctionsIngestionWorkflowImpl implements SanctionsIngestionWorkflow {
             SanctionsIngestionActivities.class,
             ActivityOptions.newBuilder()
                     .setStartToCloseTimeout(Duration.ofSeconds(30))
-                    .setRetryOptions(RetryOptions.newBuilder()
-                            .setMaximumAttempts(1)
-                            .build())
+                    .setRetryOptions(
+                            RetryOptions.newBuilder().setMaximumAttempts(1).build())
                     .build());
 
     @Override
@@ -66,8 +64,7 @@ class SanctionsIngestionWorkflowImpl implements SanctionsIngestionWorkflow {
         }
 
         if (recordsBySource.isEmpty()) {
-            throw ApplicationFailure.newNonRetryableFailure(
-                    "All sanctions sources failed", "ALL_SOURCES_FAILED");
+            throw ApplicationFailure.newNonRetryableFailure("All sanctions sources failed", "ALL_SOURCES_FAILED");
         }
 
         var snapshot = Map.copyOf(recordsBySource);
@@ -75,7 +72,9 @@ class SanctionsIngestionWorkflowImpl implements SanctionsIngestionWorkflow {
         sourceActivities.persistSnapshot(versionId, snapshot);
         flipActivities.flipCurrentVersion(versionId);
 
-        log.info("Sanctions ingestion completed for version {} with {} successful sources",
-                versionId, recordsBySource.size());
+        log.info(
+                "Sanctions ingestion completed for version {} with {} successful sources",
+                versionId,
+                recordsBySource.size());
     }
 }

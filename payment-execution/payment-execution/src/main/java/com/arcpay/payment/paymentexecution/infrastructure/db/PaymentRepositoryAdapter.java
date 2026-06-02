@@ -4,13 +4,12 @@ import com.arcpay.payment.paymentexecution.domain.exception.IdempotencyConflictE
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -44,7 +43,9 @@ class PaymentRepositoryAdapter implements PaymentRepository {
 
     @Override
     public Optional<Payment> findByAgentIdAndIdempotencyKey(UUID agentId, String idempotencyKey) {
-        return jpaRepository.findByAgentIdAndIdempotencyKey(agentId, idempotencyKey).map(mapper::mapToDomain);
+        return jpaRepository
+                .findByAgentIdAndIdempotencyKey(agentId, idempotencyKey)
+                .map(mapper::mapToDomain);
     }
 
     @Override
@@ -58,8 +59,11 @@ class PaymentRepositoryAdapter implements PaymentRepository {
     }
 
     @Override
-    public Page<Payment> findByOwnerIdAndAgentIdAndStatus(UUID ownerId, UUID agentId, PaymentStatus status, Pageable pageable) {
-        return jpaRepository.findByOwnerIdAndAgentIdAndStatus(ownerId, agentId, status, pageable).map(mapper::mapToDomain);
+    public Page<Payment> findByOwnerIdAndAgentIdAndStatus(
+            UUID ownerId, UUID agentId, PaymentStatus status, Pageable pageable) {
+        return jpaRepository
+                .findByOwnerIdAndAgentIdAndStatus(ownerId, agentId, status, pageable)
+                .map(mapper::mapToDomain);
     }
 
     @Override

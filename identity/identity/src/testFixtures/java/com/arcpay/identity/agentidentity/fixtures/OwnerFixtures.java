@@ -3,7 +3,6 @@ package com.arcpay.identity.agentidentity.fixtures;
 import com.arcpay.identity.agentidentity.domain.model.Owner;
 import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
 import com.arcpay.identity.agentidentity.infrastructure.db.owner.OwnerEntity;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -56,6 +55,5 @@ public final class OwnerFixtures {
                 .build();
     }
 
-    private OwnerFixtures() {
-    }
+    private OwnerFixtures() {}
 }

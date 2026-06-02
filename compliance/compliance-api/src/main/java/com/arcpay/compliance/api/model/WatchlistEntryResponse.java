@@ -5,7 +5,4 @@ import lombok.Builder;
 
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record WatchlistEntryResponse(
-        String address,
-        String label
-) {}
+public record WatchlistEntryResponse(String address, String label) {}

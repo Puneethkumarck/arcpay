@@ -1,15 +1,5 @@
 package com.arcpay.policy.policyengine.domain.spending;
 
-import com.arcpay.policy.policyengine.domain.model.SpendingLedgerEntry;
-import com.arcpay.policy.policyengine.domain.port.SpendingLedgerRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
 import static com.arcpay.platform.test.TestUtils.eqIgnoring;
 import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AGENT_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AMOUNT;
@@ -22,6 +12,15 @@ import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+
+import com.arcpay.policy.policyengine.domain.model.SpendingLedgerEntry;
+import com.arcpay.policy.policyengine.domain.port.SpendingLedgerRepository;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SpendingLedgerServiceTest {
@@ -75,8 +74,7 @@ class SpendingLedgerServiceTest {
     @Test
     void shouldReturnExistingOnDuplicatePaymentId() {
         // given
-        given(spendingLedgerRepository.findByPaymentId(SOME_PAYMENT_ID))
-                .willReturn(Optional.of(SOME_LEDGER_ENTRY));
+        given(spendingLedgerRepository.findByPaymentId(SOME_PAYMENT_ID)).willReturn(Optional.of(SOME_LEDGER_ENTRY));
 
         // when
         var result = spendingLedgerService.recordSpending(

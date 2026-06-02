@@ -1,15 +1,14 @@
 package com.arcpay.policy.policyengine.infrastructure.scheduling;
 
 import com.arcpay.policy.policyengine.domain.port.PolicyEvaluationRepository;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
 
 @Slf4j
 @Component

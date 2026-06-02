@@ -1,10 +1,9 @@
 package com.arcpay.identity.agentidentity.domain.port;
 
 import com.arcpay.identity.agentidentity.domain.model.GasUsage;
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.UUID;
 
 public interface GasUsageRepository {
 

@@ -1,7 +1,6 @@
 package com.arcpay.identity.agentidentity.fixtures;
 
 import com.arcpay.identity.agentidentity.domain.model.GasUsage;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -34,6 +33,5 @@ public final class GasUsageFixtures {
             .createdAt(SOME_CREATED_AT)
             .build();
 
-    private GasUsageFixtures() {
-    }
+    private GasUsageFixtures() {}
 }

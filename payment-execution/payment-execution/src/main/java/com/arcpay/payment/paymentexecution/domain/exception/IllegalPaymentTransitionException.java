@@ -1,7 +1,6 @@
 package com.arcpay.payment.paymentexecution.domain.exception;
 
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-
 import java.util.UUID;
 
 public class IllegalPaymentTransitionException extends RuntimeException {

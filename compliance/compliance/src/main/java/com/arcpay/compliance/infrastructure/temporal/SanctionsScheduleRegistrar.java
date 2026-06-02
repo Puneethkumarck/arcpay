@@ -1,5 +1,7 @@
 package com.arcpay.compliance.infrastructure.temporal;
 
+import static io.temporal.api.enums.v1.ScheduleOverlapPolicy.SCHEDULE_OVERLAP_POLICY_SKIP;
+
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowOptions;
 import io.temporal.client.schedules.Schedule;
@@ -10,14 +12,11 @@ import io.temporal.client.schedules.ScheduleOptions;
 import io.temporal.client.schedules.SchedulePolicy;
 import io.temporal.client.schedules.ScheduleSpec;
 import io.temporal.client.schedules.ScheduleState;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-
-import static io.temporal.api.enums.v1.ScheduleOverlapPolicy.SCHEDULE_OVERLAP_POLICY_SKIP;
 
 @Slf4j
 @Component
@@ -33,7 +32,8 @@ class SanctionsScheduleRegistrar implements InitializingBean {
     public void afterPropertiesSet() {
         var scheduleClient = ScheduleClient.newInstance(workflowClient.getWorkflowServiceStubs());
         try {
-            scheduleClient.createSchedule(SCHEDULE_ID, buildSchedule(), ScheduleOptions.newBuilder().build());
+            scheduleClient.createSchedule(
+                    SCHEDULE_ID, buildSchedule(), ScheduleOptions.newBuilder().build());
             log.info("Created sanctions ingestion schedule {} with cron {}", SCHEDULE_ID, properties.refreshCron());
         } catch (ScheduleException e) {
             log.info("Sanctions ingestion schedule {} already registered; skipping creation", SCHEDULE_ID);
@@ -56,9 +56,7 @@ class SanctionsScheduleRegistrar implements InitializingBean {
                 .setPolicy(SchedulePolicy.newBuilder()
                         .setOverlap(SCHEDULE_OVERLAP_POLICY_SKIP)
                         .build())
-                .setState(ScheduleState.newBuilder()
-                        .setPaused(false)
-                        .build())
+                .setState(ScheduleState.newBuilder().setPaused(false).build())
                 .build();
     }
 }

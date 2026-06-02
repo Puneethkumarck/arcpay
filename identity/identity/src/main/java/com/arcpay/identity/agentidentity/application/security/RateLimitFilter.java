@@ -4,16 +4,15 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -40,8 +39,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 log.warn("Rate limit exceeded for IP={}", clientIp);
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                response.getWriter().write(
-                        "{\"code\":\"ARCPAY-IDENTITY-0007\",\"status\":429,\"message\":\"Too many requests\"}");
+                response.getWriter()
+                        .write("{\"code\":\"ARCPAY-IDENTITY-0007\",\"status\":429,\"message\":\"Too many requests\"}");
                 return;
             }
         }

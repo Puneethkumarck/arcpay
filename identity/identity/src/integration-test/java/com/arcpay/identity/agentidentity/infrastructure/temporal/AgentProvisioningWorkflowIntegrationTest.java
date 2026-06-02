@@ -1,5 +1,17 @@
 package com.arcpay.identity.agentidentity.infrastructure.temporal;
 
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_METADATA_HASH;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_PROVISIONING_REQUEST;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_TX_HASH;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ADDRESS;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ID;
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningWorkflow;
 import com.arcpay.identity.agentidentity.domain.model.AgentProvisioningRequest;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
@@ -12,27 +24,14 @@ import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowFailedException;
 import io.temporal.client.WorkflowOptions;
+import java.time.Duration;
+import java.time.Instant;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.time.Duration;
-import java.time.Instant;
-
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_METADATA_HASH;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_PROVISIONING_REQUEST;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_TX_HASH;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ADDRESS;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_WALLET_ID;
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
 
 class AgentProvisioningWorkflowIntegrationTest extends FullContextIntegrationTest {
 
@@ -57,8 +56,7 @@ class AgentProvisioningWorkflowIntegrationTest extends FullContextIntegrationTes
         jdbcTemplate.update("""
                 INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
                 VALUES (?, ?, ?, ?, 'ACTIVE')
-                ON CONFLICT DO NOTHING""",
-                SOME_OWNER_ID, "test@example.com", "0xwallet", "hash");
+                ON CONFLICT DO NOTHING""", SOME_OWNER_ID, "test@example.com", "0xwallet", "hash");
         agentRepository.save(SOME_AGENT_PROVISIONING);
     }
 
@@ -108,9 +106,8 @@ class AgentProvisioningWorkflowIntegrationTest extends FullContextIntegrationTes
                 .isInstanceOf(WorkflowFailedException.class);
 
         var agent = agentRepository.findById(SOME_AGENT_ID).orElseThrow();
-        var expected = SOME_AGENT_PROVISIONING.toBuilder()
-                .status(AgentStatus.FAILED)
-                .build();
+        var expected =
+                SOME_AGENT_PROVISIONING.toBuilder().status(AgentStatus.FAILED).build();
         assertThat(agent)
                 .usingRecursiveComparison()
                 .ignoringFieldsOfTypes(Instant.class)

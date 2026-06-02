@@ -2,7 +2,6 @@ package com.arcpay.policy.policyengine.test.fixtures;
 
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 

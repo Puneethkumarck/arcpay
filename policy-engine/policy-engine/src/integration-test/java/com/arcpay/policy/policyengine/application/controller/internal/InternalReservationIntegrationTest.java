@@ -1,5 +1,11 @@
 package com.arcpay.policy.policyengine.application.controller.internal;
 
+import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.reserveRequest;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.model.Policy;
@@ -11,22 +17,15 @@ import com.arcpay.policy.policyengine.test.RestControllerAbstractTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static com.arcpay.policy.policyengine.test.fixtures.ReservationFixtures.reserveRequest;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class InternalReservationIntegrationTest extends RestControllerAbstractTest {
 
@@ -80,7 +79,8 @@ class InternalReservationIntegrationTest extends RestControllerAbstractTest {
         mockMvc.perform(post("/api/v1/internal/policies/reservations")
                         .header("X-Service-Auth", SERVICE_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(reserveRequest(agentId, paymentId, new BigDecimal("30.00")))))
+                        .content(objectMapper.writeValueAsString(
+                                reserveRequest(agentId, paymentId, new BigDecimal("30.00")))))
                 .andExpect(status().isOk());
 
         // when

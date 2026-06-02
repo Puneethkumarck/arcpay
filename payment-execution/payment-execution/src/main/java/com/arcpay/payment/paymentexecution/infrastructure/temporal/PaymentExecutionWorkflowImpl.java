@@ -1,5 +1,12 @@
 package com.arcpay.payment.paymentexecution.infrastructure.temporal;
 
+import static com.arcpay.payment.paymentexecution.domain.model.FailureReason.CHAIN_TIMEOUT;
+import static com.arcpay.payment.paymentexecution.domain.model.FailureReason.EXECUTION_REVERTED;
+import static com.arcpay.payment.paymentexecution.domain.model.RejectionReason.AGENT_NOT_ACTIVE;
+import static com.arcpay.payment.paymentexecution.domain.model.RejectionReason.COMPLIANCE_BLOCK;
+import static com.arcpay.payment.paymentexecution.domain.model.RejectionReason.POLICY_VIOLATION;
+import static com.arcpay.payment.paymentexecution.domain.model.RejectionReason.REVIEW_DENIED;
+
 import com.arcpay.payment.paymentexecution.domain.model.ChainResultSignal;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentExecutionInput;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
@@ -13,18 +20,10 @@ import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.spring.boot.WorkflowImpl;
 import io.temporal.workflow.Workflow;
-import org.slf4j.Logger;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
-
-import static com.arcpay.payment.paymentexecution.domain.model.FailureReason.CHAIN_TIMEOUT;
-import static com.arcpay.payment.paymentexecution.domain.model.FailureReason.EXECUTION_REVERTED;
-import static com.arcpay.payment.paymentexecution.domain.model.RejectionReason.AGENT_NOT_ACTIVE;
-import static com.arcpay.payment.paymentexecution.domain.model.RejectionReason.COMPLIANCE_BLOCK;
-import static com.arcpay.payment.paymentexecution.domain.model.RejectionReason.POLICY_VIOLATION;
-import static com.arcpay.payment.paymentexecution.domain.model.RejectionReason.REVIEW_DENIED;
+import org.slf4j.Logger;
 
 @WorkflowImpl(taskQueues = "PaymentExecutionTaskQueue")
 class PaymentExecutionWorkflowImpl implements PaymentExecutionWorkflow {
@@ -117,8 +116,7 @@ class PaymentExecutionWorkflowImpl implements PaymentExecutionWorkflow {
         }
 
         decisionActivities.persistStatus(paymentId, PaymentStatus.EXECUTING, now());
-        var txHash = decisionActivities.submitTransfer(
-                paymentId, input.agentId(), input.recipient(), input.amount());
+        var txHash = decisionActivities.submitTransfer(paymentId, input.agentId(), input.recipient(), input.amount());
         ledgerActivities.recordTransfer(paymentId, txHash);
 
         if (!Workflow.await(CHAIN_TIMEOUT_WINDOW, () -> chainResult != null)) {

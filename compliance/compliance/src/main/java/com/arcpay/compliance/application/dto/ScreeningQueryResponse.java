@@ -1,10 +1,9 @@
 package com.arcpay.compliance.application.dto;
 
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record ScreeningQueryResponse(
@@ -16,6 +15,4 @@ public record ScreeningQueryResponse(
         int riskScore,
         List<ScreeningCheckResponse> checks,
         Instant timestamp,
-        long durationMs
-) {
-}
+        long durationMs) {}

@@ -1,12 +1,11 @@
 package com.arcpay.settlement.domain.event;
 
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
 
 class TransferRevertedTest {
 
@@ -35,9 +34,7 @@ class TransferRevertedTest {
     @Test
     void shouldRejectNullRequiredField() {
         // given
-        var builder = TransferReverted.builder()
-                .reason("DENIED")
-                .revertedAt(Instant.parse("2026-05-30T10:00:01Z"));
+        var builder = TransferReverted.builder().reason("DENIED").revertedAt(Instant.parse("2026-05-30T10:00:01Z"));
 
         // when / then
         assertThatThrownBy(builder::build).isInstanceOf(NullPointerException.class);

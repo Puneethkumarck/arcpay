@@ -1,17 +1,16 @@
 package com.arcpay.payment.paymentexecution;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.arcpay.payment.paymentexecution.test.FullContextIntegrationTest;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ScaffoldIntegrationTest extends FullContextIntegrationTest {
 
@@ -26,8 +25,8 @@ class ScaffoldIntegrationTest extends FullContextIntegrationTest {
 
         // when
         var tableCount = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' "
-                        + "AND table_name IN (" + tableNames + ")",
+                "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' " + "AND table_name IN ("
+                        + tableNames + ")",
                 Integer.class);
 
         // then
@@ -42,8 +41,7 @@ class ScaffoldIntegrationTest extends FullContextIntegrationTest {
         insertPayment(agentId, idempotencyKey);
 
         // when / then
-        assertThatThrownBy(() -> insertPayment(agentId, idempotencyKey))
-                .isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> insertPayment(agentId, idempotencyKey)).isInstanceOf(DataAccessException.class);
     }
 
     private void insertPayment(String agentId, String idempotencyKey) {

@@ -1,5 +1,9 @@
 package com.arcpay.policy.policyengine.application.controller.internal;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.policy.policyengine.api.model.InternalEvaluateRequest;
 import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
 import com.arcpay.policy.policyengine.api.model.RuleResultResponse;
@@ -12,22 +16,17 @@ import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class InternalPolicyEvaluationControllerTest {
@@ -41,8 +40,7 @@ class InternalPolicyEvaluationControllerTest {
     private static final BigDecimal SOME_AMOUNT = new BigDecimal("25.00");
     private static final Instant SOME_REQUESTED_AT = Instant.parse("2026-01-07T10:00:00Z");
     private static final Instant SOME_EVALUATED_AT = Instant.parse("2026-01-07T10:00:01Z");
-    private static final AgentInfo SOME_AGENT =
-            new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", SOME_POLICY_HASH);
+    private static final AgentInfo SOME_AGENT = new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", SOME_POLICY_HASH);
 
     @Mock
     private AgentServiceClient agentServiceClient;
@@ -50,8 +48,7 @@ class InternalPolicyEvaluationControllerTest {
     @Mock
     private PolicyEvaluationService policyEvaluationService;
 
-    private final EvaluationResponseMapper evaluationResponseMapper =
-            Mappers.getMapper(EvaluationResponseMapper.class);
+    private final EvaluationResponseMapper evaluationResponseMapper = Mappers.getMapper(EvaluationResponseMapper.class);
 
     private InternalPolicyEvaluationController controller;
 
@@ -93,7 +90,7 @@ class InternalPolicyEvaluationControllerTest {
                 .build();
         given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
         given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
+                        SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
                 .willReturn(result);
 
         // when
@@ -138,7 +135,7 @@ class InternalPolicyEvaluationControllerTest {
                 .build();
         given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
         given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
+                        SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
                 .willReturn(result);
 
         // when
@@ -182,7 +179,7 @@ class InternalPolicyEvaluationControllerTest {
                 .build();
         given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
         given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
+                        SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
                 .willReturn(noPolicyResult);
 
         // when
@@ -211,11 +208,10 @@ class InternalPolicyEvaluationControllerTest {
         // given
         given(agentServiceClient.getAgent(SOME_AGENT_ID)).willReturn(Optional.of(SOME_AGENT));
         given(policyEvaluationService.evaluate(
-                SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
+                        SOME_AGENT_ID, SOME_AGENT, SOME_RECIPIENT, SOME_AMOUNT, SOME_REQUESTED_AT, false))
                 .willThrow(new PolicyHashMismatchException(SOME_AGENT_ID, "0xexpected", "0xactual"));
 
         // when / then
-        assertThatThrownBy(() -> controller.evaluate(someRequest()))
-                .isInstanceOf(PolicyHashMismatchException.class);
+        assertThatThrownBy(() -> controller.evaluate(someRequest())).isInstanceOf(PolicyHashMismatchException.class);
     }
 }

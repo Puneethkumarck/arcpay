@@ -1,10 +1,9 @@
 package com.arcpay.policy.policyengine.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record SpendingSummary(
@@ -12,8 +11,7 @@ public record SpendingSummary(
         BigDecimal weeklyTotal,
         BigDecimal monthlyTotal,
         int velocityCount,
-        Instant lastTransactionAt
-) {
+        Instant lastTransactionAt) {
 
     public SpendingSummary {
         Objects.requireNonNull(dailyTotal, "dailyTotal must not be null");

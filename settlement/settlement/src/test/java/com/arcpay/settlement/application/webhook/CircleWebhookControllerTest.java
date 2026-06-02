@@ -1,5 +1,15 @@
 package com.arcpay.settlement.application.webhook;
 
+import static com.arcpay.settlement.fixtures.CircleKeyFixtures.SOME_KEY_ID;
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.notificationBody;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.arcpay.settlement.application.controller.GlobalExceptionHandler;
 import com.arcpay.settlement.domain.TransferNotificationHandler;
 import com.arcpay.settlement.domain.WebhookSignatureException;
@@ -13,16 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static com.arcpay.settlement.fixtures.CircleKeyFixtures.SOME_KEY_ID;
-import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
-import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.notificationBody;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.doThrow;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class CircleWebhookControllerTest {
@@ -43,9 +43,8 @@ class CircleWebhookControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(new CircleWebhookController(
-                        signatureVerifier, notificationParser, notificationHandler))
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                        new CircleWebhookController(signatureVerifier, notificationParser, notificationHandler))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -75,7 +74,8 @@ class CircleWebhookControllerTest {
     void shouldReturnUnauthorizedAndNotHandleWhenSignatureInvalid() throws Exception {
         // given
         doThrow(new WebhookSignatureException("bad signature"))
-                .when(signatureVerifier).verify(BODY, SOME_KEY_ID, "bad");
+                .when(signatureVerifier)
+                .verify(BODY, SOME_KEY_ID, "bad");
 
         // when
         mockMvc.perform(post("/api/v1/webhooks/circle")

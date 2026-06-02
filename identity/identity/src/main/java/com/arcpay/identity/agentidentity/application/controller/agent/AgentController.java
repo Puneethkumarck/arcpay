@@ -7,11 +7,12 @@ import com.arcpay.identity.agentidentity.api.model.RegisterAgentRequest;
 import com.arcpay.identity.agentidentity.api.model.UpdateAgentRequest;
 import com.arcpay.identity.agentidentity.application.controller.agent.handler.IdempotencyHandler;
 import com.arcpay.identity.agentidentity.application.controller.agent.mapper.AgentResponseMapper;
-import com.arcpay.platform.api.OwnerPrincipal;
 import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
 import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import com.arcpay.platform.api.OwnerPrincipal;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -28,8 +29,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -62,9 +61,7 @@ public class AgentController {
     }
 
     @GetMapping("/{agentId}")
-    public AgentResponse getAgent(
-            @AuthenticationPrincipal OwnerPrincipal principal,
-            @PathVariable UUID agentId) {
+    public AgentResponse getAgent(@AuthenticationPrincipal OwnerPrincipal principal, @PathVariable UUID agentId) {
         var agent = agentQueryHandler.getAgent(agentId, principal.ownerId());
         return agentResponseMapper.toApi(agent);
     }
@@ -84,24 +81,19 @@ public class AgentController {
             @PathVariable UUID agentId,
             @Valid @RequestBody UpdateAgentRequest request) {
         log.info("Agent metadata update requested agentId={}", agentId);
-        var agent = agentCommandHandler.updateMetadata(
-                agentId, principal.ownerId(), request.name(), request.purpose());
+        var agent = agentCommandHandler.updateMetadata(agentId, principal.ownerId(), request.name(), request.purpose());
         return agentResponseMapper.toApi(agent);
     }
 
     @PostMapping("/{agentId}/deactivate")
-    public AgentResponse deactivate(
-            @AuthenticationPrincipal OwnerPrincipal principal,
-            @PathVariable UUID agentId) {
+    public AgentResponse deactivate(@AuthenticationPrincipal OwnerPrincipal principal, @PathVariable UUID agentId) {
         log.info("Agent deactivation requested agentId={}", agentId);
         var agent = agentCommandHandler.deactivate(agentId, principal.ownerId());
         return agentResponseMapper.toApi(agent);
     }
 
     @PostMapping("/{agentId}/reactivate")
-    public AgentResponse reactivate(
-            @AuthenticationPrincipal OwnerPrincipal principal,
-            @PathVariable UUID agentId) {
+    public AgentResponse reactivate(@AuthenticationPrincipal OwnerPrincipal principal, @PathVariable UUID agentId) {
         log.info("Agent reactivation requested agentId={}", agentId);
         var agent = agentCommandHandler.reactivate(agentId, principal.ownerId());
         return agentResponseMapper.toApi(agent);
@@ -109,8 +101,7 @@ public class AgentController {
 
     @GetMapping("/{agentId}/status")
     public ProvisioningStatusResponse getProvisioningStatus(
-            @AuthenticationPrincipal OwnerPrincipal principal,
-            @PathVariable UUID agentId) {
+            @AuthenticationPrincipal OwnerPrincipal principal, @PathVariable UUID agentId) {
         var status = agentQueryHandler.getProvisioningStatus(agentId, principal.ownerId());
         return agentResponseMapper.toApi(status);
     }

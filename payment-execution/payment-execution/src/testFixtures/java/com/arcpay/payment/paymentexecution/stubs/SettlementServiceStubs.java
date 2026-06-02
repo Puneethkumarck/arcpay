@@ -1,13 +1,12 @@
 package com.arcpay.payment.paymentexecution.stubs;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-
-import java.util.UUID;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
+import java.util.UUID;
 
 public final class SettlementServiceStubs {
 
@@ -17,8 +16,8 @@ public final class SettlementServiceStubs {
     private SettlementServiceStubs() {}
 
     public static void stubReceiptAccepted(WireMockServer server) {
-        server.stubFor(post(urlPathEqualTo(RECEIPTS_PATH))
-                .willReturn(aResponse().withStatus(200)));
+        server.stubFor(
+                post(urlPathEqualTo(RECEIPTS_PATH)).willReturn(aResponse().withStatus(200)));
     }
 
     public static String balancePath(UUID agentId) {
@@ -34,13 +33,13 @@ public final class SettlementServiceStubs {
     }
 
     public static void stubTransferServerError(WireMockServer server) {
-        server.stubFor(post(urlPathEqualTo(TRANSFERS_PATH))
-                .willReturn(aResponse().withStatus(500)));
+        server.stubFor(
+                post(urlPathEqualTo(TRANSFERS_PATH)).willReturn(aResponse().withStatus(500)));
     }
 
     public static void stubTransferClientError(WireMockServer server) {
-        server.stubFor(post(urlPathEqualTo(TRANSFERS_PATH))
-                .willReturn(aResponse().withStatus(422)));
+        server.stubFor(
+                post(urlPathEqualTo(TRANSFERS_PATH)).willReturn(aResponse().withStatus(422)));
     }
 
     public static void stubBalance(WireMockServer server, UUID agentId, String amount) {

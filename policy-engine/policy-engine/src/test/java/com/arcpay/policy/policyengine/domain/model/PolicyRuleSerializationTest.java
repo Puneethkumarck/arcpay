@@ -1,8 +1,14 @@
 package com.arcpay.policy.policyengine.domain.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.util.Set;
+import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -10,13 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.math.BigDecimal;
-import java.time.DayOfWeek;
-import java.util.Set;
-import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class PolicyRuleSerializationTest {
 
@@ -34,13 +33,17 @@ class PolicyRuleSerializationTest {
                 Arguments.of(new PolicyRule.WeeklyLimit(new BigDecimal("5000.00")), "WEEKLY_LIMIT"),
                 Arguments.of(new PolicyRule.MonthlyLimit(new BigDecimal("20000.00")), "MONTHLY_LIMIT"),
                 Arguments.of(new PolicyRule.PerTransactionLimit(new BigDecimal("500.00")), "PER_TX_LIMIT"),
-                Arguments.of(new PolicyRule.RecipientAllowlist(Set.of("0x1234567890abcdef1234567890abcdef12345678")), "RECIPIENT_ALLOWLIST"),
-                Arguments.of(new PolicyRule.RecipientBlocklist(Set.of("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef")), "RECIPIENT_BLOCKLIST"),
-                Arguments.of(new PolicyRule.TimeWindow(9, 17, Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY)), "TIME_WINDOW"),
+                Arguments.of(
+                        new PolicyRule.RecipientAllowlist(Set.of("0x1234567890abcdef1234567890abcdef12345678")),
+                        "RECIPIENT_ALLOWLIST"),
+                Arguments.of(
+                        new PolicyRule.RecipientBlocklist(Set.of("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef")),
+                        "RECIPIENT_BLOCKLIST"),
+                Arguments.of(
+                        new PolicyRule.TimeWindow(9, 17, Set.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY)), "TIME_WINDOW"),
                 Arguments.of(new PolicyRule.Velocity(10, 60), "VELOCITY"),
                 Arguments.of(new PolicyRule.ApprovalThreshold(new BigDecimal("10000.00")), "APPROVAL_THRESHOLD"),
-                Arguments.of(new PolicyRule.Cooldown(300), "COOLDOWN")
-        );
+                Arguments.of(new PolicyRule.Cooldown(300), "COOLDOWN"));
     }
 
     @Nested
@@ -55,9 +58,7 @@ class PolicyRuleSerializationTest {
             var deserialized = objectMapper.readValue(json, PolicyRule.class);
 
             // then
-            assertThat(deserialized)
-                    .usingRecursiveComparison()
-                    .isEqualTo(rule);
+            assertThat(deserialized).usingRecursiveComparison().isEqualTo(rule);
         }
     }
 
@@ -91,9 +92,7 @@ class PolicyRuleSerializationTest {
 
             // then
             assertThat(deserialized).isInstanceOf(PolicyRule.DailyLimit.class);
-            assertThat(deserialized)
-                    .usingRecursiveComparison()
-                    .isEqualTo(rule);
+            assertThat(deserialized).usingRecursiveComparison().isEqualTo(rule);
         }
     }
 }

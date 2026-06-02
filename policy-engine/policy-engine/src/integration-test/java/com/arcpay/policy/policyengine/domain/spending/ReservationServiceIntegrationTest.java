@@ -1,5 +1,7 @@
 package com.arcpay.policy.policyengine.domain.spending;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.model.Policy;
@@ -8,21 +10,17 @@ import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.policy.PolicyHashUtil;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
 import com.arcpay.policy.policyengine.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 class ReservationServiceIntegrationTest extends FullContextIntegrationTest {
 
@@ -47,8 +45,10 @@ class ReservationServiceIntegrationTest extends FullContextIntegrationTest {
         var agent = persistDailyLimitPolicy("100.00");
 
         // when
-        var first = reservationService.reserve(UUID.randomUUID(), agent.agentId(), agent, RECIPIENT, SIXTY, Instant.now());
-        var second = reservationService.reserve(UUID.randomUUID(), agent.agentId(), agent, RECIPIENT, SIXTY, Instant.now());
+        var first =
+                reservationService.reserve(UUID.randomUUID(), agent.agentId(), agent, RECIPIENT, SIXTY, Instant.now());
+        var second =
+                reservationService.reserve(UUID.randomUUID(), agent.agentId(), agent, RECIPIENT, SIXTY, Instant.now());
 
         // then
         assertThat(first.verdict()).isEqualTo(PolicyVerdict.APPROVED);
@@ -68,8 +68,9 @@ class ReservationServiceIntegrationTest extends FullContextIntegrationTest {
         for (var i = 0; i < 2; i++) {
             executor.submit(() -> {
                 awaitStart(start);
-                verdicts.add(reservationService.reserve(
-                        UUID.randomUUID(), agent.agentId(), agent, RECIPIENT, SIXTY, Instant.now()).verdict());
+                verdicts.add(reservationService
+                        .reserve(UUID.randomUUID(), agent.agentId(), agent, RECIPIENT, SIXTY, Instant.now())
+                        .verdict());
             });
         }
         start.countDown();
@@ -97,8 +98,10 @@ class ReservationServiceIntegrationTest extends FullContextIntegrationTest {
         assertThat(second.verdict()).isEqualTo(PolicyVerdict.APPROVED);
         assertThat(heldCount(agent.agentId())).isOne();
         assertThat(jdbcTemplate.queryForObject(
-                "SELECT COALESCE(SUM(amount), 0) FROM spending_reservation WHERE agent_id = ? AND status = 'HELD'",
-                BigDecimal.class, agent.agentId())).isEqualByComparingTo("60.00");
+                        "SELECT COALESCE(SUM(amount), 0) FROM spending_reservation WHERE agent_id = ? AND status = 'HELD'",
+                        BigDecimal.class,
+                        agent.agentId()))
+                .isEqualByComparingTo("60.00");
     }
 
     @Test
@@ -114,7 +117,8 @@ class ReservationServiceIntegrationTest extends FullContextIntegrationTest {
         // then
         assertThat(heldCount(agent.agentId())).isZero();
         assertThat(jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM spending_ledger WHERE payment_id = ?", Integer.class, paymentId)).isOne();
+                        "SELECT COUNT(*) FROM spending_ledger WHERE payment_id = ?", Integer.class, paymentId))
+                .isOne();
         var summary = spendingLedgerService.getSpendingSummary(agent.agentId(), 60);
         assertThat(summary.dailyTotal()).isEqualByComparingTo("60.00");
     }
@@ -128,8 +132,8 @@ class ReservationServiceIntegrationTest extends FullContextIntegrationTest {
 
         // when
         reservationService.release(firstPayment);
-        var afterRelease = reservationService.reserve(
-                UUID.randomUUID(), agent.agentId(), agent, RECIPIENT, SIXTY, Instant.now());
+        var afterRelease =
+                reservationService.reserve(UUID.randomUUID(), agent.agentId(), agent, RECIPIENT, SIXTY, Instant.now());
 
         // then
         assertThat(afterRelease.verdict()).isEqualTo(PolicyVerdict.APPROVED);
@@ -157,7 +161,8 @@ class ReservationServiceIntegrationTest extends FullContextIntegrationTest {
     private int heldCount(UUID agentId) {
         return jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM spending_reservation WHERE agent_id = ? AND status = 'HELD'",
-                Integer.class, agentId);
+                Integer.class,
+                agentId);
     }
 
     private static void awaitStart(CountDownLatch start) {

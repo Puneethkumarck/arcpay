@@ -1,20 +1,19 @@
 package com.arcpay.identity.agentidentity.infrastructure.temporal;
 
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_METADATA_HASH;
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_POLICY_HASH;
+import static org.mockito.BDDMockito.then;
+
 import com.arcpay.identity.agentidentity.domain.model.AgentOnChainSyncRequest;
 import com.arcpay.identity.agentidentity.domain.model.OnChainOperation;
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Map;
-
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_METADATA_HASH;
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_POLICY_HASH;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class AgentOnChainSyncActivitiesImplTest {

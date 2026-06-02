@@ -1,9 +1,8 @@
 package com.arcpay.policy.policyengine.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.util.Objects;
+import lombok.Builder;
 
 @Builder
 public record RuleEvaluationResult(
@@ -12,8 +11,7 @@ public record RuleEvaluationResult(
         BigDecimal limit,
         BigDecimal current,
         BigDecimal requested,
-        String message
-) {
+        String message) {
 
     public RuleEvaluationResult {
         Objects.requireNonNull(ruleType, "ruleType must not be null");

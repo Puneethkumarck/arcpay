@@ -6,6 +6,7 @@ import com.arcpay.settlement.application.read.mapper.BalanceResponseMapper;
 import com.arcpay.settlement.application.read.mapper.TransferStatusResponseMapper;
 import com.arcpay.settlement.domain.SettlementQueryService;
 import jakarta.validation.constraints.NotBlank;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
 
 @Slf4j
 @RestController

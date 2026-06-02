@@ -2,10 +2,9 @@ package com.arcpay.compliance.application.dto;
 
 import com.arcpay.compliance.domain.model.HoldReview;
 import com.arcpay.compliance.domain.model.ReviewState;
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record HoldReviewResponse(
@@ -18,8 +17,7 @@ public record HoldReviewResponse(
         String reviewerRole,
         String reason,
         Instant createdAt,
-        Instant decidedAt
-) {
+        Instant decidedAt) {
 
     public static HoldReviewResponse from(HoldReview review) {
         return HoldReviewResponse.builder()

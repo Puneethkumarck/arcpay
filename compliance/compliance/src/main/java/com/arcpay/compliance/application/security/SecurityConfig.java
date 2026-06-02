@@ -40,21 +40,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())
+        return http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
-                        .requestMatchers("/api/v1/internal/**").hasRole(Roles.SERVICE)
-                        .requestMatchers("/compliance/watchlist/**", "/compliance/watchlist")
-                        .hasRole(Roles.COMPLIANCE_OFFICER)
-                        .requestMatchers(HttpMethod.GET, "/compliance/screenings/**")
-                        .hasRole(Roles.COMPLIANCE_OFFICER)
-                        .requestMatchers(HttpMethod.GET, "/compliance/holds", "/compliance/holds/**")
-                        .hasRole(Roles.COMPLIANCE_OFFICER)
-                        .anyRequest().authenticated())
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .authorizeHttpRequests(
+                        auth -> auth.requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info")
+                                .permitAll()
+                                .requestMatchers("/api/v1/internal/**")
+                                .hasRole(Roles.SERVICE)
+                                .requestMatchers("/compliance/watchlist/**", "/compliance/watchlist")
+                                .hasRole(Roles.COMPLIANCE_OFFICER)
+                                .requestMatchers(HttpMethod.GET, "/compliance/screenings/**")
+                                .hasRole(Roles.COMPLIANCE_OFFICER)
+                                .requestMatchers(HttpMethod.GET, "/compliance/holds", "/compliance/holds/**")
+                                .hasRole(Roles.COMPLIANCE_OFFICER)
+                                .anyRequest()
+                                .authenticated())
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                         .accessDeniedHandler(accessDeniedHandler()))
                 .addFilterBefore(apiKeyAuthFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(serviceAuthFilter(), ApiKeyAuthFilter.class)

@@ -1,19 +1,5 @@
 package com.arcpay.payment.paymentexecution.domain.service;
 
-import com.arcpay.payment.paymentexecution.domain.exception.InvalidPaymentRequestException;
-import com.arcpay.payment.paymentexecution.domain.model.Payment;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentRequest;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentTransition;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.web3j.crypto.Hash;
-
-import java.util.Locale;
-
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AGENT_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AMOUNT;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_CURRENCY;
@@ -29,6 +15,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+
+import com.arcpay.payment.paymentexecution.domain.exception.InvalidPaymentRequestException;
+import com.arcpay.payment.paymentexecution.domain.model.Payment;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentTransition;
+import java.util.Locale;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.web3j.crypto.Hash;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentOrchestrationServiceTest {
@@ -49,8 +47,8 @@ class PaymentOrchestrationServiceTest {
         var second = service.fingerprint(request);
 
         // then
-        var expected = Hash.sha3String(String.join("|",
-                SOME_AGENT_ID.toString(), SOME_RECIPIENT, "25", SOME_CURRENCY, SOME_MEMO));
+        var expected = Hash.sha3String(
+                String.join("|", SOME_AGENT_ID.toString(), SOME_RECIPIENT, "25", SOME_CURRENCY, SOME_MEMO));
         assertThat(first).isEqualTo(expected);
         assertThat(second).isEqualTo(expected);
     }
@@ -58,8 +56,11 @@ class PaymentOrchestrationServiceTest {
     @Test
     void shouldComputeSameFingerprintForEquivalentAmountScale() {
         // given
-        var twentyFive = someRequest().toBuilder().amount(new java.math.BigDecimal("25")).build();
-        var twentyFiveDecimals = someRequest().toBuilder().amount(new java.math.BigDecimal("25.00")).build();
+        var twentyFive =
+                someRequest().toBuilder().amount(new java.math.BigDecimal("25")).build();
+        var twentyFiveDecimals = someRequest().toBuilder()
+                .amount(new java.math.BigDecimal("25.00"))
+                .build();
 
         // when
         var fingerprintOne = service.fingerprint(twentyFive);
@@ -154,7 +155,8 @@ class PaymentOrchestrationServiceTest {
     @Test
     void shouldRejectInvalidRecipientAddress() {
         // given
-        var request = someRequest().toBuilder().recipientAddress("0xnot-an-address").build();
+        var request =
+                someRequest().toBuilder().recipientAddress("0xnot-an-address").build();
 
         // when then
         assertThatThrownBy(() -> service.newPayment(request))
@@ -165,7 +167,9 @@ class PaymentOrchestrationServiceTest {
     @Test
     void shouldRejectAmountBelowMinimum() {
         // given
-        var request = someRequest().toBuilder().amount(new java.math.BigDecimal("0.0000001")).build();
+        var request = someRequest().toBuilder()
+                .amount(new java.math.BigDecimal("0.0000001"))
+                .build();
 
         // when then
         assertThatThrownBy(() -> service.newPayment(request))

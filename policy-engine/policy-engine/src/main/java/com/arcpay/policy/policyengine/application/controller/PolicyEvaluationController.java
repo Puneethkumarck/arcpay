@@ -27,8 +27,7 @@ public class PolicyEvaluationController {
 
     @PostMapping("/evaluate")
     public PolicyEvaluationResponse evaluate(
-            @AuthenticationPrincipal OwnerPrincipal principal,
-            @Valid @RequestBody DryRunEvaluateRequest request) {
+            @AuthenticationPrincipal OwnerPrincipal principal, @Valid @RequestBody DryRunEvaluateRequest request) {
         log.info("Dry-run evaluation requested agentId={} ownerId={}", request.agentId(), principal.ownerId());
         var result = policyEvaluationService.evaluateDryRunForOwner(
                 principal.ownerId(), request.agentId(), request.recipientAddress(), request.amount());

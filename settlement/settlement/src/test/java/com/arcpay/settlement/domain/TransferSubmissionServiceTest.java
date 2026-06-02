@@ -1,5 +1,11 @@
 package com.arcpay.settlement.domain;
 
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someTransferCommand;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+
 import com.arcpay.settlement.domain.model.TransferState;
 import com.arcpay.settlement.domain.model.TransferSubmission;
 import com.arcpay.settlement.domain.port.CustodyProvider;
@@ -8,12 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
-import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someTransferCommand;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class TransferSubmissionServiceTest {

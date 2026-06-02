@@ -1,16 +1,11 @@
 package com.arcpay.settlement.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.util.Objects;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
-public record WalletBalance(
-        String walletId,
-        String tokenAddress,
-        BigDecimal amount
-) {
+public record WalletBalance(String walletId, String tokenAddress, BigDecimal amount) {
 
     public WalletBalance {
         Objects.requireNonNull(walletId, "walletId must not be null");

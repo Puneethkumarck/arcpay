@@ -1,20 +1,19 @@
 package com.arcpay.compliance.infrastructure.temporal;
 
+import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_SDN;
+
 import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_SDN;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -38,18 +37,24 @@ class StalenessMetricsPublisher {
     }
 
     private long stalenessHours(SanctionsSource source) {
-        return refreshTracker.lastSuccessfulRefresh(source)
+        return refreshTracker
+                .lastSuccessfulRefresh(source)
                 .map(last -> Duration.between(last, Instant.now()).toHours())
                 .orElse(Long.MAX_VALUE);
     }
 
     private void evaluate(SanctionsSource source, long staleHours) {
         if (source == OFAC_SDN && staleHours >= properties.stalenessCriticalHours()) {
-            log.error("CRITICAL: OFAC SDN sanctions list stale for {}h (threshold {}h); serving last-good list",
-                    staleHours, properties.stalenessCriticalHours());
+            log.error(
+                    "CRITICAL: OFAC SDN sanctions list stale for {}h (threshold {}h); serving last-good list",
+                    staleHours,
+                    properties.stalenessCriticalHours());
         } else if (staleHours >= properties.stalenessWarnHours()) {
-            log.warn("WARNING: sanctions source {} stale for {}h (threshold {}h); serving last-good list",
-                    source, staleHours, properties.stalenessWarnHours());
+            log.warn(
+                    "WARNING: sanctions source {} stale for {}h (threshold {}h); serving last-good list",
+                    source,
+                    staleHours,
+                    properties.stalenessWarnHours());
         }
     }
 

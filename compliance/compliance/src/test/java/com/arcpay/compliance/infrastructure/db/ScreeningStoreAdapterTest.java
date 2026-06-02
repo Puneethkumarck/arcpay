@@ -1,17 +1,5 @@
 package com.arcpay.compliance.infrastructure.db;
 
-import com.arcpay.compliance.domain.exception.ScreeningAlreadyExistsException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
-
-import java.util.List;
-import java.util.Optional;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_CLEAR_CHECK;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SCREENING_RESULT_PASS;
@@ -20,6 +8,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+
+import com.arcpay.compliance.domain.exception.ScreeningAlreadyExistsException;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class ScreeningStoreAdapterTest {
@@ -56,8 +55,8 @@ class ScreeningStoreAdapterTest {
     @Test
     void shouldInsertScreeningChecks() {
         // given
-        var expectedCheckEntity = screeningCheckMapper.mapToEntity(
-                SOME_CLEAR_CHECK, null, SOME_SCREENING_RESULT_PASS.screeningId());
+        var expectedCheckEntity =
+                screeningCheckMapper.mapToEntity(SOME_CLEAR_CHECK, null, SOME_SCREENING_RESULT_PASS.screeningId());
 
         // when
         adapter.insert(SOME_SCREENING_RESULT_PASS, List.of(SOME_CLEAR_CHECK));
@@ -96,8 +95,8 @@ class ScreeningStoreAdapterTest {
     void shouldFindScreeningByPaymentIdWithChecks() {
         // given
         var resultEntity = screeningResultMapper.mapToEntity(SOME_SCREENING_RESULT_PASS);
-        var checkEntity = screeningCheckMapper.mapToEntity(
-                SOME_CLEAR_CHECK, null, SOME_SCREENING_RESULT_PASS.screeningId());
+        var checkEntity =
+                screeningCheckMapper.mapToEntity(SOME_CLEAR_CHECK, null, SOME_SCREENING_RESULT_PASS.screeningId());
         given(screeningResultRepository.findByPaymentId(SOME_PAYMENT_ID)).willReturn(Optional.of(resultEntity));
         given(screeningCheckRepository.findByScreeningId(SOME_SCREENING_RESULT_PASS.screeningId()))
                 .willReturn(List.of(checkEntity));

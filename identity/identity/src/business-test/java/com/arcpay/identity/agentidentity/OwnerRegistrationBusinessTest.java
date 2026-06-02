@@ -1,8 +1,12 @@
 package com.arcpay.identity.agentidentity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import com.arcpay.identity.agentidentity.test.BusinessTest;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -12,11 +16,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.Map;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class OwnerRegistrationBusinessTest extends BusinessTest {
@@ -42,7 +41,8 @@ class OwnerRegistrationBusinessTest extends BusinessTest {
     @SuppressWarnings("unchecked")
     void shouldRegisterOwnerAndReturnApiKey() {
         // when
-        var response = restClient().post()
+        var response = restClient()
+                .post()
                 .uri("/api/v1/owners/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
@@ -66,7 +66,8 @@ class OwnerRegistrationBusinessTest extends BusinessTest {
     @SuppressWarnings("unchecked")
     void shouldUseApiKeyToCreateAgent() {
         // given — register owner and extract apiKey
-        var ownerResponse = restClient().post()
+        var ownerResponse = restClient()
+                .post()
                 .uri("/api/v1/owners/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
@@ -77,7 +78,8 @@ class OwnerRegistrationBusinessTest extends BusinessTest {
         var apiKey = (String) ownerResponse.get("apiKey");
 
         // when — use apiKey to create agent
-        var agentResponse = restClient().post()
+        var agentResponse = restClient()
+                .post()
                 .uri("/api/v1/agents")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + apiKey)
@@ -101,7 +103,8 @@ class OwnerRegistrationBusinessTest extends BusinessTest {
     void shouldRejectRateLimitedRegistrations() {
         // when — register 10 times (limit is 10/hour), each should succeed
         for (var i = 0; i < 10; i++) {
-            var status = restClient().post()
+            var status = restClient()
+                    .post()
                     .uri("/api/v1/owners/register")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body("""
@@ -112,7 +115,8 @@ class OwnerRegistrationBusinessTest extends BusinessTest {
         }
 
         // then — 11th registration should be rate limited
-        var status = restClient().post()
+        var status = restClient()
+                .post()
                 .uri("/api/v1/owners/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""

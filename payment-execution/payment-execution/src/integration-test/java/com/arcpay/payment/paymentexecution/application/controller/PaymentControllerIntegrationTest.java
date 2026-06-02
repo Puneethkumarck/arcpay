@@ -1,30 +1,5 @@
 package com.arcpay.payment.paymentexecution.application.controller;
 
-import com.arcpay.payment.paymentexecution.api.model.PaymentListResponse;
-import com.arcpay.payment.paymentexecution.api.model.PaymentResponse;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-import com.arcpay.payment.paymentexecution.test.RestControllerAbstractTest;
-import com.arcpay.platform.api.ApiError;
-import com.arcpay.platform.api.OwnerPrincipal;
-import com.arcpay.platform.infrastructure.security.Roles;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import tools.jackson.databind.json.JsonMapper;
-
-import java.util.List;
-import java.util.UUID;
-
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AGENT_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_IDEMPOTENCY_KEY;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_OWNER_EMAIL;
@@ -38,6 +13,30 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.arcpay.payment.paymentexecution.api.model.PaymentListResponse;
+import com.arcpay.payment.paymentexecution.api.model.PaymentResponse;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
+import com.arcpay.payment.paymentexecution.test.RestControllerAbstractTest;
+import com.arcpay.platform.api.ApiError;
+import com.arcpay.platform.api.OwnerPrincipal;
+import com.arcpay.platform.infrastructure.security.Roles;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import tools.jackson.databind.json.JsonMapper;
 
 class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
 
@@ -122,7 +121,8 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
     private long outboxCount() {
         return jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM paymentexecution_outbox_record WHERE record_type LIKE ?",
-                Long.class, "%PaymentRequested");
+                Long.class,
+                "%PaymentRequested");
     }
 
     @Test
@@ -136,7 +136,9 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(SOME_IDEMPOTENCY_KEY, "25.00")))
                 .andExpect(status().isAccepted())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, PaymentResponse.class);
@@ -186,7 +188,9 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(SOME_IDEMPOTENCY_KEY, "50.00")))
                 .andExpect(status().isUnprocessableEntity())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -205,7 +209,9 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(SOME_IDEMPOTENCY_KEY, "25.00")))
                 .andExpect(status().isUnprocessableEntity())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -216,8 +222,8 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
     @Test
     void shouldReturn422WhenAgentNotFound() throws Exception {
         // given
-        identityServer.stubFor(WireMock.get(urlPathEqualTo(AGENT_PATH))
-                .willReturn(aResponse().withStatus(404)));
+        identityServer.stubFor(
+                WireMock.get(urlPathEqualTo(AGENT_PATH)).willReturn(aResponse().withStatus(404)));
 
         // when
         var response = mockMvc.perform(post("/api/v1/payments")
@@ -225,7 +231,9 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(SOME_IDEMPOTENCY_KEY, "25.00")))
                 .andExpect(status().isUnprocessableEntity())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -243,7 +251,9 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(SOME_IDEMPOTENCY_KEY, "25.00")))
                 .andExpect(status().isUnprocessableEntity())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -261,7 +271,9 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(SOME_IDEMPOTENCY_KEY, "1.1234567")))
                 .andExpect(status().isUnprocessableEntity())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -287,7 +299,9 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                                 }
                                 """.formatted(SOME_AGENT_ID, SOME_IDEMPOTENCY_KEY, SOME_WALLET_ADDRESS)))
                 .andExpect(status().isUnprocessableEntity())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -303,14 +317,18 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(SOME_IDEMPOTENCY_KEY, "25.00")))
                 .andExpect(status().isAccepted())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         var paymentId = jsonMapper.readValue(created, PaymentResponse.class).paymentId();
 
         // when
-        var response = mockMvc.perform(get("/api/v1/payments/{paymentId}", paymentId)
-                        .with(authentication(ownerAuth())))
+        var response = mockMvc.perform(
+                        get("/api/v1/payments/{paymentId}", paymentId).with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, PaymentResponse.class);
@@ -320,10 +338,12 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
     @Test
     void shouldReturn404WhenPaymentMissing() throws Exception {
         // when
-        var response = mockMvc.perform(get("/api/v1/payments/{paymentId}", UUID.randomUUID())
-                        .with(authentication(ownerAuth())))
+        var response = mockMvc.perform(
+                        get("/api/v1/payments/{paymentId}", UUID.randomUUID()).with(authentication(ownerAuth())))
                 .andExpect(status().isNotFound())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -339,17 +359,22 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody(SOME_IDEMPOTENCY_KEY, "25.00")))
                 .andExpect(status().isAccepted())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         var paymentId = jsonMapper.readValue(created, PaymentResponse.class).paymentId();
         var otherOwner = new UsernamePasswordAuthenticationToken(
                 new OwnerPrincipal(UUID.randomUUID(), "other@arcpay.dev"),
-                null, List.of(new SimpleGrantedAuthority("ROLE_" + Roles.OWNER)));
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_" + Roles.OWNER)));
 
         // when
-        var response = mockMvc.perform(get("/api/v1/payments/{paymentId}", paymentId)
-                        .with(authentication(otherOwner)))
+        var response = mockMvc.perform(
+                        get("/api/v1/payments/{paymentId}", paymentId).with(authentication(otherOwner)))
                 .andExpect(status().isForbidden())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -372,7 +397,9 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
                         .param("status", PaymentStatus.PENDING.name())
                         .with(authentication(ownerAuth())))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, PaymentListResponse.class);
@@ -383,7 +410,6 @@ class PaymentControllerIntegrationTest extends RestControllerAbstractTest {
     @Test
     void shouldReturn401WhenUnauthenticated() throws Exception {
         // when / then
-        mockMvc.perform(get("/api/v1/payments/{paymentId}", UUID.randomUUID()))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/payments/{paymentId}", UUID.randomUUID())).andExpect(status().isUnauthorized());
     }
 }

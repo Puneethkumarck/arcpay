@@ -1,12 +1,5 @@
 package com.arcpay.settlement.application.webhook;
 
-import com.arcpay.settlement.domain.model.TransferNotification;
-import com.arcpay.settlement.domain.model.TransferState;
-import org.junit.jupiter.api.Test;
-import tools.jackson.databind.json.JsonMapper;
-
-import java.math.BigDecimal;
-
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_ERROR_REASON;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_NETWORK_FEE;
@@ -15,6 +8,12 @@ import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.faile
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.notificationBody;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.arcpay.settlement.domain.model.TransferNotification;
+import com.arcpay.settlement.domain.model.TransferState;
+import java.math.BigDecimal;
+import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
 class CircleNotificationParserTest {
 
@@ -66,14 +65,12 @@ class CircleNotificationParserTest {
         var body = notificationBody(SOME_CIRCLE_TX_ID, "NONSENSE");
 
         // when / then
-        assertThatThrownBy(() -> parser.parse(body))
-                .isInstanceOf(CircleNotificationException.class);
+        assertThatThrownBy(() -> parser.parse(body)).isInstanceOf(CircleNotificationException.class);
     }
 
     @Test
     void shouldRejectMalformedJson() {
         // when / then
-        assertThatThrownBy(() -> parser.parse("{not-json"))
-                .isInstanceOf(CircleNotificationException.class);
+        assertThatThrownBy(() -> parser.parse("{not-json")).isInstanceOf(CircleNotificationException.class);
     }
 }

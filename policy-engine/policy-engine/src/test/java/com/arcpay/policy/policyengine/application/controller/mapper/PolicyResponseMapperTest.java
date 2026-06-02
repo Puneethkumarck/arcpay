@@ -1,18 +1,17 @@
 package com.arcpay.policy.policyengine.application.controller.mapper;
 
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY;
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_SUPERSEDED_POLICY;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.api.model.PolicyListResponse;
 import com.arcpay.policy.policyengine.api.model.PolicyResponse;
 import com.arcpay.policy.policyengine.domain.model.Policy;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-
-import java.util.List;
-
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_SUPERSEDED_POLICY;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class PolicyResponseMapperTest {
 

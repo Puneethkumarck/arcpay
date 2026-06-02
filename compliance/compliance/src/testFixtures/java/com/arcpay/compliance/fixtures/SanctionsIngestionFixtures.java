@@ -1,17 +1,16 @@
 package com.arcpay.compliance.fixtures;
 
-import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
-import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
-
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.EU;
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_NONSDN;
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_SDN;
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.UK_HMT;
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.UN;
+
+import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
+import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 public final class SanctionsIngestionFixtures {
 

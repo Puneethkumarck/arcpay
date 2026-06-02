@@ -1,5 +1,9 @@
 package com.arcpay.policy.policyengine;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.platform.api.ApiError;
 import com.arcpay.platform.infrastructure.security.ApiKeyAuthFilter;
 import com.arcpay.policy.policyengine.api.model.PolicyEvaluationResponse;
@@ -7,18 +11,13 @@ import com.arcpay.policy.policyengine.api.model.PolicyResponse;
 import com.arcpay.policy.policyengine.api.model.SpendingSummaryResponse;
 import com.arcpay.policy.policyengine.test.BusinessTest;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class PolicyEngineBusinessTest extends BusinessTest {
 
@@ -130,9 +129,9 @@ class PolicyEngineBusinessTest extends BusinessTest {
 
         // then
         var policyHash = response.getBody().policyHash();
-        identityService().verify(WireMock.putRequestedFor(
-                        urlPathEqualTo("/api/v1/internal/agents/" + agentId + "/policy"))
-                .withRequestBody(WireMock.matchingJsonPath("$.policyHash", WireMock.equalTo(policyHash))));
+        identityService()
+                .verify(WireMock.putRequestedFor(urlPathEqualTo("/api/v1/internal/agents/" + agentId + "/policy"))
+                        .withRequestBody(WireMock.matchingJsonPath("$.policyHash", WireMock.equalTo(policyHash))));
     }
 
     @Test
@@ -157,14 +156,16 @@ class PolicyEngineBusinessTest extends BusinessTest {
         assertThat(v2.version()).isEqualTo(2);
         assertThat(v2.status()).isEqualTo("ACTIVE");
 
-        var v1Reloaded = restClient().get()
+        var v1Reloaded = restClient()
+                .get()
                 .uri("/api/v1/agents/{agentId}/policies/{policyId}", agentId, v1.policyId())
                 .header("Authorization", "Bearer " + apiKey)
                 .retrieve()
                 .body(PolicyResponse.class);
         assertThat(v1Reloaded.status()).isEqualTo("SUPERSEDED");
 
-        var active = restClient().get()
+        var active = restClient()
+                .get()
                 .uri("/api/v1/agents/{agentId}/policies/active", agentId)
                 .header("Authorization", "Bearer " + apiKey)
                 .retrieve()
@@ -181,7 +182,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
         stubAgent(agentId, ownerId, "ACTIVE", "0xunset");
 
         // when
-        var status = restClient().post()
+        var status = restClient()
+                .post()
                 .uri("/api/v1/agents/{agentId}/policies", agentId)
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -207,7 +209,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
         stubAgent(agentId, otherOwnerId, "ACTIVE", "0xunset");
 
         // when
-        var status = restClient().post()
+        var status = restClient()
+                .post()
                 .uri("/api/v1/agents/{agentId}/policies", agentId)
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -229,7 +232,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
         stubAgent(agentId, ownerId, "SUSPENDED", "0xunset");
 
         // when
-        var status = restClient().post()
+        var status = restClient()
+                .post()
                 .uri("/api/v1/agents/{agentId}/policies", agentId)
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -248,19 +252,20 @@ class PolicyEngineBusinessTest extends BusinessTest {
         var agentId = UUID.randomUUID();
         var ownerId = UUID.randomUUID();
         var apiKey = stubOwner(ownerId);
-        identityService().stubFor(WireMock.get(urlPathEqualTo("/api/v1/internal/agents/" + agentId))
-                .willReturn(aResponse().withStatus(500)));
+        identityService()
+                .stubFor(WireMock.get(urlPathEqualTo("/api/v1/internal/agents/" + agentId))
+                        .willReturn(aResponse().withStatus(500)));
 
         // when
-        var result = restClient().post()
+        var result = restClient()
+                .post()
                 .uri("/api/v1/agents/{agentId}/policies", agentId)
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {"rules": [{"type": "PER_TX_LIMIT", "amount": 100.00}]}
                         """)
-                .exchange((req, resp) -> new ErrorResult(
-                        resp.getStatusCode().value(), resp.bodyTo(ApiError.class)));
+                .exchange((req, resp) -> new ErrorResult(resp.getStatusCode().value(), resp.bodyTo(ApiError.class)));
 
         // then
         assertThat(result.status()).isEqualTo(503);
@@ -339,7 +344,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
         stubAgent(agentId, otherOwnerId, "ACTIVE", "0xhash");
 
         // when
-        var status = restClient().post()
+        var status = restClient()
+                .post()
                 .uri("/api/v1/policies/evaluate")
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -359,7 +365,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
         stubAgent(agentId, ownerId, "ACTIVE", "0xhash");
 
         // when
-        var verdict = restClient().post()
+        var verdict = restClient()
+                .post()
                 .uri("/api/v1/policies/evaluate")
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -399,7 +406,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
         recordSpending(ctx.agentId(), UUID.randomUUID(), "60.00");
 
         // when
-        var summary = restClient().get()
+        var summary = restClient()
+                .get()
                 .uri("/api/v1/internal/agents/{agentId}/spending-summary", ctx.agentId())
                 .header("X-Service-Auth", SERVICE_TOKEN)
                 .retrieve()
@@ -424,7 +432,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
         recordSpending(ctx.agentId(), paymentId, "40.00");
 
         // then
-        var summary = restClient().get()
+        var summary = restClient()
+                .get()
                 .uri("/api/v1/internal/agents/{agentId}/spending-summary", ctx.agentId())
                 .header("X-Service-Auth", SERVICE_TOKEN)
                 .retrieve()
@@ -461,7 +470,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
                 """);
 
         // when
-        var status = restClient().post()
+        var status = restClient()
+                .post()
                 .uri("/api/v1/internal/policies/evaluate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(internalEvaluateBody(ctx.agentId(), RECIPIENT, "10.00"))
@@ -493,7 +503,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
 
     private org.springframework.http.ResponseEntity<PolicyResponse> createPolicy(
             String apiKey, UUID agentId, String rulesJson) {
-        return restClient().post()
+        return restClient()
+                .post()
                 .uri("/api/v1/agents/{agentId}/policies", agentId)
                 .header("Authorization", "Bearer " + apiKey)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -503,7 +514,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
     }
 
     private PolicyEvaluationResponse dryRun(AgentContext ctx, String recipient, String amount) {
-        return restClient().post()
+        return restClient()
+                .post()
                 .uri("/api/v1/policies/evaluate")
                 .header("Authorization", "Bearer " + ctx.apiKey())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -513,7 +525,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
     }
 
     private PolicyEvaluationResponse internalEvaluate(UUID agentId, String recipient, String amount) {
-        return restClient().post()
+        return restClient()
+                .post()
                 .uri("/api/v1/internal/policies/evaluate")
                 .header("X-Service-Auth", SERVICE_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -523,7 +536,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
     }
 
     private void recordSpending(UUID agentId, UUID paymentId, String amount) {
-        restClient().post()
+        restClient()
+                .post()
                 .uri("/api/v1/internal/policies/reservations")
                 .header("X-Service-Auth", SERVICE_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -535,7 +549,8 @@ class PolicyEngineBusinessTest extends BusinessTest {
                         "requestedAt", Instant.now().toString()))
                 .retrieve()
                 .toBodilessEntity();
-        restClient().post()
+        restClient()
+                .post()
                 .uri("/api/v1/internal/policies/reservations/{paymentId}/commit", paymentId)
                 .header("X-Service-Auth", SERVICE_TOKEN)
                 .retrieve()
@@ -551,32 +566,37 @@ class PolicyEngineBusinessTest extends BusinessTest {
 
     private Map<String, Object> internalEvaluateBody(UUID agentId, String recipient, String amount) {
         return Map.of(
-                "agentId", agentId.toString(),
-                "recipientAddress", recipient,
-                "amount", amount,
-                "requestedAt", Instant.now().toString());
+                "agentId",
+                agentId.toString(),
+                "recipientAddress",
+                recipient,
+                "amount",
+                amount,
+                "requestedAt",
+                Instant.now().toString());
     }
 
     private String stubOwner(UUID ownerId) {
         var apiKey = "biz-key-" + UUID.randomUUID();
         var hash = ApiKeyAuthFilter.hashApiKey(apiKey);
-        identityService().stubFor(WireMock.get(urlPathEqualTo(
-                        "/api/v1/internal/owners/by-api-key-hash/" + hash))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
+        identityService()
+                .stubFor(WireMock.get(urlPathEqualTo("/api/v1/internal/owners/by-api-key-hash/" + hash))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody("""
                                 {"ownerId": "%s", "email": "owner@example.com"}
                                 """.formatted(ownerId))));
         return apiKey;
     }
 
     private void stubAgent(UUID agentId, UUID ownerId, String status, String policyHash) {
-        identityService().stubFor(WireMock.get(urlPathEqualTo("/api/v1/internal/agents/" + agentId))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
+        identityService()
+                .stubFor(WireMock.get(urlPathEqualTo("/api/v1/internal/agents/" + agentId))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody("""
                                 {"agentId": "%s", "ownerId": "%s", "status": "%s",
                                  "policyHash": "%s", "name": "biz-agent",
                                  "createdAt": "2026-01-01T00:00:00Z"}
@@ -584,11 +604,12 @@ class PolicyEngineBusinessTest extends BusinessTest {
     }
 
     private void stubUpdatePolicy(UUID agentId) {
-        identityService().stubFor(WireMock.put(urlPathEqualTo("/api/v1/internal/agents/" + agentId + "/policy"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("""
+        identityService()
+                .stubFor(WireMock.put(urlPathEqualTo("/api/v1/internal/agents/" + agentId + "/policy"))
+                        .willReturn(aResponse()
+                                .withStatus(200)
+                                .withHeader("Content-Type", "application/json")
+                                .withBody("""
                                 {"agentId": "%s", "status": "ACTIVE", "name": "biz-agent",
                                  "createdAt": "2026-01-01T00:00:00Z"}
                                 """.formatted(agentId))));

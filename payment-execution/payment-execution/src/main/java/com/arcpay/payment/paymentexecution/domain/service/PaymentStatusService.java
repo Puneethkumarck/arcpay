@@ -9,13 +9,12 @@ import com.arcpay.payment.paymentexecution.domain.model.PaymentTransition;
 import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
 import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
 import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -91,7 +90,6 @@ public class PaymentStatusService {
     }
 
     private Payment load(UUID paymentId) {
-        return paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+        return paymentRepository.findById(paymentId).orElseThrow(() -> new PaymentNotFoundException(paymentId));
     }
 }

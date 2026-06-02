@@ -1,9 +1,5 @@
 package com.arcpay.compliance.infrastructure.sanctions.parser;
 
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.EU;
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_NONSDN;
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_SDN;
@@ -12,14 +8,13 @@ import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.UN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
 class ParserRegistryTest {
 
-    private final ParserRegistry registry = new ParserRegistry(List.of(
-            new OfacSdnParser(),
-            new OfacNonSdnParser(),
-            new UnParser(),
-            new EuParser(),
-            new UkHmtParser()));
+    private final ParserRegistry registry = new ParserRegistry(
+            List.of(new OfacSdnParser(), new OfacNonSdnParser(), new UnParser(), new EuParser(), new UkHmtParser()));
 
     @Test
     void shouldDispatchToTheParserForEachSource() {
@@ -37,7 +32,6 @@ class ParserRegistryTest {
         var sparseRegistry = new ParserRegistry(List.of(new OfacSdnParser()));
 
         // when / then
-        assertThatThrownBy(() -> sparseRegistry.parserFor(UN))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> sparseRegistry.parserFor(UN)).isInstanceOf(IllegalArgumentException.class);
     }
 }

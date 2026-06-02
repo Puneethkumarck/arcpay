@@ -1,27 +1,5 @@
 package com.arcpay.settlement.application.webhook;
 
-import com.arcpay.settlement.domain.event.TransferConfirmed;
-import com.arcpay.settlement.domain.event.TransferReverted;
-import com.arcpay.settlement.domain.model.TransferState;
-import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
-import com.arcpay.settlement.test.RestControllerAbstractTest;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import tools.jackson.databind.json.JsonMapper;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
-
 import static com.arcpay.settlement.fixtures.CircleKeyFixtures.SOME_KEY_ID;
 import static com.arcpay.settlement.fixtures.CircleKeyFixtures.signWebhook;
 import static com.arcpay.settlement.fixtures.CircleKeyFixtures.webhookPublicKeyPem;
@@ -36,6 +14,27 @@ import static org.awaitility.Awaitility.await;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.arcpay.settlement.domain.event.TransferConfirmed;
+import com.arcpay.settlement.domain.event.TransferReverted;
+import com.arcpay.settlement.domain.model.TransferState;
+import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
+import com.arcpay.settlement.test.RestControllerAbstractTest;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import java.time.Duration;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import tools.jackson.databind.json.JsonMapper;
 
 class CircleWebhookIntegrationTest extends RestControllerAbstractTest {
 
@@ -129,7 +128,8 @@ class CircleWebhookIntegrationTest extends RestControllerAbstractTest {
         postWebhook(body, signWebhook(body)).andExpect(status().isOk());
 
         // then
-        await().during(Duration.ofSeconds(3)).atMost(Duration.ofSeconds(10))
+        await().during(Duration.ofSeconds(3))
+                .atMost(Duration.ofSeconds(10))
                 .until(() -> publishedConfirmedCount() == 1);
         assertThat(stateOf(SOME_PAYMENT_ID)).isEqualTo(TransferState.COMPLETED.name());
     }
@@ -162,16 +162,16 @@ class CircleWebhookIntegrationTest extends RestControllerAbstractTest {
     }
 
     private long outboxCount() {
-        var count = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM settlement_outbox_record", Long.class);
+        var count = jdbcTemplate.queryForObject("SELECT count(*) FROM settlement_outbox_record", Long.class);
         return count == null ? 0 : count;
     }
 
     private long publishedConfirmedCount() {
         var count = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM settlement_outbox_record "
-                        + "WHERE record_type LIKE ? AND record_key = ?",
-                Long.class, "%" + TransferConfirmed.class.getSimpleName(), SOME_PAYMENT_ID.toString());
+                "SELECT count(*) FROM settlement_outbox_record " + "WHERE record_type LIKE ? AND record_key = ?",
+                Long.class,
+                "%" + TransferConfirmed.class.getSimpleName(),
+                SOME_PAYMENT_ID.toString());
         return count == null ? 0 : count;
     }
 
@@ -179,7 +179,8 @@ class CircleWebhookIntegrationTest extends RestControllerAbstractTest {
         try (var consumer = newConsumer()) {
             consumer.subscribe(List.of(topic));
             var captured = new AtomicReference<T>();
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (var record : consumer.poll(Duration.ofSeconds(2))) {
                             if (SOME_PAYMENT_ID.toString().equals(record.key())) {

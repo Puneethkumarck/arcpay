@@ -41,6 +41,9 @@ jobs:
       - name: Compile (fail fast)
         run: ./gradlew compileJava compileTestJava --stacktrace
 
+      - name: Format check (Spotless)
+        run: ./gradlew spotlessCheck --stacktrace
+
       - name: Unit + architecture tests
         run: ./gradlew test --stacktrace
 

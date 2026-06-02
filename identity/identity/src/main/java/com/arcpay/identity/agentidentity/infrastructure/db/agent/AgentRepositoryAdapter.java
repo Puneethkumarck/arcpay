@@ -4,15 +4,14 @@ import com.arcpay.identity.agentidentity.domain.model.Agent;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
 import com.arcpay.identity.agentidentity.infrastructure.db.agent.mapper.AgentEntityMapper;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -41,14 +40,12 @@ class AgentRepositoryAdapter implements AgentRepository {
 
     @Override
     public Page<Agent> findByOwnerIdAndStatus(UUID ownerId, AgentStatus status, Pageable pageable) {
-        return jpaRepository.findByOwnerIdAndStatus(ownerId, status, pageable)
-                .map(mapper::mapToDomain);
+        return jpaRepository.findByOwnerIdAndStatus(ownerId, status, pageable).map(mapper::mapToDomain);
     }
 
     @Override
     public Page<Agent> findByOwnerId(UUID ownerId, Pageable pageable) {
-        return jpaRepository.findByOwnerId(ownerId, pageable)
-                .map(mapper::mapToDomain);
+        return jpaRepository.findByOwnerId(ownerId, pageable).map(mapper::mapToDomain);
     }
 
     @Override

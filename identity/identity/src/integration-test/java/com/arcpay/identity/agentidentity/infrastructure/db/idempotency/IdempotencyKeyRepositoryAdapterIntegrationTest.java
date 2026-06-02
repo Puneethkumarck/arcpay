@@ -1,22 +1,21 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.idempotency;
 
-import com.arcpay.identity.agentidentity.domain.port.IdempotencyKeyRepository;
-import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.UUID;
-
 import static com.arcpay.identity.agentidentity.fixtures.IdempotencyKeyFixtures.SOME_IDEMPOTENCY_KEY;
 import static com.arcpay.identity.agentidentity.fixtures.IdempotencyKeyFixtures.SOME_IDEMPOTENCY_KEY_EXPIRED;
 import static com.arcpay.identity.agentidentity.fixtures.IdempotencyKeyFixtures.SOME_IDEMPOTENCY_KEY_ID;
 import static com.arcpay.identity.agentidentity.fixtures.IdempotencyKeyFixtures.SOME_OWNER_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.identity.agentidentity.domain.port.IdempotencyKeyRepository;
+import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 class IdempotencyKeyRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
 
@@ -50,11 +49,7 @@ class IdempotencyKeyRepositoryAdapterIntegrationTest extends FullContextIntegrat
         var result = idempotencyKeyRepository.findByKeyAndOwnerId(SOME_IDEMPOTENCY_KEY_ID, SOME_OWNER_ID);
 
         // then
-        assertThat(result)
-                .isPresent()
-                .get()
-                .usingRecursiveComparison()
-                .isEqualTo(SOME_IDEMPOTENCY_KEY);
+        assertThat(result).isPresent().get().usingRecursiveComparison().isEqualTo(SOME_IDEMPOTENCY_KEY);
     }
 
     @Test
@@ -80,19 +75,18 @@ class IdempotencyKeyRepositoryAdapterIntegrationTest extends FullContextIntegrat
         idempotencyKeyRepository.deleteExpiredBefore(cutoff);
 
         // then
-        assertThat(idempotencyKeyRepository.findByKeyAndOwnerId(
-                SOME_IDEMPOTENCY_KEY.idempotencyKey(), SOME_OWNER_ID))
+        assertThat(idempotencyKeyRepository.findByKeyAndOwnerId(SOME_IDEMPOTENCY_KEY.idempotencyKey(), SOME_OWNER_ID))
                 .isPresent();
         assertThat(idempotencyKeyRepository.findByKeyAndOwnerId(
-                SOME_IDEMPOTENCY_KEY_EXPIRED.idempotencyKey(), SOME_OWNER_ID))
+                        SOME_IDEMPOTENCY_KEY_EXPIRED.idempotencyKey(), SOME_OWNER_ID))
                 .isEmpty();
     }
 
     private void insertOwner(UUID ownerId, String email, String walletAddress) {
         var now = Timestamp.from(Instant.parse("2026-06-01T09:00:00Z"));
         jdbcTemplate.update(
-                "INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status, created_at, updated_at) " +
-                        "VALUES (?::uuid, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status, created_at, updated_at) "
+                        + "VALUES (?::uuid, ?, ?, ?, ?, ?, ?)",
                 ownerId.toString(),
                 email,
                 walletAddress,

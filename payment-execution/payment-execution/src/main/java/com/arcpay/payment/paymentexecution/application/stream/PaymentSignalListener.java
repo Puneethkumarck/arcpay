@@ -13,13 +13,12 @@ import com.arcpay.settlement.domain.event.TransferConfirmed;
 import com.arcpay.settlement.domain.event.TransferReverted;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowNotFoundException;
+import java.util.UUID;
+import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
-import java.util.function.Consumer;
 
 @Slf4j
 @Component
@@ -91,8 +90,6 @@ class PaymentSignalListener {
     }
 
     private ChainResultSignal toRevertedResult() {
-        return ChainResultSignal.builder()
-                .confirmed(false)
-                .build();
+        return ChainResultSignal.builder().confirmed(false).build();
     }
 }

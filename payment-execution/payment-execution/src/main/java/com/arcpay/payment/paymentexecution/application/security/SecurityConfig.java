@@ -23,23 +23,22 @@ public class SecurityConfig {
     private final String serviceToken;
 
     public SecurityConfig(
-            ApiKeyResolver apiKeyResolver,
-            @Value("${arcpay.security.service-token:}") String serviceToken) {
+            ApiKeyResolver apiKeyResolver, @Value("${arcpay.security.service-token:}") String serviceToken) {
         this.apiKeyResolver = apiKeyResolver;
         this.serviceToken = serviceToken;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())
+        return http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers("/api/v1/internal/**").hasRole(Roles.SERVICE)
-                        .anyRequest().authenticated())
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/actuator/health", "/actuator/info")
+                        .permitAll()
+                        .requestMatchers("/api/v1/internal/**")
+                        .hasRole(Roles.SERVICE)
+                        .anyRequest()
+                        .authenticated())
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(apiKeyAuthFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(serviceAuthFilter(), ApiKeyAuthFilter.class)
                 .build();

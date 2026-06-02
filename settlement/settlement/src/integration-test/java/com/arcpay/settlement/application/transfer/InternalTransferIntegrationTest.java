@@ -1,16 +1,5 @@
 package com.arcpay.settlement.application.transfer;
 
-import com.arcpay.settlement.domain.model.TransferState;
-import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
-import com.arcpay.settlement.test.RestControllerAbstractTest;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.UUID;
-
 import static com.arcpay.settlement.fixtures.CircleKeyFixtures.publicKeyPem;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_RECIPIENT_ADDRESS;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_WALLET_ID;
@@ -25,6 +14,16 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.arcpay.settlement.domain.model.TransferState;
+import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
+import com.arcpay.settlement.test.RestControllerAbstractTest;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class InternalTransferIntegrationTest extends RestControllerAbstractTest {
 

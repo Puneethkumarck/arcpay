@@ -28,7 +28,8 @@ public final class UuidConversionUtil {
         for (int i = 0; i < BYTES32_LENGTH - UUID_BYTE_LENGTH; i++) {
             if (bytes32[i] != 0) {
                 throw new IllegalArgumentException(
-                        "Non-canonical bytes32: expected zero padding in positions 0-15 but found non-zero byte at index " + i);
+                        "Non-canonical bytes32: expected zero padding in positions 0-15 but found non-zero byte at index "
+                                + i);
             }
         }
         var buffer = ByteBuffer.wrap(bytes32, BYTES32_LENGTH - UUID_BYTE_LENGTH, UUID_BYTE_LENGTH);

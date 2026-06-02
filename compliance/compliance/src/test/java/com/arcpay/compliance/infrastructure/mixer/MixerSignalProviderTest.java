@@ -1,16 +1,15 @@
 package com.arcpay.compliance.infrastructure.mixer;
 
-import com.arcpay.compliance.domain.model.CheckResult;
-import com.arcpay.compliance.domain.model.CheckType;
-import com.arcpay.compliance.domain.model.ScreeningCheck;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_MIXER_ADDRESS;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.compliance.domain.model.CheckResult;
+import com.arcpay.compliance.domain.model.CheckType;
+import com.arcpay.compliance.domain.model.ScreeningCheck;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 class MixerSignalProviderTest {
 

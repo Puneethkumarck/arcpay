@@ -4,12 +4,11 @@ import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
 import com.arcpay.payment.paymentexecution.domain.port.CompliancePort;
 import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
 
 @Slf4j
 @Component

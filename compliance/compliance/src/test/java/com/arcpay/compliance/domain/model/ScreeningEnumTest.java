@@ -1,8 +1,8 @@
 package com.arcpay.compliance.domain.model;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 class ScreeningEnumTest {
 
@@ -21,15 +21,16 @@ class ScreeningEnumTest {
         var values = CheckType.values();
 
         // then
-        assertThat(values).containsExactly(
-                CheckType.SANCTIONS_OFAC,
-                CheckType.SANCTIONS_UN,
-                CheckType.SANCTIONS_EU,
-                CheckType.SANCTIONS_UK,
-                CheckType.WATCHLIST,
-                CheckType.ONCHAIN_INTERACTION,
-                CheckType.ONCHAIN_NOVELTY,
-                CheckType.ONCHAIN_MIXER);
+        assertThat(values)
+                .containsExactly(
+                        CheckType.SANCTIONS_OFAC,
+                        CheckType.SANCTIONS_UN,
+                        CheckType.SANCTIONS_EU,
+                        CheckType.SANCTIONS_UK,
+                        CheckType.WATCHLIST,
+                        CheckType.ONCHAIN_INTERACTION,
+                        CheckType.ONCHAIN_NOVELTY,
+                        CheckType.ONCHAIN_MIXER);
     }
 
     @Test
@@ -38,11 +39,8 @@ class ScreeningEnumTest {
         var values = CheckResult.values();
 
         // then
-        assertThat(values).containsExactly(
-                CheckResult.CLEAR,
-                CheckResult.LOW_RISK,
-                CheckResult.FLAGGED,
-                CheckResult.MATCH);
+        assertThat(values)
+                .containsExactly(CheckResult.CLEAR, CheckResult.LOW_RISK, CheckResult.FLAGGED, CheckResult.MATCH);
     }
 
     @Test
@@ -51,9 +49,6 @@ class ScreeningEnumTest {
         var values = ReviewState.values();
 
         // then
-        assertThat(values).containsExactly(
-                ReviewState.PENDING,
-                ReviewState.APPROVED,
-                ReviewState.REJECTED);
+        assertThat(values).containsExactly(ReviewState.PENDING, ReviewState.APPROVED, ReviewState.REJECTED);
     }
 }

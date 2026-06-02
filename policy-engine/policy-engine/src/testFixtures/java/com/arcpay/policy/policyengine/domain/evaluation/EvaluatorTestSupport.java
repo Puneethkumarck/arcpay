@@ -2,7 +2,6 @@ package com.arcpay.policy.policyengine.domain.evaluation;
 
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -26,7 +25,8 @@ public final class EvaluatorTestSupport {
         return contextWith(amount, SOME_RECIPIENT, spendingSummary);
     }
 
-    public static EvaluationContext contextWith(BigDecimal amount, String recipientAddress, SpendingSummary spendingSummary) {
+    public static EvaluationContext contextWith(
+            BigDecimal amount, String recipientAddress, SpendingSummary spendingSummary) {
         return EvaluationContext.builder()
                 .agentId(SOME_AGENT_ID)
                 .ownerId(SOME_OWNER_ID)

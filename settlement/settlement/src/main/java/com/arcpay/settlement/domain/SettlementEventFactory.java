@@ -1,14 +1,5 @@
 package com.arcpay.settlement.domain;
 
-import com.arcpay.settlement.domain.event.SettlementEvent;
-import com.arcpay.settlement.domain.event.TransferConfirmed;
-import com.arcpay.settlement.domain.event.TransferReverted;
-import com.arcpay.settlement.domain.model.SettlementTransaction;
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.Optional;
-
 import static com.arcpay.settlement.domain.model.TransferState.CANCELLED;
 import static com.arcpay.settlement.domain.model.TransferState.COMPLETED;
 import static com.arcpay.settlement.domain.model.TransferState.CONFIRMED;
@@ -18,6 +9,14 @@ import static com.arcpay.settlement.domain.model.TransferState.INITIATED;
 import static com.arcpay.settlement.domain.model.TransferState.QUEUED;
 import static com.arcpay.settlement.domain.model.TransferState.SENT;
 import static com.arcpay.settlement.domain.model.TransferState.STUCK;
+
+import com.arcpay.settlement.domain.event.SettlementEvent;
+import com.arcpay.settlement.domain.event.TransferConfirmed;
+import com.arcpay.settlement.domain.event.TransferReverted;
+import com.arcpay.settlement.domain.model.SettlementTransaction;
+import java.time.Instant;
+import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 @Service
 public class SettlementEventFactory {

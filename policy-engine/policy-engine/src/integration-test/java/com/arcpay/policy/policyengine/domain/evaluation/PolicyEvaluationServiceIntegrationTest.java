@@ -1,5 +1,7 @@
 package com.arcpay.policy.policyengine.domain.evaluation;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.model.Policy;
@@ -10,18 +12,15 @@ import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLedgerService;
 import com.arcpay.policy.policyengine.test.FullContextIntegrationTest;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
 class PolicyEvaluationServiceIntegrationTest extends FullContextIntegrationTest {
@@ -70,9 +69,11 @@ class PolicyEvaluationServiceIntegrationTest extends FullContextIntegrationTest 
     void shouldApproveWhenAllRulesPassAgainstRealDatabase() {
         // given
         var ownerId = UUID.randomUUID();
-        var agent = persistPolicy(ownerId, List.of(
-                new PolicyRule.PerTransactionLimit(new BigDecimal("100.00")),
-                new PolicyRule.DailyLimit(new BigDecimal("1000.00"))));
+        var agent = persistPolicy(
+                ownerId,
+                List.of(
+                        new PolicyRule.PerTransactionLimit(new BigDecimal("100.00")),
+                        new PolicyRule.DailyLimit(new BigDecimal("1000.00"))));
 
         // when
         var result = policyEvaluationService.evaluate(
@@ -89,8 +90,11 @@ class PolicyEvaluationServiceIntegrationTest extends FullContextIntegrationTest 
         // given
         var ownerId = UUID.randomUUID();
         var agent = persistPolicy(ownerId, List.of(new PolicyRule.DailyLimit(new BigDecimal("100.00"))));
-        spendingLedgerService.recordSpending(agent.agentId(), UUID.randomUUID(),
-                new BigDecimal("80.000000"), SOME_RECIPIENT,
+        spendingLedgerService.recordSpending(
+                agent.agentId(),
+                UUID.randomUUID(),
+                new BigDecimal("80.000000"),
+                SOME_RECIPIENT,
                 Instant.now().minus(1, ChronoUnit.HOURS).truncatedTo(ChronoUnit.MICROS));
 
         // when
@@ -99,7 +103,8 @@ class PolicyEvaluationServiceIntegrationTest extends FullContextIntegrationTest 
 
         // then
         assertThat(result.verdict()).isEqualTo(PolicyVerdict.REJECTED);
-        assertThat(evaluationCount("agent_id = ? AND verdict = 'REJECTED'", agent.agentId())).isOne();
+        assertThat(evaluationCount("agent_id = ? AND verdict = 'REJECTED'", agent.agentId()))
+                .isOne();
     }
 
     @Test
@@ -114,7 +119,8 @@ class PolicyEvaluationServiceIntegrationTest extends FullContextIntegrationTest 
 
         // then
         assertThat(result.verdict()).isEqualTo(PolicyVerdict.REQUIRES_APPROVAL);
-        assertThat(evaluationCount("agent_id = ? AND verdict = 'REQUIRES_APPROVAL'", agent.agentId())).isOne();
+        assertThat(evaluationCount("agent_id = ? AND verdict = 'REQUIRES_APPROVAL'", agent.agentId()))
+                .isOne();
     }
 
     @Test
@@ -130,6 +136,7 @@ class PolicyEvaluationServiceIntegrationTest extends FullContextIntegrationTest 
         // then
         assertThat(result.verdict()).isEqualTo(PolicyVerdict.APPROVED);
         assertThat(result.dryRun()).isTrue();
-        assertThat(evaluationCount("agent_id = ? AND dry_run = true", agent.agentId())).isOne();
+        assertThat(evaluationCount("agent_id = ? AND dry_run = true", agent.agentId()))
+                .isOne();
     }
 }

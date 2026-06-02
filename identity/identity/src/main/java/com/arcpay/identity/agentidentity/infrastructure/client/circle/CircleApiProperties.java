@@ -4,13 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "circle.api")
 record CircleApiProperties(
-        String baseUrl,
-        String apiKey,
-        String walletSetId,
-        String blockchain,
-        String entitySecret,
-        Timeout timeout
-) {
+        String baseUrl, String apiKey, String walletSetId, String blockchain, String entitySecret, Timeout timeout) {
 
     record Timeout(int connect, int read) {}
 }

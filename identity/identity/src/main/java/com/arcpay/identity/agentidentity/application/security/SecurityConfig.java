@@ -24,22 +24,23 @@ public class SecurityConfig {
     private final String serviceToken;
 
     public SecurityConfig(
-            ApiKeyResolver apiKeyResolver,
-            @Value("${arcpay.security.service-token:}") String serviceToken) {
+            ApiKeyResolver apiKeyResolver, @Value("${arcpay.security.service-token:}") String serviceToken) {
         this.apiKeyResolver = apiKeyResolver;
         this.serviceToken = serviceToken;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())
+        return http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/v1/owners/register").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers("/api/v1/internal/**").hasRole(Roles.SERVICE)
-                        .anyRequest().authenticated())
+                .authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.POST, "/api/v1/owners/register")
+                        .permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info")
+                        .permitAll()
+                        .requestMatchers("/api/v1/internal/**")
+                        .hasRole(Roles.SERVICE)
+                        .anyRequest()
+                        .authenticated())
                 .addFilterBefore(rateLimitFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(apiKeyAuthFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(serviceAuthFilter(), ApiKeyAuthFilter.class)
