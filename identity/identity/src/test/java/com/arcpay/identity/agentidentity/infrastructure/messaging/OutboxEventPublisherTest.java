@@ -1,13 +1,18 @@
 package com.arcpay.identity.agentidentity.infrastructure.messaging;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.then;
 
+import com.arcpay.platform.infrastructure.messaging.OutboxHeaders;
 import io.namastack.outbox.Outbox;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -16,6 +21,15 @@ class OutboxEventPublisherTest {
 
     @Mock
     private Outbox outbox;
+
+    @Captor
+    private ArgumentCaptor<Object> eventCaptor;
+
+    @Captor
+    private ArgumentCaptor<String> keyCaptor;
+
+    @Captor
+    private ArgumentCaptor<Map<String, String>> contextCaptor;
 
     @Test
     void shouldResolveKeyFromAgentIdField() {
@@ -28,7 +42,7 @@ class OutboxEventPublisherTest {
         publisher.publish(event);
 
         // then
-        then(outbox).should().schedule(event, agentId.toString());
+        assertScheduledWithKeyAndEventId(event, agentId.toString());
     }
 
     @Test
@@ -42,7 +56,17 @@ class OutboxEventPublisherTest {
         publisher.publish(event);
 
         // then
-        then(outbox).should().schedule(event, ownerId.toString());
+        assertScheduledWithKeyAndEventId(event, ownerId.toString());
+    }
+
+    private void assertScheduledWithKeyAndEventId(Object expectedEvent, String expectedKey) {
+        then(outbox).should().schedule(eventCaptor.capture(), keyCaptor.capture(), contextCaptor.capture());
+        assertThat(eventCaptor.getValue()).isEqualTo(expectedEvent);
+        assertThat(keyCaptor.getValue()).isEqualTo(expectedKey);
+        assertThat(contextCaptor.getValue())
+                .containsKey(OutboxHeaders.EVENT_ID_CONTEXT_KEY)
+                .extractingByKey(OutboxHeaders.EVENT_ID_CONTEXT_KEY)
+                .satisfies(id -> assertThat(id).asString().isNotBlank());
     }
 
     @Test

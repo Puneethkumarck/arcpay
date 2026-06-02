@@ -4,15 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.transaction.annotation.Propagation.MANDATORY;
 
+import com.arcpay.platform.infrastructure.messaging.OutboxHeaders;
 import com.arcpay.policy.policyengine.domain.event.PolicyCreated;
 import com.arcpay.policy.policyengine.domain.event.PolicyViolationDetected;
 import io.namastack.outbox.Outbox;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -23,6 +27,15 @@ class OutboxEventPublisherTest {
 
     @Mock
     private Outbox outbox;
+
+    @Captor
+    private ArgumentCaptor<Object> eventCaptor;
+
+    @Captor
+    private ArgumentCaptor<String> keyCaptor;
+
+    @Captor
+    private ArgumentCaptor<Map<String, String>> contextCaptor;
 
     @Test
     void shouldPublishPolicyCreatedWithAgentIdAsPartitionKey() {
@@ -35,7 +48,7 @@ class OutboxEventPublisherTest {
         publisher.publish(event);
 
         // then
-        then(outbox).should().schedule(event, AGENT_ID.toString());
+        assertScheduledWithKeyAndEventId(event, AGENT_ID.toString());
     }
 
     @Test
@@ -55,7 +68,17 @@ class OutboxEventPublisherTest {
         publisher.publish(event);
 
         // then
-        then(outbox).should().schedule(event, AGENT_ID.toString());
+        assertScheduledWithKeyAndEventId(event, AGENT_ID.toString());
+    }
+
+    private void assertScheduledWithKeyAndEventId(Object expectedEvent, String expectedKey) {
+        then(outbox).should().schedule(eventCaptor.capture(), keyCaptor.capture(), contextCaptor.capture());
+        assertThat(eventCaptor.getValue()).isEqualTo(expectedEvent);
+        assertThat(keyCaptor.getValue()).isEqualTo(expectedKey);
+        assertThat(contextCaptor.getValue())
+                .containsKey(OutboxHeaders.EVENT_ID_CONTEXT_KEY)
+                .extractingByKey(OutboxHeaders.EVENT_ID_CONTEXT_KEY)
+                .satisfies(id -> assertThat(id).asString().isNotBlank());
     }
 
     @Test
