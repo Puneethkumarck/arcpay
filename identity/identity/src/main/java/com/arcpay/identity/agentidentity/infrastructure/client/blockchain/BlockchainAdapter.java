@@ -1,5 +1,7 @@
 package com.arcpay.identity.agentidentity.infrastructure.client.blockchain;
 
+import static java.util.Collections.emptyList;
+
 import com.arcpay.identity.agentidentity.domain.agent.UuidConversionUtil;
 import com.arcpay.identity.agentidentity.domain.exception.BlockchainRegistrationException;
 import com.arcpay.identity.agentidentity.domain.model.GasUsage;
@@ -9,71 +11,211 @@ import com.arcpay.identity.agentidentity.domain.port.GasUsageRepository;
 import com.github.f4b6a3.uuid.UuidCreator;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.Instant;
-import java.util.HexFormat;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Bool;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Bytes32;
+import org.web3j.abi.datatypes.generated.Uint64;
+import org.web3j.crypto.Hash;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tx.FastRawTransactionManager;
+import org.web3j.tx.response.TransactionReceiptProcessor;
+import org.web3j.utils.Numeric;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 class BlockchainAdapter implements BlockchainService {
 
+    private static final Pattern BYTES32_HEX = Pattern.compile("^0x[0-9a-fA-F]{64}$");
+
     private final Web3j web3j;
+    private final FastRawTransactionManager transactionManager;
+    private final TransactionReceiptProcessor receiptProcessor;
     private final GasUsageRepository gasUsageRepository;
-    private final String contractAddress;
+    private final AgentRegistryProperties properties;
+    private final Clock clock;
 
     @Override
     public RegistrationResult registerAgent(UUID agentId, UUID ownerId, String metadataHash) {
-        var agentBytes32 = UuidConversionUtil.uuidToBytes32(agentId);
-        try {
-            // TODO: Replace with actual AgentRegistry.sol contract call once ABI is generated
-            var txHash = "0x" + HexFormat.of().formatHex(agentBytes32);
-            var blockNumber = web3j.ethBlockNumber().send().getBlockNumber().longValue();
-            log.info("Agent registered on-chain agentId={} txHash={}", agentId, txHash);
-            recordGasUsage(ownerId, agentId, "REGISTER_AGENT", txHash, BigInteger.valueOf(21000));
-            return new RegistrationResult(txHash, blockNumber);
-        } catch (Exception e) {
-            log.error("Blockchain registration failed agentId={}: {}", agentId, e.getMessage());
-            throw new BlockchainRegistrationException("Blockchain registration failed for agentId=" + agentId, e);
-        }
+        var function = new Function(
+                "registerAgent",
+                List.of(
+                        new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)),
+                        new Bytes32(UuidConversionUtil.uuidToBytes32(ownerId)),
+                        new Bytes32(hashToBytes32(metadataHash)),
+                        new Uint64(nowEpochSeconds())),
+                emptyList());
+        var receipt = submit(function, agentId);
+        recordGasUsage(ownerId, agentId, "REGISTER_AGENT", receipt.getTransactionHash(), receipt.getGasUsed());
+        return new RegistrationResult(
+                receipt.getTransactionHash(), receipt.getBlockNumber().longValue());
     }
 
     @Override
     public String deactivateAgent(UUID agentId) {
-        // TODO: Implement actual AgentRegistry.sol deactivateAgent() contract call
-        log.info("Agent deactivated on-chain agentId={}", agentId);
-        return "0xdeactivate_" + agentId;
+        var function = new Function(
+                "deactivateAgent",
+                List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)), new Uint64(nowEpochSeconds())),
+                emptyList());
+        return submit(function, agentId).getTransactionHash();
     }
 
     @Override
     public String reactivateAgent(UUID agentId) {
-        // TODO: Implement actual AgentRegistry.sol reactivateAgent() contract call
-        log.info("Agent reactivated on-chain agentId={}", agentId);
-        return "0xreactivate_" + agentId;
+        var function = new Function(
+                "reactivateAgent",
+                List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)), new Uint64(nowEpochSeconds())),
+                emptyList());
+        return submit(function, agentId).getTransactionHash();
     }
 
     @Override
     public String updateMetadata(UUID agentId, String metadataHash) {
-        // TODO: Implement actual AgentRegistry.sol updateMetadata() contract call
-        log.info("Agent metadata updated on-chain agentId={}", agentId);
-        return "0xupdate_metadata_" + agentId;
+        var function = new Function(
+                "updateMetadata",
+                List.of(
+                        new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)),
+                        new Bytes32(hashToBytes32(metadataHash)),
+                        new Uint64(nowEpochSeconds())),
+                emptyList());
+        return submit(function, agentId).getTransactionHash();
     }
 
     @Override
     public String updatePolicy(UUID agentId, String policyHash) {
-        // TODO: Implement actual AgentRegistry.sol updatePolicy() contract call
-        log.info("Agent policy updated on-chain agentId={}", agentId);
-        return "0xupdate_policy_" + agentId;
+        var function = new Function(
+                "updatePolicy",
+                List.of(
+                        new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)),
+                        new Bytes32(hashToBytes32(policyHash)),
+                        new Uint64(nowEpochSeconds())),
+                emptyList());
+        return submit(function, agentId).getTransactionHash();
     }
 
     @Override
     public boolean isAgentActive(UUID agentId) {
-        // TODO: Implement actual AgentRegistry.sol isAgentActive() view call
-        return true;
+        var function = new Function(
+                "isAgentActive",
+                List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId))),
+                List.of(new TypeReference<Bool>() {}));
+        var decoded = callView(function, agentId);
+        return (Boolean) decoded.get(0).getValue();
+    }
+
+    OnChainAgentView getAgent(UUID agentId) {
+        var function = new Function(
+                "getAgent",
+                List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId))),
+                List.of(
+                        new TypeReference<Bytes32>() {},
+                        new TypeReference<Bytes32>() {},
+                        new TypeReference<Bytes32>() {},
+                        new TypeReference<Bool>() {},
+                        new TypeReference<Uint64>() {}));
+        var decoded = callView(function, agentId);
+        return new OnChainAgentView(
+                UuidConversionUtil.bytes32ToUuid((byte[]) decoded.get(0).getValue()),
+                Numeric.toHexString((byte[]) decoded.get(1).getValue()),
+                Numeric.toHexString((byte[]) decoded.get(2).getValue()),
+                (Boolean) decoded.get(3).getValue(),
+                ((BigInteger) decoded.get(4).getValue()).longValue());
+    }
+
+    private TransactionReceipt submit(Function function, UUID agentId) {
+        try {
+            var data = FunctionEncoder.encode(function);
+            var response = transactionManager.sendTransaction(
+                    properties.gasPrice(),
+                    properties.gasLimit(),
+                    properties.agentRegistryAddress(),
+                    data,
+                    BigInteger.ZERO);
+            if (response.hasError()) {
+                throw new BlockchainRegistrationException(
+                        "AgentRegistry." + function.getName() + " rejected for agentId=" + agentId + ": "
+                                + response.getError().getMessage(),
+                        null);
+            }
+            var receipt = receiptProcessor.waitForTransactionReceipt(response.getTransactionHash());
+            if (!receipt.isStatusOK()) {
+                throw new BlockchainRegistrationException(
+                        "AgentRegistry." + function.getName() + " reverted on-chain for agentId=" + agentId + " txHash="
+                                + receipt.getTransactionHash() + " status=" + receipt.getStatus(),
+                        null);
+            }
+            log.info(
+                    "On-chain {} agentId={} txHash={} block={} gasUsed={}",
+                    function.getName(),
+                    agentId,
+                    receipt.getTransactionHash(),
+                    receipt.getBlockNumber(),
+                    receipt.getGasUsed());
+            return receipt;
+        } catch (BlockchainRegistrationException e) {
+            throw e;
+        } catch (Exception e) {
+            resetNonceQuietly();
+            throw new BlockchainRegistrationException(
+                    "AgentRegistry." + function.getName() + " failed for agentId=" + agentId, e);
+        }
+    }
+
+    private List<Type> callView(Function function, UUID agentId) {
+        try {
+            var data = FunctionEncoder.encode(function);
+            var response = web3j.ethCall(
+                            Transaction.createEthCallTransaction(
+                                    transactionManager.getFromAddress(), properties.agentRegistryAddress(), data),
+                            DefaultBlockParameterName.LATEST)
+                    .send();
+            if (response.isReverted()) {
+                throw new BlockchainRegistrationException(
+                        "AgentRegistry." + function.getName() + " reverted for agentId=" + agentId + ": "
+                                + response.getRevertReason(),
+                        null);
+            }
+            return FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
+        } catch (BlockchainRegistrationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BlockchainRegistrationException(
+                    "AgentRegistry." + function.getName() + " view call failed for agentId=" + agentId, e);
+        }
+    }
+
+    private void resetNonceQuietly() {
+        try {
+            transactionManager.resetNonce();
+        } catch (Exception e) {
+            log.warn("Failed to resync platform-wallet nonce after on-chain failure: {}", e.getMessage());
+        }
+    }
+
+    private byte[] hashToBytes32(String hash) {
+        if (hash != null && BYTES32_HEX.matcher(hash).matches()) {
+            return Numeric.hexStringToByteArray(hash);
+        }
+        return Hash.sha3((hash == null ? "" : hash).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private BigInteger nowEpochSeconds() {
+        return BigInteger.valueOf(clock.instant().getEpochSecond());
     }
 
     private void recordGasUsage(UUID ownerId, UUID agentId, String operation, String txHash, BigInteger gasUsed) {
@@ -85,7 +227,7 @@ class BlockchainAdapter implements BlockchainService {
                 .txHash(txHash)
                 .gasUsed(gasUsed.longValue())
                 .gasCostUsdc(BigDecimal.ZERO)
-                .createdAt(Instant.now())
+                .createdAt(clock.instant())
                 .build();
         gasUsageRepository.save(gasUsage);
     }

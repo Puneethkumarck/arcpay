@@ -1,0 +1,326 @@
+[
+    {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "AgentDeactivated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "AgentReactivated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "owner",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "metadataHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "AgentRegistered",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "metadataHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "MetadataUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "policyHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "PolicyUpdated",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "deactivateAgent",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            }
+        ],
+        "name": "getAgent",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "owner",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "metadataHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "policyHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bool",
+                "name": "active",
+                "type": "bool"
+            },
+            {
+                "internalType": "uint64",
+                "name": "createdAt",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "owner",
+                "type": "bytes32"
+            }
+        ],
+        "name": "getAgentsByOwner",
+        "outputs": [
+            {
+                "internalType": "bytes32[]",
+                "name": "",
+                "type": "bytes32[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            }
+        ],
+        "name": "isAgentActive",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "reactivateAgent",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "owner",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "metadataHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "registerAgent",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "registrar",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "metadataHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "updateMetadata",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "policyHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            }
+        ],
+        "name": "updatePolicy",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
