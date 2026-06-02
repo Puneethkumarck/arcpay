@@ -12,7 +12,7 @@ import com.github.f4b6a3.uuid.UuidCreator;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
@@ -49,7 +49,6 @@ class BlockchainAdapter implements BlockchainService {
     private final TransactionReceiptProcessor receiptProcessor;
     private final GasUsageRepository gasUsageRepository;
     private final AgentRegistryProperties properties;
-    private final Clock clock;
 
     // Serializes state-changing submissions: the shared FastRawTransactionManager tracks the
     // gas-wallet nonce in memory, so concurrent provisioning activities must not race on it.
@@ -62,8 +61,7 @@ class BlockchainAdapter implements BlockchainService {
                 List.of(
                         new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)),
                         new Bytes32(UuidConversionUtil.uuidToBytes32(ownerId)),
-                        new Bytes32(hashToBytes32(metadataHash)),
-                        new Uint64(nowEpochSeconds())),
+                        new Bytes32(hashToBytes32(metadataHash))),
                 emptyList());
         var receipt = submit(function, agentId);
         recordGasUsage(ownerId, agentId, "REGISTER_AGENT", receipt.getTransactionHash(), receipt.getGasUsed());
@@ -74,18 +72,14 @@ class BlockchainAdapter implements BlockchainService {
     @Override
     public String deactivateAgent(UUID agentId) {
         var function = new Function(
-                "deactivateAgent",
-                List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)), new Uint64(nowEpochSeconds())),
-                emptyList());
+                "deactivateAgent", List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId))), emptyList());
         return submit(function, agentId).getTransactionHash();
     }
 
     @Override
     public String reactivateAgent(UUID agentId) {
         var function = new Function(
-                "reactivateAgent",
-                List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)), new Uint64(nowEpochSeconds())),
-                emptyList());
+                "reactivateAgent", List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId))), emptyList());
         return submit(function, agentId).getTransactionHash();
     }
 
@@ -95,8 +89,7 @@ class BlockchainAdapter implements BlockchainService {
                 "updateMetadata",
                 List.of(
                         new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)),
-                        new Bytes32(hashToBytes32(metadataHash)),
-                        new Uint64(nowEpochSeconds())),
+                        new Bytes32(hashToBytes32(metadataHash))),
                 emptyList());
         return submit(function, agentId).getTransactionHash();
     }
@@ -105,10 +98,7 @@ class BlockchainAdapter implements BlockchainService {
     public String updatePolicy(UUID agentId, String policyHash) {
         var function = new Function(
                 "updatePolicy",
-                List.of(
-                        new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)),
-                        new Bytes32(hashToBytes32(policyHash)),
-                        new Uint64(nowEpochSeconds())),
+                List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)), new Bytes32(hashToBytes32(policyHash))),
                 emptyList());
         return submit(function, agentId).getTransactionHash();
     }
@@ -224,10 +214,6 @@ class BlockchainAdapter implements BlockchainService {
         return Hash.sha3((hash == null ? "" : hash).getBytes(StandardCharsets.UTF_8));
     }
 
-    private BigInteger nowEpochSeconds() {
-        return BigInteger.valueOf(clock.instant().getEpochSecond());
-    }
-
     private void recordGasUsage(UUID ownerId, UUID agentId, String operation, String txHash, BigInteger gasUsed) {
         var gasUsage = GasUsage.builder()
                 .id(UuidCreator.getTimeOrderedEpoch())
@@ -237,7 +223,7 @@ class BlockchainAdapter implements BlockchainService {
                 .txHash(txHash)
                 .gasUsed(gasUsed.longValue())
                 .gasCostUsdc(BigDecimal.ZERO)
-                .createdAt(clock.instant())
+                .createdAt(Instant.now())
                 .build();
         gasUsageRepository.save(gasUsage);
     }

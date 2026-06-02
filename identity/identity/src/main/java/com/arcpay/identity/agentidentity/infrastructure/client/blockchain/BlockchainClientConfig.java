@@ -1,7 +1,5 @@
 package com.arcpay.identity.agentidentity.infrastructure.client.blockchain;
 
-import java.time.Clock;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -40,11 +38,5 @@ class BlockchainClientConfig {
     @Bean
     TransactionReceiptProcessor transactionReceiptProcessor(Web3j web3j) {
         return new PollingTransactionReceiptProcessor(web3j, RECEIPT_POLL_INTERVAL_MS, RECEIPT_POLL_ATTEMPTS);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    Clock blockchainClock() {
-        return Clock.systemUTC();
     }
 }

@@ -5,6 +5,43 @@
         "type": "constructor"
     },
     {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            }
+        ],
+        "name": "AgentAlreadyRegistered",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NotPendingRegistrar",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NotRegistrar",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "agentId",
+                "type": "bytes32"
+            }
+        ],
+        "name": "UnknownAgent",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ZeroAddress",
+        "type": "error"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {
@@ -124,16 +161,56 @@
         "type": "event"
     },
     {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "currentRegistrar",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "pendingRegistrar",
+                "type": "address"
+            }
+        ],
+        "name": "RegistrarTransferStarted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "previousRegistrar",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newRegistrar",
+                "type": "address"
+            }
+        ],
+        "name": "RegistrarTransferred",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "acceptRegistrar",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "bytes32",
                 "name": "agentId",
                 "type": "bytes32"
-            },
-            {
-                "internalType": "uint64",
-                "name": "timestamp",
-                "type": "uint64"
             }
         ],
         "name": "deactivateAgent",
@@ -219,16 +296,24 @@
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "pendingRegistrar",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "bytes32",
                 "name": "agentId",
                 "type": "bytes32"
-            },
-            {
-                "internalType": "uint64",
-                "name": "timestamp",
-                "type": "uint64"
             }
         ],
         "name": "reactivateAgent",
@@ -252,11 +337,6 @@
                 "internalType": "bytes32",
                 "name": "metadataHash",
                 "type": "bytes32"
-            },
-            {
-                "internalType": "uint64",
-                "name": "timestamp",
-                "type": "uint64"
             }
         ],
         "name": "registerAgent",
@@ -280,6 +360,19 @@
     {
         "inputs": [
             {
+                "internalType": "address",
+                "name": "newRegistrar",
+                "type": "address"
+            }
+        ],
+        "name": "transferRegistrar",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "bytes32",
                 "name": "agentId",
                 "type": "bytes32"
@@ -288,11 +381,6 @@
                 "internalType": "bytes32",
                 "name": "metadataHash",
                 "type": "bytes32"
-            },
-            {
-                "internalType": "uint64",
-                "name": "timestamp",
-                "type": "uint64"
             }
         ],
         "name": "updateMetadata",
@@ -311,11 +399,6 @@
                 "internalType": "bytes32",
                 "name": "policyHash",
                 "type": "bytes32"
-            },
-            {
-                "internalType": "uint64",
-                "name": "timestamp",
-                "type": "uint64"
             }
         ],
         "name": "updatePolicy",

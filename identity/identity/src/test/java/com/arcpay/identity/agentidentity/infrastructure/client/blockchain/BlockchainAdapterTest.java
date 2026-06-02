@@ -14,9 +14,6 @@ import com.arcpay.identity.agentidentity.domain.port.GasUsageRepository;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -28,7 +25,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.generated.Bytes32;
-import org.web3j.abi.datatypes.generated.Uint64;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
@@ -51,8 +47,6 @@ class BlockchainAdapterTest {
     private static final long GAS_USED = 73219L;
     private static final BigInteger GAS_PRICE = BigInteger.valueOf(1_000_000_000L);
     private static final BigInteger GAS_LIMIT = BigInteger.valueOf(300_000L);
-    private static final Instant FIXED_NOW = Instant.parse("2026-06-02T10:00:00Z");
-    private static final BigInteger EPOCH = BigInteger.valueOf(FIXED_NOW.getEpochSecond());
 
     @Mock
     private Web3j web3j;
@@ -70,11 +64,9 @@ class BlockchainAdapterTest {
     private ArgumentCaptor<GasUsage> gasUsageCaptor;
 
     private final AgentRegistryProperties properties = new AgentRegistryProperties(CONTRACT_ADDRESS, null, null);
-    private final Clock clock = Clock.fixed(FIXED_NOW, ZoneOffset.UTC);
 
     private BlockchainAdapter adapter() {
-        return new BlockchainAdapter(
-                web3j, transactionManager, receiptProcessor, gasUsageRepository, properties, clock);
+        return new BlockchainAdapter(web3j, transactionManager, receiptProcessor, gasUsageRepository, properties);
     }
 
     @Test
@@ -106,11 +98,10 @@ class BlockchainAdapterTest {
                 .txHash(TX_HASH)
                 .gasUsed(GAS_USED)
                 .gasCostUsdc(BigDecimal.ZERO)
-                .createdAt(FIXED_NOW)
                 .build();
         assertThat(gasUsageCaptor.getValue())
                 .usingRecursiveComparison()
-                .ignoringFields("id")
+                .ignoringFields("id", "createdAt")
                 .isEqualTo(expected);
     }
 
@@ -228,16 +219,12 @@ class BlockchainAdapterTest {
                 List.of(
                         new Bytes32(UuidConversionUtil.uuidToBytes32(SOME_AGENT_ID)),
                         new Bytes32(UuidConversionUtil.uuidToBytes32(SOME_OWNER_ID)),
-                        new Bytes32(Numeric.hexStringToByteArray(SOME_METADATA_HASH)),
-                        new Uint64(EPOCH)),
+                        new Bytes32(Numeric.hexStringToByteArray(SOME_METADATA_HASH))),
                 emptyList());
     }
 
     private Function stateChangeFunction(String name) {
-        return new Function(
-                name,
-                List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(SOME_AGENT_ID)), new Uint64(EPOCH)),
-                emptyList());
+        return new Function(name, List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(SOME_AGENT_ID))), emptyList());
     }
 
     private Function hashFunction(String name, String hash) {
@@ -245,8 +232,7 @@ class BlockchainAdapterTest {
                 name,
                 List.of(
                         new Bytes32(UuidConversionUtil.uuidToBytes32(SOME_AGENT_ID)),
-                        new Bytes32(Numeric.hexStringToByteArray(hash)),
-                        new Uint64(EPOCH)),
+                        new Bytes32(Numeric.hexStringToByteArray(hash))),
                 emptyList());
     }
 }
