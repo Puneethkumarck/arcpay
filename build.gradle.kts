@@ -1,6 +1,7 @@
 plugins {
     id("org.springframework.boot") apply false
     id("io.spring.dependency-management") apply false
+    id("com.diffplug.spotless") version "7.0.4" apply false
     java
 }
 
@@ -13,6 +14,7 @@ tasks.jar { enabled = false }
 subprojects {
     apply(plugin = "java")
     apply(plugin = "io.spring.dependency-management")
+    apply(plugin = "com.diffplug.spotless")
 
     java {
         toolchain {
@@ -22,6 +24,13 @@ subprojects {
 
     repositories {
         mavenCentral()
+    }
+
+    configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        java {
+            target("src/**/*.java")
+            palantirJavaFormat("2.91.0")
+        }
     }
 
     configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
