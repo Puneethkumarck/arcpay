@@ -2,7 +2,9 @@ package com.arcpay.platform.infrastructure.messaging;
 
 import io.namastack.outbox.Outbox;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Propagation;
@@ -19,8 +21,13 @@ public abstract class AbstractOutboxEventPublisher {
     public void publish(Object event) {
         Objects.requireNonNull(event, "event must not be null");
         var key = resolveKey(event);
-        outbox.schedule(event, key);
-        log.debug("Scheduled outbox event type={} key={}", event.getClass().getSimpleName(), key);
+        var eventId = UUID.randomUUID().toString();
+        outbox.schedule(event, key, Map.of(OutboxHeaders.EVENT_ID_CONTEXT_KEY, eventId));
+        log.debug(
+                "Scheduled outbox event type={} key={} eventId={}",
+                event.getClass().getSimpleName(),
+                key,
+                eventId);
     }
 
     private String resolveKey(Object event) {

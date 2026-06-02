@@ -3,13 +3,18 @@ package com.arcpay.policy.policyengine.infrastructure.messaging;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.arcpay.platform.infrastructure.messaging.OutboxHeaders;
 import com.arcpay.policy.policyengine.domain.event.PolicyCreated;
 import com.arcpay.policy.policyengine.domain.event.PolicyViolationDetected;
 import io.namastack.outbox.handler.OutboxRecordMetadata;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -21,6 +26,7 @@ class PolicyEngineOutboxHandlerTest {
 
     private static final String KEY = "11111111-2222-3333-4444-555555555555";
     private static final UUID AGENT_ID = UUID.fromString(KEY);
+    private static final String EVENT_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
 
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
@@ -29,23 +35,25 @@ class PolicyEngineOutboxHandlerTest {
     private OutboxRecordMetadata metadata;
 
     @Test
-    void shouldPublishPolicyCreatedToPolicyCreatedTopic() {
+    void shouldPublishPolicyCreatedToPolicyCreatedTopicWithEventIdHeader() {
         // given
         var handler = new PolicyEngineOutboxHandler(kafkaTemplate);
         var event = new PolicyCreated(
                 UUID.randomUUID(), AGENT_ID, UUID.randomUUID(), 1, "0xabc", Instant.parse("2026-05-29T10:00:00Z"));
+        var expected = recordWithEventId("policy.created", event);
         given(metadata.getKey()).willReturn(KEY);
-        given(kafkaTemplate.send("policy.created", KEY, event)).willReturn(CompletableFuture.completedFuture(null));
+        given(metadata.getContext()).willReturn(Map.of(OutboxHeaders.EVENT_ID_CONTEXT_KEY, EVENT_ID));
+        given(kafkaTemplate.send(expected)).willReturn(CompletableFuture.completedFuture(null));
 
         // when
         handler.handle(event, metadata);
 
         // then
-        then(kafkaTemplate).should().send("policy.created", KEY, event);
+        then(kafkaTemplate).should().send(expected);
     }
 
     @Test
-    void shouldPublishPolicyViolationDetectedToViolationTopic() {
+    void shouldPublishPolicyViolationDetectedToViolationTopicWithEventIdHeader() {
         // given
         var handler = new PolicyEngineOutboxHandler(kafkaTemplate);
         var event = new PolicyViolationDetected(
@@ -56,14 +64,22 @@ class PolicyEngineOutboxHandlerTest {
                 "Daily spending limit exceeded",
                 new BigDecimal("100.000000"),
                 Instant.parse("2026-05-29T10:00:00Z"));
+        var expected = recordWithEventId("policy.violation-detected", event);
         given(metadata.getKey()).willReturn(KEY);
-        given(kafkaTemplate.send("policy.violation-detected", KEY, event))
-                .willReturn(CompletableFuture.completedFuture(null));
+        given(metadata.getContext()).willReturn(Map.of(OutboxHeaders.EVENT_ID_CONTEXT_KEY, EVENT_ID));
+        given(kafkaTemplate.send(expected)).willReturn(CompletableFuture.completedFuture(null));
 
         // when
         handler.handle(event, metadata);
 
         // then
-        then(kafkaTemplate).should().send("policy.violation-detected", KEY, event);
+        then(kafkaTemplate).should().send(expected);
+    }
+
+    private static ProducerRecord<String, Object> recordWithEventId(String topic, Object event) {
+        var record = new ProducerRecord<String, Object>(topic, null, KEY, event);
+        record.headers()
+                .add(new RecordHeader(OutboxHeaders.EVENT_ID_HEADER, EVENT_ID.getBytes(StandardCharsets.UTF_8)));
+        return record;
     }
 }
