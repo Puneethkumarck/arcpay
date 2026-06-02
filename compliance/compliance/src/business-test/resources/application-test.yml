@@ -1,4 +1,12 @@
 spring:
+  datasource:
+    hikari:
+      # Each full-context test class with its own @DynamicPropertySource gets a
+      # separately-cached ApplicationContext, each holding its own connection pool.
+      # Bound the pool (and let it shrink to near-idle) so the shared Postgres
+      # container does not hit max_connections ("too many clients already").
+      maximum-pool-size: 4
+      minimum-idle: 1
   jpa:
     hibernate:
       ddl-auto: validate
