@@ -21,10 +21,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -47,6 +50,7 @@ class ScreeningRequestedListenerDltIntegrationTest extends FullContextIntegratio
 
     private static final String DLT_TOPIC = PaymentScreeningRequested.TOPIC + ".dlt";
     private static final String MALFORMED_ADDRESS = "definitely-not-an-evm-address";
+    private static final String POISON_PAYLOAD = "{not-valid-json";
 
     private static WireMockServer rpcServer;
 
@@ -103,7 +107,10 @@ class ScreeningRequestedListenerDltIntegrationTest extends FullContextIntegratio
                 requestFor(paymentId, MALFORMED_ADDRESS));
 
         // then
-        assertThat(awaitDeadLetterKey(paymentId.toString())).isTrue();
+        var dltRecord = awaitDeadLetterRecord(paymentId.toString());
+        assertThat(dltRecord.value()).contains(paymentId.toString()).contains(MALFORMED_ADDRESS);
+        assertThat(headerValue(dltRecord, KafkaHeaders.DLT_ORIGINAL_TOPIC)).isEqualTo(PaymentScreeningRequested.TOPIC);
+        assertThat(headerValue(dltRecord, KafkaHeaders.DLT_EXCEPTION_CAUSE_FQCN)).contains("MalformedAddressException");
         assertThat(dltCount()).isGreaterThan(before);
     }
 
@@ -115,24 +122,28 @@ class ScreeningRequestedListenerDltIntegrationTest extends FullContextIntegratio
 
         // when
         try (var producer = rawProducer()) {
-            producer.send(new ProducerRecord<>(PaymentScreeningRequested.TOPIC, key, "{not-valid-json"));
+            producer.send(new ProducerRecord<>(PaymentScreeningRequested.TOPIC, key, POISON_PAYLOAD));
             producer.flush();
         }
 
         // then
-        assertThat(awaitDeadLetterKey(key)).isTrue();
+        var dltRecord = awaitDeadLetterRecord(key);
+        assertThat(dltRecord.value()).isEqualTo(POISON_PAYLOAD);
+        assertThat(headerValue(dltRecord, KafkaHeaders.DLT_ORIGINAL_TOPIC)).isEqualTo(PaymentScreeningRequested.TOPIC);
+        assertThat(headerValue(dltRecord, KafkaHeaders.DLT_EXCEPTION_FQCN))
+                .isEqualTo(DeserializationException.class.getName());
         assertThat(dltCount()).isGreaterThan(before);
     }
 
-    private boolean awaitDeadLetterKey(String key) {
+    private ConsumerRecord<String, String> awaitDeadLetterRecord(String key) {
         try (var consumer = newDltConsumer()) {
             consumer.subscribe(List.of(DLT_TOPIC));
-            var found = new AtomicReference<>(false);
+            var found = new AtomicReference<ConsumerRecord<String, String>>();
             await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (ConsumerRecord<String, String> record : consumer.poll(Duration.ofSeconds(2))) {
                             if (key.equals(record.key())) {
-                                found.set(true);
+                                found.set(record);
                                 return true;
                             }
                         }
@@ -140,6 +151,11 @@ class ScreeningRequestedListenerDltIntegrationTest extends FullContextIntegratio
                     });
             return found.get();
         }
+    }
+
+    private String headerValue(ConsumerRecord<String, String> record, String header) {
+        var value = record.headers().lastHeader(header);
+        return value == null ? null : new String(value.value(), StandardCharsets.UTF_8);
     }
 
     private double dltCount() {
