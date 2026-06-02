@@ -132,6 +132,7 @@ class BlockchainAdapterTest {
                 .isInstanceOf(BlockchainRegistrationException.class)
                 .hasMessageContaining(SOME_AGENT_ID.toString())
                 .hasMessageContaining("not registrar");
+        then(transactionManager).should().resetNonce();
     }
 
     @Test

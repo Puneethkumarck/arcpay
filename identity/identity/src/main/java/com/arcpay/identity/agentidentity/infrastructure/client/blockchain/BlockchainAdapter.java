@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,10 @@ class BlockchainAdapter implements BlockchainService {
     private final GasUsageRepository gasUsageRepository;
     private final AgentRegistryProperties properties;
     private final Clock clock;
+
+    // Serializes state-changing submissions: the shared FastRawTransactionManager tracks the
+    // gas-wallet nonce in memory, so concurrent provisioning activities must not race on it.
+    private final ReentrantLock writeLock = new ReentrantLock(true);
 
     @Override
     public RegistrationResult registerAgent(UUID agentId, UUID ownerId, String metadataHash) {
@@ -138,6 +143,7 @@ class BlockchainAdapter implements BlockchainService {
     }
 
     private TransactionReceipt submit(Function function, UUID agentId) {
+        writeLock.lock();
         try {
             var data = FunctionEncoder.encode(function);
             var response = transactionManager.sendTransaction(
@@ -147,17 +153,15 @@ class BlockchainAdapter implements BlockchainService {
                     data,
                     BigInteger.ZERO);
             if (response.hasError()) {
-                throw new BlockchainRegistrationException(
-                        "AgentRegistry." + function.getName() + " rejected for agentId=" + agentId + ": "
-                                + response.getError().getMessage(),
-                        null);
+                throw new BlockchainRegistrationException("AgentRegistry." + function.getName()
+                        + " rejected for agentId=" + agentId + ": "
+                        + response.getError().getMessage());
             }
             var receipt = receiptProcessor.waitForTransactionReceipt(response.getTransactionHash());
             if (!receipt.isStatusOK()) {
-                throw new BlockchainRegistrationException(
-                        "AgentRegistry." + function.getName() + " reverted on-chain for agentId=" + agentId + " txHash="
-                                + receipt.getTransactionHash() + " status=" + receipt.getStatus(),
-                        null);
+                throw new BlockchainRegistrationException("AgentRegistry." + function.getName()
+                        + " reverted on-chain for agentId=" + agentId + " txHash=" + receipt.getTransactionHash()
+                        + " status=" + receipt.getStatus());
             }
             log.info(
                     "On-chain {} agentId={} txHash={} block={} gasUsed={}",
@@ -168,11 +172,14 @@ class BlockchainAdapter implements BlockchainService {
                     receipt.getGasUsed());
             return receipt;
         } catch (BlockchainRegistrationException e) {
+            resetNonceQuietly();
             throw e;
         } catch (Exception e) {
             resetNonceQuietly();
             throw new BlockchainRegistrationException(
                     "AgentRegistry." + function.getName() + " failed for agentId=" + agentId, e);
+        } finally {
+            writeLock.unlock();
         }
     }
 
@@ -185,12 +192,15 @@ class BlockchainAdapter implements BlockchainService {
                             DefaultBlockParameterName.LATEST)
                     .send();
             if (response.isReverted()) {
-                throw new BlockchainRegistrationException(
-                        "AgentRegistry." + function.getName() + " reverted for agentId=" + agentId + ": "
-                                + response.getRevertReason(),
-                        null);
+                throw new BlockchainRegistrationException("AgentRegistry." + function.getName()
+                        + " reverted for agentId=" + agentId + ": " + response.getRevertReason());
             }
-            return FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
+            var decoded = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
+            if (decoded.size() != function.getOutputParameters().size()) {
+                throw new BlockchainRegistrationException("AgentRegistry." + function.getName()
+                        + " returned no decodable value for agentId=" + agentId + " (empty or malformed response)");
+            }
+            return decoded;
         } catch (BlockchainRegistrationException e) {
             throw e;
         } catch (Exception e) {
