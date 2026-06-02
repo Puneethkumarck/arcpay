@@ -63,6 +63,9 @@ contract AgentRegistry {
     }
 
     /// @notice Registers a new agent and binds it to its on-chain wallet address.
+    /// @dev Idempotent: re-submitting the same (agentId, owner, wallet) is a no-op success, so a
+    ///      workflow retry after a mined-but-unacknowledged tx does not fail a registered agent.
+    ///      A re-registration of the same agentId with a different owner or wallet reverts.
     /// @param agentId Off-chain agent UUID encoded as bytes32.
     /// @param owner Off-chain owner UUID encoded as bytes32.
     /// @param wallet The agent's on-chain wallet address.
@@ -71,8 +74,12 @@ contract AgentRegistry {
         external
         onlyRegistrar
     {
-        if (agents[agentId].exists) {
-            revert AgentAlreadyRegistered(agentId);
+        Agent storage existing = agents[agentId];
+        if (existing.exists) {
+            if (existing.owner != owner || existing.wallet != wallet) {
+                revert AgentAlreadyRegistered(agentId);
+            }
+            return;
         }
         if (wallet == address(0)) {
             revert ZeroAddress();

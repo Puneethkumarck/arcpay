@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
@@ -57,6 +58,10 @@ class BlockchainAdapter implements BlockchainService {
 
     @Override
     public RegistrationResult registerAgent(UUID agentId, UUID ownerId, String walletAddress, String metadataHash) {
+        if (walletAddress == null || walletAddress.isBlank()) {
+            throw new BlockchainRegistrationException(
+                    "AgentRegistry.registerAgent requires a wallet address for agentId=" + agentId);
+        }
         var function = new Function(
                 "registerAgent",
                 List.of(
@@ -136,11 +141,12 @@ class BlockchainAdapter implements BlockchainService {
                 ((BigInteger) decoded.get(5).getValue()).longValue());
     }
 
-    UUID getAgentByWallet(String walletAddress) {
+    Optional<UUID> getAgentByWallet(String walletAddress) {
         var function = new Function(
                 "getAgentByWallet", List.of(new Address(walletAddress)), List.of(new TypeReference<Bytes32>() {}));
         var decoded = callView(function, walletAddress);
-        return UuidConversionUtil.bytes32ToUuid((byte[]) decoded.get(0).getValue());
+        var agentBytes = (byte[]) decoded.get(0).getValue();
+        return isZero(agentBytes) ? Optional.empty() : Optional.of(UuidConversionUtil.bytes32ToUuid(agentBytes));
     }
 
     boolean isWalletActive(String walletAddress) {
@@ -223,6 +229,15 @@ class BlockchainAdapter implements BlockchainService {
         } catch (Exception e) {
             log.warn("Failed to resync platform-wallet nonce after on-chain failure: {}", e.getMessage());
         }
+    }
+
+    private boolean isZero(byte[] bytes) {
+        for (var b : bytes) {
+            if (b != 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private byte[] hashToBytes32(String hash) {

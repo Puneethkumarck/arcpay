@@ -41,6 +41,7 @@ class AgentRegistryContractIntegrationTest {
     private static final String OUTSIDER_KEY = "0x6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1";
 
     private static final String AGENT_WALLET = "0x1234567890abcdef1234567890abcdef12345678";
+    private static final String OTHER_WALLET = "0x9999999999999999999999999999999999999999";
     private static final String METADATA_HASH = "0xabababababababababababababababababababababababababababababababab";
     private static final String NEW_METADATA_HASH =
             "0x1111111111111111111111111111111111111111111111111111111111111111";
@@ -110,12 +111,30 @@ class AgentRegistryContractIntegrationTest {
         adapter.registerAgent(agentId, UuidCreator.getTimeOrderedEpoch(), AGENT_WALLET, METADATA_HASH);
 
         // then an external party can resolve the wallet back to the active agent
-        assertThat(adapter.getAgentByWallet(AGENT_WALLET)).isEqualTo(agentId);
+        assertThat(adapter.getAgentByWallet(AGENT_WALLET)).contains(agentId);
+        assertThat(adapter.getAgentByWallet(OTHER_WALLET)).isEmpty();
         assertThat(adapter.isWalletActive(AGENT_WALLET)).isTrue();
 
         // and deactivation flips the wallet's active status
         adapter.deactivateAgent(agentId);
         assertThat(adapter.isWalletActive(AGENT_WALLET)).isFalse();
+    }
+
+    @Test
+    void shouldTreatDuplicateRegistrationAsIdempotentButRejectConflicting() throws Exception {
+        // given a registered agent
+        var adapter = adapterFor(REGISTRAR_KEY, deploy(managerFor(REGISTRAR_KEY)));
+        var agentId = UuidCreator.getTimeOrderedEpoch();
+        var ownerId = UuidCreator.getTimeOrderedEpoch();
+        adapter.registerAgent(agentId, ownerId, AGENT_WALLET, METADATA_HASH);
+
+        // when the same registration is re-submitted (workflow-retry safe)
+        adapter.registerAgent(agentId, ownerId, AGENT_WALLET, METADATA_HASH);
+
+        // then it is a no-op success, and a conflicting re-registration is rejected
+        assertThat(adapter.isAgentActive(agentId)).isTrue();
+        assertThatThrownBy(() -> adapter.registerAgent(agentId, ownerId, OTHER_WALLET, METADATA_HASH))
+                .isInstanceOf(BlockchainRegistrationException.class);
     }
 
     @Test
