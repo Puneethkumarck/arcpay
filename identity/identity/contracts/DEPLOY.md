@@ -51,9 +51,12 @@ AGENT_REGISTRY_ADDRESS=<DEPLOYED_ADDRESS>   # arcpay.contract.agent-registry-add
 
 Record the deployed address here once live:
 
-| Network      | Address | Deployed (tx) |
-|--------------|---------|---------------|
-| Arc testnet  | _TBD_   | _TBD_         |
+| Network     | Address | Registrar | Deployed (tx) |
+|-------------|---------|-----------|---------------|
+| Arc testnet | `0x8A3A6E9825A2b7A6fAe65ebcC8cD95C33327f3Ba` | `0xeaE1E22C917412dC5142305d5ae151668Bd7E8B1` | [`0x1d19a8…a85851`](https://testnet.arcscan.app/tx/0x1d19a8eed774f30e0b7fb04f46e70cea321f096596e62f6c72937c1e5ca85851) |
+
+Set `AGENT_REGISTRY_ADDRESS=0x8A3A6E9825A2b7A6fAe65ebcC8cD95C33327f3Ba` and run the Identity
+service with the registrar wallet's key as `PLATFORM_WALLET_PRIVATE_KEY`.
 
 ## Rotating the registrar (key rotation / compromise)
 
