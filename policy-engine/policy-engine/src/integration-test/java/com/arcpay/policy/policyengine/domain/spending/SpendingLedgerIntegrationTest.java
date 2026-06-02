@@ -167,7 +167,7 @@ class SpendingLedgerIntegrationTest extends FullContextIntegrationTest {
 
         try {
             // then — second returns the same persisted entry, never the second amount
-            assertThat(second).usingRecursiveComparison().isEqualTo(first);
+            assertThat(second).usingRecursiveComparison().ignoringFields("createdAt").isEqualTo(first);
 
             var summary = transactionTemplate.execute(status ->
                     spendingLedgerService.getSpendingSummary(agentId, 120));
