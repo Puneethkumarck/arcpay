@@ -63,7 +63,8 @@ class AgentProvisioningActivitiesImplTest {
         var agent = SOME_AGENT_WALLET_READY;
         var registrationResult = new RegistrationResult(SOME_TX_HASH, 42L);
         given(agentRepository.findById(agent.agentId())).willReturn(Optional.of(agent));
-        given(blockchainService.registerAgent(agent.agentId(), agent.ownerId(), agent.metadataHash()))
+        given(blockchainService.registerAgent(
+                        agent.agentId(), agent.ownerId(), agent.walletAddress(), agent.metadataHash()))
                 .willReturn(registrationResult);
 
         // when

@@ -42,7 +42,7 @@ class AgentLifecycleBusinessTest extends BusinessTest {
         // any() required: agentId is server-generated and stubs must be in place before Temporal workflow runs
         given(circleWalletService.createWallet(any()))
                 .willReturn(new WalletCreationResult(SOME_WALLET_ID, SOME_WALLET_ADDRESS));
-        given(blockchainService.registerAgent(any(), any(), any()))
+        given(blockchainService.registerAgent(any(), any(), any(), any()))
                 .willReturn(new RegistrationResult(SOME_TX_HASH, 42L));
     }
 

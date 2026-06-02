@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public interface BlockchainService {
 
-    RegistrationResult registerAgent(UUID agentId, UUID ownerId, String metadataHash);
+    RegistrationResult registerAgent(UUID agentId, UUID ownerId, String walletAddress, String metadataHash);
 
     String deactivateAgent(UUID agentId);
 
