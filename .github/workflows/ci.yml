@@ -56,15 +56,27 @@ jobs:
           retention-days: 7
 
   integration-e2e:
-    name: Integration + Business (E2E)
+    name: Integration + E2E (${{ matrix.name }})
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     # Toggle the heavy Docker/Testcontainers suite off two ways:
     #   - persistent: set repo variable RUN_INTEGRATION_TESTS=false (skips on push/PR)
     #   - ad-hoc:     run via "Run workflow" with run_integration=false
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.run_integration) ||
       (github.event_name != 'workflow_dispatch' && vars.RUN_INTEGRATION_TESTS != 'false')
+    # One service per runner: each service's Testcontainers stacks (Postgres/Kafka/Temporal)
+    # are isolated, so the suites do not contend for memory on a single runner (the cause of
+    # the Postgres "connection refused" flake when all 5 ran together). Also runs in parallel.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: identity, module: "identity:identity" }
+          - { name: policy-engine, module: "policy-engine:policy-engine" }
+          - { name: compliance, module: "compliance:compliance" }
+          - { name: payment-execution, module: "payment-execution:payment-execution" }
+          - { name: settlement, module: "settlement:settlement" }
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -79,19 +91,16 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@48b5f213c81028ace310571dc5ec0fbbca0b2947 # v4
 
-      # --max-workers=2 bounds concurrent Testcontainers stacks so the suite does not
-      # exhaust Postgres connections (the connection-reset flake seen under full parallelism).
-      # --continue runs every module's suite so all failures surface in one run.
-      - name: Integration + business tests
-        run: ./gradlew integrationTest businessTest --max-workers=2 --continue --stacktrace
+      - name: Integration + business tests (${{ matrix.name }})
+        run: ./gradlew :${{ matrix.module }}:integrationTest :${{ matrix.module }}:businessTest --continue --stacktrace
 
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: integration-e2e-reports
+          name: integration-e2e-reports-${{ matrix.name }}
           path: |
-            **/build/reports/tests/**
-            **/build/test-results/**
+            ${{ matrix.name }}/**/build/reports/tests/**
+            ${{ matrix.name }}/**/build/test-results/**
           if-no-files-found: ignore
           retention-days: 7
