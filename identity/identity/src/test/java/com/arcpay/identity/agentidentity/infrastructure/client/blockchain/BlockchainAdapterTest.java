@@ -1,5 +1,6 @@
 package com.arcpay.identity.agentidentity.infrastructure.client.blockchain;
 
+import static com.arcpay.platform.test.TestUtils.eqIgnoring;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,6 +10,7 @@ import static org.mockito.BDDMockito.then;
 import com.arcpay.identity.agentidentity.domain.agent.UuidConversionUtil;
 import com.arcpay.identity.agentidentity.domain.exception.BlockchainRegistrationException;
 import com.arcpay.identity.agentidentity.domain.model.GasUsage;
+import com.arcpay.identity.agentidentity.domain.model.OnChainOperation;
 import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
 import com.arcpay.identity.agentidentity.domain.port.GasUsageRepository;
 import java.io.IOException;
@@ -23,11 +25,19 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeEncoder;
+import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Bool;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.generated.Bytes32;
+import org.web3j.abi.datatypes.generated.Uint64;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.FastRawTransactionManager;
@@ -61,6 +71,10 @@ class BlockchainAdapterTest {
 
     @Mock
     private GasUsageRepository gasUsageRepository;
+
+    @Mock
+    @SuppressWarnings("rawtypes")
+    private Request ethCallRequest;
 
     @Captor
     private ArgumentCaptor<GasUsage> gasUsageCaptor;
@@ -150,51 +164,109 @@ class BlockchainAdapterTest {
     }
 
     @Test
-    void shouldReturnRealTxHashForDeactivate() throws Exception {
+    void shouldDeactivateReturningTxHashAndRecordingGas() throws Exception {
         // given
         givenSubmitSucceeds(stateChangeFunction("deactivateAgent"));
+        givenGetAgentReturnsOwner();
 
         // when
         var txHash = adapter().deactivateAgent(SOME_AGENT_ID);
 
         // then
         assertThat(txHash).isEqualTo(TX_HASH);
+        assertGasRecorded(OnChainOperation.DEACTIVATE.name());
     }
 
     @Test
-    void shouldReturnRealTxHashForReactivate() throws Exception {
+    void shouldReactivateReturningTxHashAndRecordingGas() throws Exception {
         // given
         givenSubmitSucceeds(stateChangeFunction("reactivateAgent"));
+        givenGetAgentReturnsOwner();
 
         // when
         var txHash = adapter().reactivateAgent(SOME_AGENT_ID);
 
         // then
         assertThat(txHash).isEqualTo(TX_HASH);
+        assertGasRecorded(OnChainOperation.REACTIVATE.name());
     }
 
     @Test
-    void shouldReturnRealTxHashForUpdateMetadata() throws Exception {
+    void shouldUpdateMetadataReturningTxHashAndRecordingGas() throws Exception {
         // given
         givenSubmitSucceeds(hashFunction("updateMetadata", SOME_METADATA_HASH));
+        givenGetAgentReturnsOwner();
 
         // when
         var txHash = adapter().updateMetadata(SOME_AGENT_ID, SOME_METADATA_HASH);
 
         // then
         assertThat(txHash).isEqualTo(TX_HASH);
+        assertGasRecorded(OnChainOperation.UPDATE_METADATA.name());
     }
 
     @Test
-    void shouldReturnRealTxHashForUpdatePolicy() throws Exception {
+    void shouldUpdatePolicyReturningTxHashAndRecordingGas() throws Exception {
         // given
         givenSubmitSucceeds(hashFunction("updatePolicy", SOME_POLICY_HASH));
+        givenGetAgentReturnsOwner();
 
         // when
         var txHash = adapter().updatePolicy(SOME_AGENT_ID, SOME_POLICY_HASH);
 
         // then
         assertThat(txHash).isEqualTo(TX_HASH);
+        assertGasRecorded(OnChainOperation.UPDATE_POLICY.name());
+    }
+
+    private void assertGasRecorded(String operation) {
+        then(gasUsageRepository).should().save(gasUsageCaptor.capture());
+        var expected = GasUsage.builder()
+                .ownerId(SOME_OWNER_ID)
+                .agentId(SOME_AGENT_ID)
+                .operation(operation)
+                .txHash(TX_HASH)
+                .gasUsed(GAS_USED)
+                .gasCostUsdc(BigDecimal.ZERO)
+                .build();
+        assertThat(gasUsageCaptor.getValue())
+                .usingRecursiveComparison()
+                .ignoringFields("id", "createdAt")
+                .isEqualTo(expected);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void givenGetAgentReturnsOwner() throws Exception {
+        var expectedCall = Transaction.createEthCallTransaction(
+                null, CONTRACT_ADDRESS, FunctionEncoder.encode(getAgentFunction()));
+        var response = new EthCall();
+        response.setResult(encodedGetAgentReturn());
+        given(web3j.ethCall(eqIgnoring(expectedCall), eqIgnoring(DefaultBlockParameterName.LATEST)))
+                .willReturn(ethCallRequest);
+        given(ethCallRequest.send()).willReturn(response);
+    }
+
+    private Function getAgentFunction() {
+        return new Function(
+                "getAgent",
+                List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(SOME_AGENT_ID))),
+                List.of(
+                        new TypeReference<Bytes32>() {},
+                        new TypeReference<Address>() {},
+                        new TypeReference<Bytes32>() {},
+                        new TypeReference<Bytes32>() {},
+                        new TypeReference<Bool>() {},
+                        new TypeReference<Uint64>() {}));
+    }
+
+    private String encodedGetAgentReturn() {
+        return "0x"
+                + TypeEncoder.encode(new Bytes32(UuidConversionUtil.uuidToBytes32(SOME_OWNER_ID)))
+                + TypeEncoder.encode(new Address(SOME_WALLET))
+                + TypeEncoder.encode(new Bytes32(Numeric.hexStringToByteArray(SOME_METADATA_HASH)))
+                + TypeEncoder.encode(new Bytes32(new byte[32]))
+                + TypeEncoder.encode(new Bool(true))
+                + TypeEncoder.encode(new Uint64(BigInteger.ZERO));
     }
 
     private void givenSubmitSucceeds(Function function) throws Exception {

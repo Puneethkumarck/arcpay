@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import com.arcpay.identity.agentidentity.domain.agent.UuidConversionUtil;
 import com.arcpay.identity.agentidentity.domain.exception.BlockchainRegistrationException;
 import com.arcpay.identity.agentidentity.domain.model.GasUsage;
+import com.arcpay.identity.agentidentity.domain.model.OnChainOperation;
 import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.GasUsageRepository;
@@ -80,14 +81,14 @@ class BlockchainAdapter implements BlockchainService {
     public String deactivateAgent(UUID agentId) {
         var function = new Function(
                 "deactivateAgent", List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId))), emptyList());
-        return submit(function, agentId).getTransactionHash();
+        return submitMutation(function, agentId, OnChainOperation.DEACTIVATE);
     }
 
     @Override
     public String reactivateAgent(UUID agentId) {
         var function = new Function(
                 "reactivateAgent", List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId))), emptyList());
-        return submit(function, agentId).getTransactionHash();
+        return submitMutation(function, agentId, OnChainOperation.REACTIVATE);
     }
 
     @Override
@@ -98,7 +99,7 @@ class BlockchainAdapter implements BlockchainService {
                         new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)),
                         new Bytes32(hashToBytes32(metadataHash))),
                 emptyList());
-        return submit(function, agentId).getTransactionHash();
+        return submitMutation(function, agentId, OnChainOperation.UPDATE_METADATA);
     }
 
     @Override
@@ -107,7 +108,14 @@ class BlockchainAdapter implements BlockchainService {
                 "updatePolicy",
                 List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)), new Bytes32(hashToBytes32(policyHash))),
                 emptyList());
-        return submit(function, agentId).getTransactionHash();
+        return submitMutation(function, agentId, OnChainOperation.UPDATE_POLICY);
+    }
+
+    private String submitMutation(Function function, UUID agentId, OnChainOperation operation) {
+        var receipt = submit(function, agentId);
+        var ownerId = getAgent(agentId).owner();
+        recordGasUsage(ownerId, agentId, operation.name(), receipt.getTransactionHash(), receipt.getGasUsed());
+        return receipt.getTransactionHash();
     }
 
     @Override

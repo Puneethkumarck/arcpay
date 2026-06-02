@@ -47,6 +47,7 @@ contract AgentRegistry {
     error NotRegistrar();
     error NotPendingRegistrar();
     error ZeroAddress();
+    error ZeroAgentId();
     error AgentAlreadyRegistered(bytes32 agentId);
     error WalletAlreadyRegistered(address wallet);
     error UnknownAgent(bytes32 agentId);
@@ -74,6 +75,9 @@ contract AgentRegistry {
         external
         onlyRegistrar
     {
+        if (agentId == bytes32(0)) {
+            revert ZeroAgentId();
+        }
         Agent storage existing = agents[agentId];
         if (existing.exists) {
             if (existing.owner != owner || existing.wallet != wallet) {

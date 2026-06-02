@@ -5,7 +5,7 @@ is the source of truth; this contract is the tamper-evident record. The platform
 wallet is the sole signer (custodial model), so it is the contract's immutable
 `registrar` — set to `msg.sender` at deploy time. **Deploy with the same wallet whose
 key the Identity service runs as (`PLATFORM_WALLET_PRIVATE_KEY`)**, or state changes
-will revert with `not registrar`.
+will revert with the `NotRegistrar()` custom error.
 
 ## Pinned artifacts
 
@@ -45,7 +45,7 @@ forge verify-contract <DEPLOYED_ADDRESS> AgentRegistry.sol:AgentRegistry \
 
 Then set the address the service reads:
 
-```
+```dotenv
 AGENT_REGISTRY_ADDRESS=<DEPLOYED_ADDRESS>   # arcpay.contract.agent-registry-address
 ```
 
