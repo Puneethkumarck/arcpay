@@ -57,7 +57,7 @@ class OutboxEventIdHeaderIntegrationTest extends FullContextIntegrationTest {
             await().atMost(Duration.ofSeconds(30))
                     .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
-                        for (ConsumerRecord<String, String> record : consumer.poll(Duration.ofSeconds(2))) {
+                        for (ConsumerRecord<String, String> record : consumer.poll(Duration.ofMillis(500))) {
                             if (key.equals(record.key())) {
                                 found.set(record);
                                 return true;
