@@ -54,3 +54,24 @@ Record the deployed address here once live:
 | Network      | Address | Deployed (tx) |
 |--------------|---------|---------------|
 | Arc testnet  | _TBD_   | _TBD_         |
+
+## Rotating the registrar (key rotation / compromise)
+
+The registrar (the only address allowed to mutate agents) is set to the deployer
+and can be rotated via a **two-step** transfer — the new wallet must accept, so a
+typo can't strand the contract. Run step 1 from the **current** platform wallet and
+step 2 from the **new** wallet:
+
+```bash
+# 1) current registrar nominates the new wallet
+cast send <CONTRACT_ADDRESS> "transferRegistrar(address)" <NEW_REGISTRAR_ADDRESS> \
+  --rpc-url "$ARC_TESTNET_RPC_URL" --private-key "$CURRENT_PLATFORM_WALLET_PRIVATE_KEY"
+
+# 2) new wallet accepts the role
+cast send <CONTRACT_ADDRESS> "acceptRegistrar()" \
+  --rpc-url "$ARC_TESTNET_RPC_URL" --private-key "$NEW_PLATFORM_WALLET_PRIVATE_KEY"
+```
+
+After step 2, update `PLATFORM_WALLET_PRIVATE_KEY` to the new wallet's key and
+restart the Identity service. Until step 2 completes, the original registrar
+remains in control. Confirm with `cast call <CONTRACT_ADDRESS> "registrar()(address)"`.
