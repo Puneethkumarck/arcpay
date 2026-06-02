@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Bool;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
@@ -55,12 +56,13 @@ class BlockchainAdapter implements BlockchainService {
     private final ReentrantLock writeLock = new ReentrantLock(true);
 
     @Override
-    public RegistrationResult registerAgent(UUID agentId, UUID ownerId, String metadataHash) {
+    public RegistrationResult registerAgent(UUID agentId, UUID ownerId, String walletAddress, String metadataHash) {
         var function = new Function(
                 "registerAgent",
                 List.of(
                         new Bytes32(UuidConversionUtil.uuidToBytes32(agentId)),
                         new Bytes32(UuidConversionUtil.uuidToBytes32(ownerId)),
+                        new Address(walletAddress),
                         new Bytes32(hashToBytes32(metadataHash))),
                 emptyList());
         var receipt = submit(function, agentId);
@@ -109,7 +111,7 @@ class BlockchainAdapter implements BlockchainService {
                 "isAgentActive",
                 List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId))),
                 List.of(new TypeReference<Bool>() {}));
-        var decoded = callView(function, agentId);
+        var decoded = callView(function, agentId.toString());
         return (Boolean) decoded.get(0).getValue();
     }
 
@@ -119,17 +121,33 @@ class BlockchainAdapter implements BlockchainService {
                 List.of(new Bytes32(UuidConversionUtil.uuidToBytes32(agentId))),
                 List.of(
                         new TypeReference<Bytes32>() {},
+                        new TypeReference<Address>() {},
                         new TypeReference<Bytes32>() {},
                         new TypeReference<Bytes32>() {},
                         new TypeReference<Bool>() {},
                         new TypeReference<Uint64>() {}));
-        var decoded = callView(function, agentId);
+        var decoded = callView(function, agentId.toString());
         return new OnChainAgentView(
                 UuidConversionUtil.bytes32ToUuid((byte[]) decoded.get(0).getValue()),
-                Numeric.toHexString((byte[]) decoded.get(1).getValue()),
+                decoded.get(1).getValue().toString(),
                 Numeric.toHexString((byte[]) decoded.get(2).getValue()),
-                (Boolean) decoded.get(3).getValue(),
-                ((BigInteger) decoded.get(4).getValue()).longValue());
+                Numeric.toHexString((byte[]) decoded.get(3).getValue()),
+                (Boolean) decoded.get(4).getValue(),
+                ((BigInteger) decoded.get(5).getValue()).longValue());
+    }
+
+    UUID getAgentByWallet(String walletAddress) {
+        var function = new Function(
+                "getAgentByWallet", List.of(new Address(walletAddress)), List.of(new TypeReference<Bytes32>() {}));
+        var decoded = callView(function, walletAddress);
+        return UuidConversionUtil.bytes32ToUuid((byte[]) decoded.get(0).getValue());
+    }
+
+    boolean isWalletActive(String walletAddress) {
+        var function = new Function(
+                "isWalletActive", List.of(new Address(walletAddress)), List.of(new TypeReference<Bool>() {}));
+        var decoded = callView(function, walletAddress);
+        return (Boolean) decoded.get(0).getValue();
     }
 
     private TransactionReceipt submit(Function function, UUID agentId) {
@@ -173,7 +191,7 @@ class BlockchainAdapter implements BlockchainService {
         }
     }
 
-    private List<Type> callView(Function function, UUID agentId) {
+    private List<Type> callView(Function function, String context) {
         try {
             var data = FunctionEncoder.encode(function);
             var response = web3j.ethCall(
@@ -182,20 +200,20 @@ class BlockchainAdapter implements BlockchainService {
                             DefaultBlockParameterName.LATEST)
                     .send();
             if (response.isReverted()) {
-                throw new BlockchainRegistrationException("AgentRegistry." + function.getName()
-                        + " reverted for agentId=" + agentId + ": " + response.getRevertReason());
+                throw new BlockchainRegistrationException("AgentRegistry." + function.getName() + " reverted for "
+                        + context + ": " + response.getRevertReason());
             }
             var decoded = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
             if (decoded.size() != function.getOutputParameters().size()) {
                 throw new BlockchainRegistrationException("AgentRegistry." + function.getName()
-                        + " returned no decodable value for agentId=" + agentId + " (empty or malformed response)");
+                        + " returned no decodable value for " + context + " (empty or malformed response)");
             }
             return decoded;
         } catch (BlockchainRegistrationException e) {
             throw e;
         } catch (Exception e) {
             throw new BlockchainRegistrationException(
-                    "AgentRegistry." + function.getName() + " view call failed for agentId=" + agentId, e);
+                    "AgentRegistry." + function.getName() + " view call failed for " + context, e);
         }
     }
 

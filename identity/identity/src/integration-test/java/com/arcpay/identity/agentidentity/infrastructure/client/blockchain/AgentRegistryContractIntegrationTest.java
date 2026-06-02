@@ -40,6 +40,7 @@ class AgentRegistryContractIntegrationTest {
     private static final String REGISTRAR_KEY = "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d";
     private static final String OUTSIDER_KEY = "0x6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1";
 
+    private static final String AGENT_WALLET = "0x1234567890abcdef1234567890abcdef12345678";
     private static final String METADATA_HASH = "0xabababababababababababababababababababababababababababababababab";
     private static final String NEW_METADATA_HASH =
             "0x1111111111111111111111111111111111111111111111111111111111111111";
@@ -58,33 +59,31 @@ class AgentRegistryContractIntegrationTest {
 
     private static Web3j web3j;
     private static TransactionReceiptProcessor receiptProcessor;
-    private static String contractAddress;
 
     @BeforeAll
-    static void connectAndDeploy() throws Exception {
+    static void connect() {
         web3j = Web3j.build(new HttpService("http://" + GANACHE.getHost() + ":" + GANACHE.getMappedPort(8545)));
         receiptProcessor = new PollingTransactionReceiptProcessor(web3j, 200L, 60);
-        contractAddress = deploy(managerFor(REGISTRAR_KEY));
     }
 
     @Test
-    void shouldRoundTripAgentLifecycleOnChain() {
-        // given
-        var adapter = adapterFor(REGISTRAR_KEY, contractAddress);
+    void shouldRoundTripAgentLifecycleOnChain() throws Exception {
+        // given a freshly deployed registry
+        var adapter = adapterFor(REGISTRAR_KEY, deploy(managerFor(REGISTRAR_KEY)));
         var agentId = UuidCreator.getTimeOrderedEpoch();
         var ownerId = UuidCreator.getTimeOrderedEpoch();
 
         // when registered
-        var registration = adapter.registerAgent(agentId, ownerId, METADATA_HASH);
+        var registration = adapter.registerAgent(agentId, ownerId, AGENT_WALLET, METADATA_HASH);
 
-        // then the on-chain record reflects an active agent with real tx coordinates
+        // then the on-chain record reflects an active agent bound to its wallet, with real tx coordinates
         assertThat(registration.txHash()).startsWith("0x").hasSize(66);
         assertThat(registration.blockNumber()).isPositive();
         assertThat(adapter.isAgentActive(agentId)).isTrue();
         assertThat(adapter.getAgent(agentId))
                 .usingRecursiveComparison()
                 .ignoringFields("createdAt")
-                .isEqualTo(new OnChainAgentView(ownerId, METADATA_HASH, zeroHash(), true, 0L));
+                .isEqualTo(new OnChainAgentView(ownerId, AGENT_WALLET, METADATA_HASH, zeroHash(), true, 0L));
 
         // when deactivated then reactivated
         adapter.deactivateAgent(agentId);
@@ -100,16 +99,33 @@ class AgentRegistryContractIntegrationTest {
         assertThat(adapter.getAgent(agentId))
                 .usingRecursiveComparison()
                 .ignoringFields("createdAt")
-                .isEqualTo(new OnChainAgentView(ownerId, NEW_METADATA_HASH, POLICY_HASH, true, 0L));
+                .isEqualTo(new OnChainAgentView(ownerId, AGENT_WALLET, NEW_METADATA_HASH, POLICY_HASH, true, 0L));
     }
 
     @Test
-    void shouldRejectStateChangeFromNonRegistrar() {
-        // given an agent registered by the registrar
-        var registrar = adapterFor(REGISTRAR_KEY, contractAddress);
-        var outsider = adapterFor(OUTSIDER_KEY, contractAddress);
+    void shouldResolveWalletToActiveAgentViaReverseIndex() throws Exception {
+        // given a registered agent bound to a wallet
+        var adapter = adapterFor(REGISTRAR_KEY, deploy(managerFor(REGISTRAR_KEY)));
         var agentId = UuidCreator.getTimeOrderedEpoch();
-        registrar.registerAgent(agentId, UuidCreator.getTimeOrderedEpoch(), METADATA_HASH);
+        adapter.registerAgent(agentId, UuidCreator.getTimeOrderedEpoch(), AGENT_WALLET, METADATA_HASH);
+
+        // then an external party can resolve the wallet back to the active agent
+        assertThat(adapter.getAgentByWallet(AGENT_WALLET)).isEqualTo(agentId);
+        assertThat(adapter.isWalletActive(AGENT_WALLET)).isTrue();
+
+        // and deactivation flips the wallet's active status
+        adapter.deactivateAgent(agentId);
+        assertThat(adapter.isWalletActive(AGENT_WALLET)).isFalse();
+    }
+
+    @Test
+    void shouldRejectStateChangeFromNonRegistrar() throws Exception {
+        // given an agent registered by the registrar
+        var address = deploy(managerFor(REGISTRAR_KEY));
+        var registrar = adapterFor(REGISTRAR_KEY, address);
+        var outsider = adapterFor(OUTSIDER_KEY, address);
+        var agentId = UuidCreator.getTimeOrderedEpoch();
+        registrar.registerAgent(agentId, UuidCreator.getTimeOrderedEpoch(), AGENT_WALLET, METADATA_HASH);
 
         // when / then a non-registrar wallet cannot mutate it
         assertThatThrownBy(() -> outsider.deactivateAgent(agentId)).isInstanceOf(BlockchainRegistrationException.class);
@@ -118,7 +134,7 @@ class AgentRegistryContractIntegrationTest {
 
     @Test
     void shouldRotateRegistrarViaTwoStepTransfer() throws Exception {
-        // given an isolated registry so the global registrar swap does not affect other tests
+        // given an isolated registry and a pending transfer to the outsider
         var registrarManager = managerFor(REGISTRAR_KEY);
         var outsiderManager = managerFor(OUTSIDER_KEY);
         var isolated = deploy(registrarManager);
@@ -135,7 +151,7 @@ class AgentRegistryContractIntegrationTest {
         var newRegistrar = adapterFor(OUTSIDER_KEY, isolated);
         var previousRegistrar = adapterFor(REGISTRAR_KEY, isolated);
         var agentId = UuidCreator.getTimeOrderedEpoch();
-        newRegistrar.registerAgent(agentId, UuidCreator.getTimeOrderedEpoch(), METADATA_HASH);
+        newRegistrar.registerAgent(agentId, UuidCreator.getTimeOrderedEpoch(), AGENT_WALLET, METADATA_HASH);
         assertThat(newRegistrar.isAgentActive(agentId)).isTrue();
         assertThatThrownBy(() -> previousRegistrar.deactivateAgent(agentId))
                 .isInstanceOf(BlockchainRegistrationException.class);

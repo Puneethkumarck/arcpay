@@ -71,7 +71,7 @@ class AgentProvisioningTriggerIntegrationTest extends FullContextIntegrationTest
         // given
         given(circleWalletService.createWallet(SOME_AGENT_ID))
                 .willReturn(new WalletCreationResult(SOME_WALLET_ID, SOME_WALLET_ADDRESS));
-        given(blockchainService.registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_METADATA_HASH))
+        given(blockchainService.registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_WALLET_ADDRESS, SOME_METADATA_HASH))
                 .willReturn(new RegistrationResult(SOME_TX_HASH, 42L));
 
         var event = new AgentRegistrationRequested(

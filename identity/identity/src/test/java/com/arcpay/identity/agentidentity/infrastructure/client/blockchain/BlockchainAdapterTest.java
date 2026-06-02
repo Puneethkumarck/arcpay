@@ -23,6 +23,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.protocol.Web3j;
@@ -41,6 +42,7 @@ class BlockchainAdapterTest {
     private static final String SOME_METADATA_HASH =
             "0xabababababababababababababababababababababababababababababababab";
     private static final String SOME_POLICY_HASH = "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
+    private static final String SOME_WALLET = "0x1234567890abcdef1234567890abcdef12345678";
     private static final String CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000abc";
     private static final String TX_HASH = "0x9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
     private static final long BLOCK_NUMBER = 4242L;
@@ -75,7 +77,7 @@ class BlockchainAdapterTest {
         givenSubmitSucceeds(registerFunction());
 
         // when
-        var result = adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_METADATA_HASH);
+        var result = adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_WALLET, SOME_METADATA_HASH);
 
         // then
         assertThat(result).usingRecursiveComparison().isEqualTo(new RegistrationResult(TX_HASH, BLOCK_NUMBER));
@@ -87,7 +89,7 @@ class BlockchainAdapterTest {
         givenSubmitSucceeds(registerFunction());
 
         // when
-        adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_METADATA_HASH);
+        adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_WALLET, SOME_METADATA_HASH);
 
         // then
         then(gasUsageRepository).should().save(gasUsageCaptor.capture());
@@ -119,7 +121,7 @@ class BlockchainAdapterTest {
                 .willReturn(errored);
 
         // when / then
-        assertThatThrownBy(() -> adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_METADATA_HASH))
+        assertThatThrownBy(() -> adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_WALLET, SOME_METADATA_HASH))
                 .isInstanceOf(BlockchainRegistrationException.class)
                 .hasMessageContaining(SOME_AGENT_ID.toString())
                 .hasMessageContaining("not registrar");
@@ -141,7 +143,7 @@ class BlockchainAdapterTest {
         given(receiptProcessor.waitForTransactionReceipt(TX_HASH)).willThrow(new IOException("receipt timeout"));
 
         // when / then
-        assertThatThrownBy(() -> adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_METADATA_HASH))
+        assertThatThrownBy(() -> adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_WALLET, SOME_METADATA_HASH))
                 .isInstanceOf(BlockchainRegistrationException.class)
                 .hasCauseInstanceOf(IOException.class);
         then(transactionManager).should().resetNonce();
@@ -219,6 +221,7 @@ class BlockchainAdapterTest {
                 List.of(
                         new Bytes32(UuidConversionUtil.uuidToBytes32(SOME_AGENT_ID)),
                         new Bytes32(UuidConversionUtil.uuidToBytes32(SOME_OWNER_ID)),
+                        new Address(SOME_WALLET),
                         new Bytes32(Numeric.hexStringToByteArray(SOME_METADATA_HASH))),
                 emptyList());
     }

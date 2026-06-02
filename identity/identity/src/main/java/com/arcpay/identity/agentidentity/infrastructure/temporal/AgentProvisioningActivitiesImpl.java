@@ -38,7 +38,8 @@ class AgentProvisioningActivitiesImpl implements AgentProvisioningActivities {
                 .findById(agentId)
                 .orElseThrow(() ->
                         ApplicationFailure.newNonRetryableFailure("Agent not found: " + agentId, "AGENT_NOT_FOUND"));
-        var result = blockchainService.registerAgent(agentId, agent.ownerId(), agent.metadataHash());
+        var result =
+                blockchainService.registerAgent(agentId, agent.ownerId(), agent.walletAddress(), agent.metadataHash());
         agentProvisioningService.completeOnChainRegistration(agentId, result.txHash(), result.blockNumber());
         log.info("On-chain registration complete for agentId={} txHash={}", agentId, result.txHash());
     }

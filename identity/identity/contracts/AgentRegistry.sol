@@ -6,13 +6,16 @@ pragma solidity 0.8.24;
 /// @dev PostgreSQL is the source of truth; this contract is the independently
 ///      verifiable record. The platform gas wallet is the sole signer (custodial
 ///      model), so all state changes are registrar-gated. Timestamps are taken from
-///      `block.timestamp` so they are trustless, not caller-asserted. The registrar
-///      can be rotated via a two-step transfer (cf. key-rotation, issue #200).
+///      `block.timestamp` so they are trustless, not caller-asserted. Each agent is
+///      bound to its on-chain wallet address and indexed by it, so an external party
+///      that sees an on-chain payment can resolve the wallet back to a registered,
+///      active agent. The registrar can be rotated via a two-step transfer (cf. #200).
 contract AgentRegistry {
     struct Agent {
         bytes32 owner;
         bytes32 metadataHash;
         bytes32 policyHash;
+        address wallet;
         bool active;
         bool exists;
         uint64 createdAt;
@@ -22,9 +25,12 @@ contract AgentRegistry {
     address public pendingRegistrar;
     mapping(bytes32 => Agent) private agents;
     mapping(bytes32 => bytes32[]) private ownerAgents;
+    mapping(address => bytes32) private walletToAgent;
 
     /// @notice Emitted when an agent is first registered on-chain.
-    event AgentRegistered(bytes32 indexed agentId, bytes32 indexed owner, bytes32 metadataHash, uint64 timestamp);
+    event AgentRegistered(
+        bytes32 indexed agentId, bytes32 indexed owner, address indexed wallet, bytes32 metadataHash, uint64 timestamp
+    );
     /// @notice Emitted when an agent is deactivated.
     event AgentDeactivated(bytes32 indexed agentId, uint64 timestamp);
     /// @notice Emitted when a previously deactivated agent is reactivated.
@@ -42,6 +48,7 @@ contract AgentRegistry {
     error NotPendingRegistrar();
     error ZeroAddress();
     error AgentAlreadyRegistered(bytes32 agentId);
+    error WalletAlreadyRegistered(address wallet);
     error UnknownAgent(bytes32 agentId);
 
     modifier onlyRegistrar() {
@@ -55,24 +62,36 @@ contract AgentRegistry {
         registrar = msg.sender;
     }
 
-    /// @notice Registers a new agent. Reverts if the agent id already exists.
+    /// @notice Registers a new agent and binds it to its on-chain wallet address.
     /// @param agentId Off-chain agent UUID encoded as bytes32.
     /// @param owner Off-chain owner UUID encoded as bytes32.
+    /// @param wallet The agent's on-chain wallet address.
     /// @param metadataHash keccak256 of the agent metadata.
-    function registerAgent(bytes32 agentId, bytes32 owner, bytes32 metadataHash) external onlyRegistrar {
+    function registerAgent(bytes32 agentId, bytes32 owner, address wallet, bytes32 metadataHash)
+        external
+        onlyRegistrar
+    {
         if (agents[agentId].exists) {
             revert AgentAlreadyRegistered(agentId);
+        }
+        if (wallet == address(0)) {
+            revert ZeroAddress();
+        }
+        if (walletToAgent[wallet] != bytes32(0)) {
+            revert WalletAlreadyRegistered(wallet);
         }
         agents[agentId] = Agent({
             owner: owner,
             metadataHash: metadataHash,
             policyHash: bytes32(0),
+            wallet: wallet,
             active: true,
             exists: true,
             createdAt: uint64(block.timestamp)
         });
         ownerAgents[owner].push(agentId);
-        emit AgentRegistered(agentId, owner, metadataHash, uint64(block.timestamp));
+        walletToAgent[wallet] = agentId;
+        emit AgentRegistered(agentId, owner, wallet, metadataHash, uint64(block.timestamp));
     }
 
     /// @notice Deactivates a registered agent.
@@ -107,18 +126,29 @@ contract AgentRegistry {
     function getAgent(bytes32 agentId)
         external
         view
-        returns (bytes32 owner, bytes32 metadataHash, bytes32 policyHash, bool active, uint64 createdAt)
+        returns (bytes32 owner, address wallet, bytes32 metadataHash, bytes32 policyHash, bool active, uint64 createdAt)
     {
         Agent storage agent = agents[agentId];
         if (!agent.exists) {
             revert UnknownAgent(agentId);
         }
-        return (agent.owner, agent.metadataHash, agent.policyHash, agent.active, agent.createdAt);
+        return (agent.owner, agent.wallet, agent.metadataHash, agent.policyHash, agent.active, agent.createdAt);
     }
 
     /// @notice Returns whether an agent is currently active. Unknown agents return false.
     function isAgentActive(bytes32 agentId) external view returns (bool) {
         return agents[agentId].active;
+    }
+
+    /// @notice Resolves an on-chain wallet address to its agent id, or bytes32(0) if unregistered.
+    function getAgentByWallet(address wallet) external view returns (bytes32) {
+        return walletToAgent[wallet];
+    }
+
+    /// @notice Returns whether a wallet belongs to a registered, currently-active agent.
+    function isWalletActive(address wallet) external view returns (bool) {
+        bytes32 agentId = walletToAgent[wallet];
+        return agentId != bytes32(0) && agents[agentId].active;
     }
 
     /// @notice Returns all agent ids registered under an owner.

@@ -37,6 +37,17 @@
         "type": "error"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
+        ],
+        "name": "WalletAlreadyRegistered",
+        "type": "error"
+    },
+    {
         "inputs": [],
         "name": "ZeroAddress",
         "type": "error"
@@ -93,6 +104,12 @@
                 "internalType": "bytes32",
                 "name": "owner",
                 "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
             },
             {
                 "indexed": false,
@@ -234,6 +251,11 @@
                 "type": "bytes32"
             },
             {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            },
+            {
                 "internalType": "bytes32",
                 "name": "metadataHash",
                 "type": "bytes32"
@@ -252,6 +274,25 @@
                 "internalType": "uint64",
                 "name": "createdAt",
                 "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
+        ],
+        "name": "getAgentByWallet",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
             }
         ],
         "stateMutability": "view",
@@ -285,6 +326,25 @@
             }
         ],
         "name": "isAgentActive",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
+            }
+        ],
+        "name": "isWalletActive",
         "outputs": [
             {
                 "internalType": "bool",
@@ -332,6 +392,11 @@
                 "internalType": "bytes32",
                 "name": "owner",
                 "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "wallet",
+                "type": "address"
             },
             {
                 "internalType": "bytes32",
