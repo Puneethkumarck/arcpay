@@ -1,24 +1,5 @@
 package com.arcpay.payment.paymentexecution;
 
-import com.arcpay.compliance.domain.event.ScreeningApproved;
-import com.arcpay.compliance.domain.event.ScreeningCompleted;
-import com.arcpay.compliance.domain.event.ScreeningRejected;
-import com.arcpay.compliance.domain.model.Verdict;
-import com.arcpay.payment.paymentexecution.domain.event.PaymentRequested;
-import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
-import com.arcpay.payment.paymentexecution.domain.model.Payment;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
-import com.arcpay.settlement.domain.event.TransferConfirmed;
-import com.arcpay.settlement.domain.event.TransferReverted;
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AGENT_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_OWNER_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_TX_HASH;
@@ -45,6 +26,23 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import com.arcpay.compliance.domain.event.ScreeningApproved;
+import com.arcpay.compliance.domain.event.ScreeningCompleted;
+import com.arcpay.compliance.domain.event.ScreeningRejected;
+import com.arcpay.compliance.domain.model.Verdict;
+import com.arcpay.payment.paymentexecution.domain.event.PaymentRequested;
+import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
+import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
+import com.arcpay.settlement.domain.event.TransferConfirmed;
+import com.arcpay.settlement.domain.event.TransferReverted;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+
 class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
 
     @Test
@@ -59,15 +57,15 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
         // when
         kafkaTemplate.send(PaymentRequested.TOPIC, paymentId.toString(), paymentRequested(paymentId));
         awaitStatus(paymentId, PaymentStatus.SCREENING);
-        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(),
-                screeningCompleted(paymentId, Verdict.PASS));
+        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(), screeningCompleted(paymentId, Verdict.PASS));
         awaitStatus(paymentId, PaymentStatus.EXECUTING);
         kafkaTemplate.send(TransferConfirmed.TOPIC, paymentId.toString(), transferConfirmed(paymentId));
         awaitStatus(paymentId, PaymentStatus.COMPLETED);
 
         // then
         var completed = loadPayment(paymentId);
-        assertThat(completed).usingRecursiveComparison()
+        assertThat(completed)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "txHash", "onChainRef", "rejectionReason", "failureReason")
                 .isEqualTo(somePayment(PaymentStatus.COMPLETED).toBuilder()
                         .paymentId(paymentId)
@@ -94,7 +92,8 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
 
         // then
         var rejected = loadPayment(paymentId);
-        assertThat(rejected).usingRecursiveComparison()
+        assertThat(rejected)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "rejectionReason", "txHash")
                 .isEqualTo(somePayment(PaymentStatus.REJECTED).toBuilder()
                         .paymentId(paymentId)
@@ -116,13 +115,14 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
         // when
         kafkaTemplate.send(PaymentRequested.TOPIC, paymentId.toString(), paymentRequested(paymentId));
         awaitStatus(paymentId, PaymentStatus.SCREENING);
-        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(),
-                screeningCompleted(paymentId, Verdict.BLOCK));
+        kafkaTemplate.send(
+                ScreeningCompleted.TOPIC, paymentId.toString(), screeningCompleted(paymentId, Verdict.BLOCK));
         awaitStatus(paymentId, PaymentStatus.REJECTED);
 
         // then
         var rejected = loadPayment(paymentId);
-        assertThat(rejected).usingRecursiveComparison()
+        assertThat(rejected)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "rejectionReason")
                 .isEqualTo(somePayment(PaymentStatus.REJECTED).toBuilder()
                         .paymentId(paymentId)
@@ -144,8 +144,7 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
         // when
         kafkaTemplate.send(PaymentRequested.TOPIC, paymentId.toString(), paymentRequested(paymentId));
         awaitStatus(paymentId, PaymentStatus.SCREENING);
-        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(),
-                screeningCompleted(paymentId, Verdict.HOLD));
+        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(), screeningCompleted(paymentId, Verdict.HOLD));
         awaitStatus(paymentId, PaymentStatus.HELD);
         kafkaTemplate.send(ScreeningApproved.TOPIC, paymentId.toString(), screeningApproved(paymentId));
         awaitStatus(paymentId, PaymentStatus.EXECUTING);
@@ -154,7 +153,8 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
 
         // then
         var completed = loadPayment(paymentId);
-        assertThat(completed).usingRecursiveComparison()
+        assertThat(completed)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "txHash", "onChainRef", "rejectionReason")
                 .isEqualTo(somePayment(PaymentStatus.COMPLETED).toBuilder()
                         .paymentId(paymentId)
@@ -178,15 +178,15 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
         // when
         kafkaTemplate.send(PaymentRequested.TOPIC, paymentId.toString(), paymentRequested(paymentId));
         awaitStatus(paymentId, PaymentStatus.SCREENING);
-        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(),
-                screeningCompleted(paymentId, Verdict.HOLD));
+        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(), screeningCompleted(paymentId, Verdict.HOLD));
         awaitStatus(paymentId, PaymentStatus.HELD);
         kafkaTemplate.send(ScreeningRejected.TOPIC, paymentId.toString(), screeningRejected(paymentId));
         awaitStatus(paymentId, PaymentStatus.REJECTED);
 
         // then
         var rejected = loadPayment(paymentId);
-        assertThat(rejected).usingRecursiveComparison()
+        assertThat(rejected)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "rejectionReason")
                 .isEqualTo(somePayment(PaymentStatus.REJECTED).toBuilder()
                         .paymentId(paymentId)
@@ -207,15 +207,15 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
         // when
         kafkaTemplate.send(PaymentRequested.TOPIC, paymentId.toString(), paymentRequested(paymentId));
         awaitStatus(paymentId, PaymentStatus.SCREENING);
-        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(),
-                screeningCompleted(paymentId, Verdict.PASS));
+        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(), screeningCompleted(paymentId, Verdict.PASS));
         awaitStatus(paymentId, PaymentStatus.EXECUTING);
         kafkaTemplate.send(TransferReverted.TOPIC, paymentId.toString(), transferReverted(paymentId));
         awaitStatus(paymentId, PaymentStatus.FAILED);
 
         // then
         var failed = loadPayment(paymentId);
-        assertThat(failed).usingRecursiveComparison()
+        assertThat(failed)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "failureReason", "txHash")
                 .isEqualTo(somePayment(PaymentStatus.FAILED).toBuilder()
                         .paymentId(paymentId)
@@ -238,7 +238,8 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
 
         // then
         var rejected = loadPayment(paymentId);
-        assertThat(rejected).usingRecursiveComparison()
+        assertThat(rejected)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "rejectionReason")
                 .isEqualTo(somePayment(PaymentStatus.REJECTED).toBuilder()
                         .paymentId(paymentId)
@@ -258,15 +259,16 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
         // when
         kafkaTemplate.send(PaymentRequested.TOPIC, paymentId.toString(), paymentRequested(paymentId));
         awaitStatus(paymentId, PaymentStatus.SCREENING);
-        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(),
-                screeningCompleted(paymentId, Verdict.PASS));
+        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(), screeningCompleted(paymentId, Verdict.PASS));
         awaitStatus(paymentId, PaymentStatus.EXECUTING);
 
         // then
-        await().during(Duration.ofSeconds(3)).atMost(Duration.ofSeconds(6))
+        await().during(Duration.ofSeconds(3))
+                .atMost(Duration.ofSeconds(6))
                 .untilAsserted(() -> assertThat(loadStatus(paymentId)).isEqualTo(PaymentStatus.EXECUTING));
         var stuck = loadPayment(paymentId);
-        assertThat(stuck).usingRecursiveComparison()
+        assertThat(stuck)
+                .usingRecursiveComparison()
                 .comparingOnlyFields("status", "txHash", "rejectionReason", "failureReason")
                 .isEqualTo(somePayment(PaymentStatus.EXECUTING).toBuilder()
                         .paymentId(paymentId)
@@ -291,14 +293,14 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
         kafkaTemplate.send(PaymentRequested.TOPIC, paymentId.toString(), paymentRequested(paymentId));
         awaitStatus(paymentId, PaymentStatus.SCREENING);
         kafkaTemplate.send(PaymentRequested.TOPIC, paymentId.toString(), paymentRequested(paymentId));
-        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(),
-                screeningCompleted(paymentId, Verdict.PASS));
+        kafkaTemplate.send(ScreeningCompleted.TOPIC, paymentId.toString(), screeningCompleted(paymentId, Verdict.PASS));
         awaitStatus(paymentId, PaymentStatus.EXECUTING);
         kafkaTemplate.send(TransferConfirmed.TOPIC, paymentId.toString(), transferConfirmed(paymentId));
         awaitStatus(paymentId, PaymentStatus.COMPLETED);
 
         // then
-        await().during(Duration.ofSeconds(2)).atMost(Duration.ofSeconds(5))
+        await().during(Duration.ofSeconds(2))
+                .atMost(Duration.ofSeconds(5))
                 .untilAsserted(() -> assertThat(loadStatus(paymentId)).isEqualTo(PaymentStatus.COMPLETED));
         var statuses = awaitStatusEvents(paymentId, 4);
         assertThat(statuses).containsExactly("POLICY_CHECK", "SCREENING", "EXECUTING", "COMPLETED");

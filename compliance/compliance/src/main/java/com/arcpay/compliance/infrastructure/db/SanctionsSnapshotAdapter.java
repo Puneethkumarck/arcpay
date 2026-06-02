@@ -2,15 +2,14 @@ package com.arcpay.compliance.infrastructure.db;
 
 import com.arcpay.compliance.domain.model.SanctionsSet;
 import com.arcpay.compliance.domain.port.SanctionsSetProvider;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -24,13 +23,11 @@ class SanctionsSnapshotAdapter implements SanctionsSetProvider {
     @Override
     @Transactional(readOnly = true)
     public SanctionsSet getCurrentSanctionsSet() {
-        return loadSnapshotByVersionId(pointerVersionId())
-                .orElseGet(SanctionsSnapshotAdapter::emptySnapshot);
+        return loadSnapshotByVersionId(pointerVersionId()).orElseGet(SanctionsSnapshotAdapter::emptySnapshot);
     }
 
     private Optional<UUID> pointerVersionId() {
-        return currentListVersionRepository.findById(CURRENT_POINTER_ID)
-                .map(CurrentListVersionEntity::getVersionId);
+        return currentListVersionRepository.findById(CURRENT_POINTER_ID).map(CurrentListVersionEntity::getVersionId);
     }
 
     private Optional<SanctionsSet> loadSnapshotByVersionId(Optional<UUID> versionId) {

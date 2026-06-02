@@ -1,12 +1,7 @@
 package com.arcpay.identity.agentidentity.api.model;
 
+import java.time.Instant;
 import lombok.Builder;
 
-import java.time.Instant;
-
 @Builder
-public record ProvisioningStepResponse(
-        String name,
-        StepStatusEnum status,
-        Instant completedAt
-) {}
+public record ProvisioningStepResponse(String name, StepStatusEnum status, Instant completedAt) {}

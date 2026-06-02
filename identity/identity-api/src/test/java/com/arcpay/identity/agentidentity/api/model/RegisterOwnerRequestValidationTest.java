@@ -1,5 +1,7 @@
 package com.arcpay.identity.agentidentity.api.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeAll;
@@ -7,8 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class RegisterOwnerRequestValidationTest {
 
@@ -22,10 +22,7 @@ class RegisterOwnerRequestValidationTest {
     @Test
     void shouldAcceptValidRequest() {
         // given
-        var request = new RegisterOwnerRequest(
-                "alice@example.com",
-                "0x1234567890abcdef1234567890abcdef12345678"
-        );
+        var request = new RegisterOwnerRequest("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
 
         // when
         var violations = validator.validate(request);

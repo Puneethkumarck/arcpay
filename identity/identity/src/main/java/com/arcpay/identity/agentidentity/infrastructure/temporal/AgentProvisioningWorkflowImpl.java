@@ -8,9 +8,8 @@ import io.temporal.common.RetryOptions;
 import io.temporal.failure.ActivityFailure;
 import io.temporal.spring.boot.WorkflowImpl;
 import io.temporal.workflow.Workflow;
-import org.slf4j.Logger;
-
 import java.time.Duration;
+import org.slf4j.Logger;
 
 @WorkflowImpl(taskQueues = "AgentIdentityTaskQueue")
 class AgentProvisioningWorkflowImpl implements AgentProvisioningWorkflow {

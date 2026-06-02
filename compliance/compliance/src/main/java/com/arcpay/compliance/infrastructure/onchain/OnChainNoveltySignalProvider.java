@@ -4,12 +4,11 @@ import com.arcpay.compliance.domain.model.CheckResult;
 import com.arcpay.compliance.domain.model.CheckType;
 import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.port.RiskSignalProvider;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 import org.web3j.protocol.Web3j;
-
-import java.util.Map;
 
 @Component
 @ConditionalOnBean(Web3j.class)

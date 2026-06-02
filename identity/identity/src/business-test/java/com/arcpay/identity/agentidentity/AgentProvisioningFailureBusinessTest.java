@@ -1,22 +1,21 @@
 package com.arcpay.identity.agentidentity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import com.arcpay.identity.agentidentity.test.BusinessTest;
+import java.time.Duration;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.time.Duration;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 
 class AgentProvisioningFailureBusinessTest extends BusinessTest {
 
@@ -44,11 +43,11 @@ class AgentProvisioningFailureBusinessTest extends BusinessTest {
     void shouldReachFailedStatusOnCircleApiFailure() {
         // given — Circle wallet creation fails
         // any() required: agentId is server-generated and stubs must be in place before Temporal workflow runs
-        given(circleWalletService.createWallet(any()))
-                .willThrow(new RuntimeException("Circle API unavailable"));
+        given(circleWalletService.createWallet(any())).willThrow(new RuntimeException("Circle API unavailable"));
 
         // when — register agent
-        var createResponse = restClient().post()
+        var createResponse = restClient()
+                .post()
                 .uri("/api/v1/agents")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + apiKey)
@@ -66,7 +65,8 @@ class AgentProvisioningFailureBusinessTest extends BusinessTest {
         await().atMost(Duration.ofSeconds(60))
                 .pollInterval(Duration.ofMillis(500))
                 .untilAsserted(() -> {
-                    var agent = restClient().get()
+                    var agent = restClient()
+                            .get()
                             .uri("/api/v1/agents/{agentId}", agentId)
                             .header("Authorization", "Bearer " + apiKey)
                             .retrieve()
@@ -78,7 +78,8 @@ class AgentProvisioningFailureBusinessTest extends BusinessTest {
 
     @SuppressWarnings("unchecked")
     private String registerOwner() {
-        var response = restClient().post()
+        var response = restClient()
+                .post()
                 .uri("/api/v1/owners/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""

@@ -1,30 +1,5 @@
 package com.arcpay.identity.agentidentity.domain.agent;
 
-import com.arcpay.identity.agentidentity.domain.event.AgentDeactivated;
-import com.arcpay.identity.agentidentity.domain.event.AgentMetadataUpdated;
-import com.arcpay.identity.agentidentity.domain.event.AgentPolicyUpdated;
-import com.arcpay.identity.agentidentity.domain.event.AgentReactivated;
-import com.arcpay.identity.agentidentity.domain.event.AgentRegistrationRequested;
-import com.arcpay.identity.agentidentity.domain.exception.AgentNameDuplicateException;
-import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
-import com.arcpay.identity.agentidentity.domain.exception.AgentNotInExpectedStateException;
-import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
-import com.arcpay.identity.agentidentity.domain.exception.InvalidAgentNameException;
-import com.arcpay.identity.agentidentity.domain.exception.InvalidPolicyHashException;
-import com.arcpay.identity.agentidentity.domain.model.Agent;
-import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
-import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
-import com.arcpay.identity.agentidentity.domain.port.EventPublisher;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
-
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_SUSPENDED;
@@ -36,6 +11,29 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
+
+import com.arcpay.identity.agentidentity.domain.event.AgentDeactivated;
+import com.arcpay.identity.agentidentity.domain.event.AgentMetadataUpdated;
+import com.arcpay.identity.agentidentity.domain.event.AgentPolicyUpdated;
+import com.arcpay.identity.agentidentity.domain.event.AgentReactivated;
+import com.arcpay.identity.agentidentity.domain.event.AgentRegistrationRequested;
+import com.arcpay.identity.agentidentity.domain.exception.AgentNameDuplicateException;
+import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
+import com.arcpay.identity.agentidentity.domain.exception.AgentNotInExpectedStateException;
+import com.arcpay.identity.agentidentity.domain.exception.ForbiddenException;
+import com.arcpay.identity.agentidentity.domain.exception.InvalidAgentNameException;
+import com.arcpay.identity.agentidentity.domain.exception.InvalidPolicyHashException;
+import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
+import com.arcpay.identity.agentidentity.domain.port.EventPublisher;
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class AgentCommandHandlerTest {
@@ -64,21 +62,33 @@ class AgentCommandHandlerTest {
         given(agentRepository.save(eqIgnoringTimestamps(agent))).willReturn(agent);
 
         // when
-        var result = agentCommandHandler.registerAgent(SOME_OWNER_ID, agent.name(), agent.purpose(), agent.policyHash());
+        var result =
+                agentCommandHandler.registerAgent(SOME_OWNER_ID, agent.name(), agent.purpose(), agent.policyHash());
 
         // then
         assertThat(result.status()).isEqualTo(AgentStatus.PROVISIONING);
-        then(agentValidator).should().validateRegistration(SOME_OWNER_ID, agent.name(), agent.purpose(), agent.policyHash());
-        then(eventPublisher).should().publish(eqIgnoring(
-                new AgentRegistrationRequested(agent.agentId(), SOME_OWNER_ID, agent.name(), agent.purpose(), agent.metadataHash(), Instant.now()),
-                "requestedAt"));
+        then(agentValidator)
+                .should()
+                .validateRegistration(SOME_OWNER_ID, agent.name(), agent.purpose(), agent.policyHash());
+        then(eventPublisher)
+                .should()
+                .publish(eqIgnoring(
+                        new AgentRegistrationRequested(
+                                agent.agentId(),
+                                SOME_OWNER_ID,
+                                agent.name(),
+                                agent.purpose(),
+                                agent.metadataHash(),
+                                Instant.now()),
+                        "requestedAt"));
     }
 
     @Test
     void shouldThrowWhenAgentNameDuplicate() {
         // given
         willThrow(new AgentNameDuplicateException("my-agent", SOME_OWNER_ID))
-                .given(agentValidator).validateRegistration(SOME_OWNER_ID, "my-agent", "purpose", null);
+                .given(agentValidator)
+                .validateRegistration(SOME_OWNER_ID, "my-agent", "purpose", null);
 
         // when / then
         assertThatThrownBy(() -> agentCommandHandler.registerAgent(SOME_OWNER_ID, "my-agent", "purpose", null))
@@ -89,7 +99,8 @@ class AgentCommandHandlerTest {
     void shouldThrowWhenAgentNameInvalid() {
         // given
         willThrow(new InvalidAgentNameException("ab"))
-                .given(agentValidator).validateRegistration(SOME_OWNER_ID, "ab", "purpose", null);
+                .given(agentValidator)
+                .validateRegistration(SOME_OWNER_ID, "ab", "purpose", null);
 
         // when / then
         assertThatThrownBy(() -> agentCommandHandler.registerAgent(SOME_OWNER_ID, "ab", "purpose", null))
@@ -111,9 +122,11 @@ class AgentCommandHandlerTest {
         // then
         assertThat(result.name()).isEqualTo("new-name");
         assertThat(result.metadataHash()).isEqualTo(newHash);
-        then(eventPublisher).should().publish(eqIgnoring(
-                new AgentMetadataUpdated(agent.agentId(), "new-name", agent.purpose(), newHash, Instant.now()),
-                "updatedAt"));
+        then(eventPublisher)
+                .should()
+                .publish(eqIgnoring(
+                        new AgentMetadataUpdated(agent.agentId(), "new-name", agent.purpose(), newHash, Instant.now()),
+                        "updatedAt"));
     }
 
     @Test
@@ -133,7 +146,8 @@ class AgentCommandHandlerTest {
         var agent = SOME_AGENT_ACTIVE;
         given(agentRepository.findByIdForUpdate(agent.agentId())).willReturn(Optional.of(agent));
         willThrow(new AgentNameDuplicateException("new-name", SOME_OWNER_ID))
-                .given(agentValidator).validateUpdate(SOME_OWNER_ID, agent.agentId(), "new-name", null);
+                .given(agentValidator)
+                .validateUpdate(SOME_OWNER_ID, agent.agentId(), "new-name", null);
 
         // when / then
         assertThatThrownBy(() -> agentCommandHandler.updateMetadata(agent.agentId(), SOME_OWNER_ID, "new-name", null))
@@ -153,9 +167,9 @@ class AgentCommandHandlerTest {
 
         // then
         assertThat(result.status()).isEqualTo(AgentStatus.SUSPENDED);
-        then(eventPublisher).should().publish(eqIgnoring(
-                new AgentDeactivated(agent.agentId(), Instant.now()),
-                "deactivatedAt"));
+        then(eventPublisher)
+                .should()
+                .publish(eqIgnoring(new AgentDeactivated(agent.agentId(), Instant.now()), "deactivatedAt"));
     }
 
     @Test
@@ -182,9 +196,9 @@ class AgentCommandHandlerTest {
 
         // then
         assertThat(result.status()).isEqualTo(AgentStatus.ACTIVE);
-        then(eventPublisher).should().publish(eqIgnoring(
-                new AgentReactivated(agent.agentId(), Instant.now()),
-                "reactivatedAt"));
+        then(eventPublisher)
+                .should()
+                .publish(eqIgnoring(new AgentReactivated(agent.agentId(), Instant.now()), "reactivatedAt"));
     }
 
     @Test
@@ -204,7 +218,10 @@ class AgentCommandHandlerTest {
         var agent = SOME_AGENT_ACTIVE;
         var newPolicyHash = "0x" + "b".repeat(64);
         given(agentRepository.findByIdForUpdate(agent.agentId())).willReturn(Optional.of(agent));
-        var updatedAgent = agent.toBuilder().policyHash(newPolicyHash).updatedAt(Instant.now()).build();
+        var updatedAgent = agent.toBuilder()
+                .policyHash(newPolicyHash)
+                .updatedAt(Instant.now())
+                .build();
         given(agentRepository.save(eqIgnoringTimestamps(updatedAgent))).willReturn(updatedAgent);
 
         // when
@@ -212,20 +229,19 @@ class AgentCommandHandlerTest {
 
         // then
         assertThat(result.policyHash()).isEqualTo(newPolicyHash);
-        then(eventPublisher).should().publish(eqIgnoring(
-                new AgentPolicyUpdated(agent.agentId(), newPolicyHash, Instant.now()),
-                "updatedAt"));
+        then(eventPublisher)
+                .should()
+                .publish(
+                        eqIgnoring(new AgentPolicyUpdated(agent.agentId(), newPolicyHash, Instant.now()), "updatedAt"));
     }
 
     @Test
     void shouldThrowWhenPolicyHashInvalid() {
         // given
-        willThrow(new InvalidPolicyHashException("0xbad"))
-                .given(agentValidator).validatePolicyUpdate("0xbad");
+        willThrow(new InvalidPolicyHashException("0xbad")).given(agentValidator).validatePolicyUpdate("0xbad");
 
         // when / then
-        assertThatThrownBy(() -> agentCommandHandler.updatePolicy(
-                SOME_AGENT_ACTIVE.agentId(), SOME_OWNER_ID, "0xbad"))
+        assertThatThrownBy(() -> agentCommandHandler.updatePolicy(SOME_AGENT_ACTIVE.agentId(), SOME_OWNER_ID, "0xbad"))
                 .isInstanceOf(InvalidPolicyHashException.class);
     }
 

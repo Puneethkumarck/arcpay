@@ -1,10 +1,9 @@
 package com.arcpay.compliance.infrastructure.db;
 
 import com.arcpay.compliance.domain.model.ScreeningCheck;
+import java.util.UUID;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-
-import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 interface ScreeningCheckMapper {

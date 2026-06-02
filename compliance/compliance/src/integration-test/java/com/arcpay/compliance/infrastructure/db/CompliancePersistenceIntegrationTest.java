@@ -1,5 +1,10 @@
 package com.arcpay.compliance.infrastructure.db;
 
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_HOLD_REVIEW_PENDING;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SCREENING_RESULT_PASS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.arcpay.compliance.domain.exception.ScreeningAlreadyExistsException;
 import com.arcpay.compliance.domain.model.HoldReview;
 import com.arcpay.compliance.domain.model.ReviewState;
@@ -10,20 +15,13 @@ import com.arcpay.compliance.domain.port.ScreeningStore;
 import com.arcpay.compliance.domain.port.WatchlistStore;
 import com.arcpay.compliance.test.FullContextIntegrationTest;
 import com.github.f4b6a3.uuid.UuidCreator;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_HOLD_REVIEW_PENDING;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SCREENING_RESULT_PASS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CompliancePersistenceIntegrationTest extends FullContextIntegrationTest {
 
@@ -139,8 +137,7 @@ class CompliancePersistenceIntegrationTest extends FullContextIntegrationTest {
 
         // then
         var count = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM watchlist_address WHERE address = ?",
-                Integer.class, address.toLowerCase());
+                "SELECT count(*) FROM watchlist_address WHERE address = ?", Integer.class, address.toLowerCase());
         assertThat(count).isEqualTo(1);
         assertThat(watchlistStore.contains(address.toUpperCase())).isTrue();
     }
@@ -178,13 +175,18 @@ class CompliancePersistenceIntegrationTest extends FullContextIntegrationTest {
                 "INSERT INTO sanctions_list_version "
                         + "(version_id, source, downloaded_at, record_count, checksum, status) "
                         + "VALUES (?, ?, now(), ?, ?, 'ACTIVE')",
-                versionId, "OFAC_SDN", 1, "checksum");
+                versionId,
+                "OFAC_SDN",
+                1,
+                "checksum");
         jdbcTemplate.update(
                 "INSERT INTO sanctioned_address (id, version_id, address, source) VALUES (?, ?, ?, ?)",
-                UuidCreator.getTimeOrderedEpoch(), versionId, address, "OFAC_SDN");
+                UuidCreator.getTimeOrderedEpoch(),
+                versionId,
+                address,
+                "OFAC_SDN");
         jdbcTemplate.update("DELETE FROM current_list_version WHERE id = 1");
         jdbcTemplate.update(
-                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())",
-                versionId);
+                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())", versionId);
     }
 }

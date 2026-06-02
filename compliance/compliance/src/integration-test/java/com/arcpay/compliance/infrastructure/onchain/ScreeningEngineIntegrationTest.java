@@ -1,27 +1,5 @@
 package com.arcpay.compliance.infrastructure.onchain;
 
-import com.arcpay.compliance.domain.model.CheckType;
-import com.arcpay.compliance.domain.model.Verdict;
-import com.arcpay.compliance.domain.port.SanctionsSetProvider;
-import com.arcpay.compliance.domain.port.ScreeningEngine;
-import com.arcpay.compliance.domain.port.WatchlistStore;
-import com.arcpay.compliance.test.FullContextIntegrationTest;
-import com.github.f4b6a3.uuid.UuidCreator;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
-
-import java.time.Duration;
-import java.util.UUID;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
@@ -38,10 +16,29 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-@TestPropertySource(properties = {
-        "compliance.sanctions.poll-interval-ms=500",
-        "compliance.onchain.scan-block-window=50000"
-})
+import com.arcpay.compliance.domain.model.CheckType;
+import com.arcpay.compliance.domain.model.Verdict;
+import com.arcpay.compliance.domain.port.SanctionsSetProvider;
+import com.arcpay.compliance.domain.port.ScreeningEngine;
+import com.arcpay.compliance.domain.port.WatchlistStore;
+import com.arcpay.compliance.test.FullContextIntegrationTest;
+import com.github.f4b6a3.uuid.UuidCreator;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import java.time.Duration;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
+
+@TestPropertySource(
+        properties = {"compliance.sanctions.poll-interval-ms=500", "compliance.onchain.scan-block-window=50000"})
 class ScreeningEngineIntegrationTest extends FullContextIntegrationTest {
 
     private static final long LATEST_BLOCK = 100000;
@@ -137,10 +134,10 @@ class ScreeningEngineIntegrationTest extends FullContextIntegrationTest {
         assertThat(result.listVersionId()).isEqualTo(versionId);
         rpcServer.verify(postRequestedFor(urlEqualTo("/"))
                 .withRequestBody(matchingJsonPath("$.method", WireMock.equalTo("eth_getLogs")))
-                .withRequestBody(matchingJsonPath("$.params[0].fromBlock",
-                        WireMock.equalTo("0x" + Long.toHexString(EXPECTED_FROM_BLOCK))))
-                .withRequestBody(matchingJsonPath("$.params[0].toBlock",
-                        WireMock.equalTo("0x" + Long.toHexString(LATEST_BLOCK)))));
+                .withRequestBody(matchingJsonPath(
+                        "$.params[0].fromBlock", WireMock.equalTo("0x" + Long.toHexString(EXPECTED_FROM_BLOCK))))
+                .withRequestBody(matchingJsonPath(
+                        "$.params[0].toBlock", WireMock.equalTo("0x" + Long.toHexString(LATEST_BLOCK)))));
     }
 
     @Test
@@ -175,7 +172,8 @@ class ScreeningEngineIntegrationTest extends FullContextIntegrationTest {
 
     private void awaitSanctionsLoaded(UUID versionId) {
         await().atMost(Duration.ofSeconds(10))
-                .until(() -> versionId.equals(sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
+                .until(() -> versionId.equals(
+                        sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
     }
 
     private UUID seedSanctions(String address) {
@@ -184,14 +182,19 @@ class ScreeningEngineIntegrationTest extends FullContextIntegrationTest {
                 "INSERT INTO sanctions_list_version "
                         + "(version_id, source, downloaded_at, record_count, checksum, status) "
                         + "VALUES (?, ?, now(), ?, ?, 'ACTIVE')",
-                versionId, "OFAC_SDN", 1, "checksum");
+                versionId,
+                "OFAC_SDN",
+                1,
+                "checksum");
         jdbcTemplate.update(
                 "INSERT INTO sanctioned_address (id, version_id, address, source) VALUES (?, ?, ?, ?)",
-                UuidCreator.getTimeOrderedEpoch(), versionId, address, "OFAC_SDN");
+                UuidCreator.getTimeOrderedEpoch(),
+                versionId,
+                address,
+                "OFAC_SDN");
         jdbcTemplate.update("DELETE FROM current_list_version WHERE id = 1");
         jdbcTemplate.update(
-                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())",
-                versionId);
+                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())", versionId);
         return versionId;
     }
 }

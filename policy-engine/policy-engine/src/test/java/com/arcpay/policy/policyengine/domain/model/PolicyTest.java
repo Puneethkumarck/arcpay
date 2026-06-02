@@ -1,12 +1,5 @@
 package com.arcpay.policy.policyengine.domain.model;
 
-import com.arcpay.policy.policyengine.api.PolicyRule;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-import java.util.List;
-
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_CREATED_AT;
@@ -16,6 +9,12 @@ import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_P
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_RULES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.arcpay.policy.policyengine.api.PolicyRule;
+import java.math.BigDecimal;
+import java.util.List;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 class PolicyTest {
 
@@ -40,15 +39,14 @@ class PolicyTest {
                     .updatedAt(SOME_CREATED_AT)
                     .build();
 
-            assertThat(policy)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(policy).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
         void shouldRejectNullPolicyId() {
             // when/then
-            assertThatThrownBy(() -> SOME_ACTIVE_POLICY.toBuilder().policyId(null).build())
+            assertThatThrownBy(
+                            () -> SOME_ACTIVE_POLICY.toBuilder().policyId(null).build())
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("policyId must not be null");
         }
@@ -56,7 +54,8 @@ class PolicyTest {
         @Test
         void shouldRejectNullAgentId() {
             // when/then
-            assertThatThrownBy(() -> SOME_ACTIVE_POLICY.toBuilder().agentId(null).build())
+            assertThatThrownBy(
+                            () -> SOME_ACTIVE_POLICY.toBuilder().agentId(null).build())
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("agentId must not be null");
         }
@@ -72,7 +71,8 @@ class PolicyTest {
         @Test
         void shouldRejectEmptyRules() {
             // when/then
-            assertThatThrownBy(() -> SOME_ACTIVE_POLICY.toBuilder().rules(List.of()).build())
+            assertThatThrownBy(() ->
+                            SOME_ACTIVE_POLICY.toBuilder().rules(List.of()).build())
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("rules must not be empty");
         }
@@ -80,9 +80,8 @@ class PolicyTest {
         @Test
         void shouldDefensivelyCopyRules() {
             // given
-            var mutableRules = new java.util.ArrayList<PolicyRule>(List.of(
-                    new PolicyRule.DailyLimit(new BigDecimal("500.00"))
-            ));
+            var mutableRules =
+                    new java.util.ArrayList<PolicyRule>(List.of(new PolicyRule.DailyLimit(new BigDecimal("500.00"))));
 
             // when
             var policy = SOME_ACTIVE_POLICY.toBuilder().rules(mutableRules).build();
@@ -105,9 +104,7 @@ class PolicyTest {
             var result = policy.supersede();
 
             // then
-            var expected = policy.toBuilder()
-                    .status(PolicyStatus.SUPERSEDED)
-                    .build();
+            var expected = policy.toBuilder().status(PolicyStatus.SUPERSEDED).build();
 
             assertThat(result)
                     .usingRecursiveComparison()

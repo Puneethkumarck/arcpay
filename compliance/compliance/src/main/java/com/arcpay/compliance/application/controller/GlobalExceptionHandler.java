@@ -10,6 +10,9 @@ import com.arcpay.compliance.domain.exception.ScreeningNotFoundException;
 import com.arcpay.compliance.domain.exception.UnauthorizedException;
 import com.arcpay.platform.api.ApiError;
 import jakarta.validation.ConstraintViolationException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +22,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -66,24 +65,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException ex) {
-        return toError("Malformed request body", ErrorCodes.MALFORMED_REQUEST,
-                HttpStatus.BAD_REQUEST);
+        return toError("Malformed request body", ErrorCodes.MALFORMED_REQUEST, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        return toError("Malformed request parameter", ErrorCodes.MALFORMED_REQUEST,
-                HttpStatus.BAD_REQUEST);
+        return toError("Malformed request parameter", ErrorCodes.MALFORMED_REQUEST, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
         var errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.groupingBy(
-                        fe -> fe.getField(),
-                        Collectors.mapping(fe -> fe.getDefaultMessage(), Collectors.toList())));
-        return toErrorWithDetail("Validation failed", ErrorCodes.MALFORMED_ADDRESS,
-                HttpStatus.UNPROCESSABLE_ENTITY, errors);
+                        fe -> fe.getField(), Collectors.mapping(fe -> fe.getDefaultMessage(), Collectors.toList())));
+        return toErrorWithDetail(
+                "Validation failed", ErrorCodes.MALFORMED_ADDRESS, HttpStatus.UNPROCESSABLE_ENTITY, errors);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -96,15 +92,17 @@ public class GlobalExceptionHandler {
                             return dot >= 0 ? path.substring(dot + 1) : path;
                         },
                         Collectors.mapping(cv -> cv.getMessage(), Collectors.toList())));
-        return toErrorWithDetail("Validation failed", ErrorCodes.MALFORMED_ADDRESS,
-                HttpStatus.UNPROCESSABLE_ENTITY, errors);
+        return toErrorWithDetail(
+                "Validation failed", ErrorCodes.MALFORMED_ADDRESS, HttpStatus.UNPROCESSABLE_ENTITY, errors);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
-        return toError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                ErrorCodes.INTERNAL_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        return toError(
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                ErrorCodes.INTERNAL_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseEntity<ApiError> toError(Exception ex, String code, HttpStatus status) {
@@ -120,8 +118,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(error);
     }
 
-    private ResponseEntity<ApiError> toErrorWithDetail(String message, String code, HttpStatus status,
-                                                       Map<String, List<String>> errors) {
+    private ResponseEntity<ApiError> toErrorWithDetail(
+            String message, String code, HttpStatus status, Map<String, List<String>> errors) {
         var detail = ApiError.Detail.builder().errors(errors).build();
         var error = ApiError.builder()
                 .code(code)

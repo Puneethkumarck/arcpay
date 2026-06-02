@@ -11,12 +11,11 @@ import com.arcpay.compliance.domain.port.HoldReviewStore;
 import com.arcpay.compliance.domain.port.ScreeningEngine;
 import com.arcpay.compliance.domain.port.ScreeningStore;
 import com.github.f4b6a3.uuid.UuidCreator;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
 
 @Slf4j
 @Component
@@ -45,8 +44,11 @@ class ScreeningRequestHandler {
         }
 
         eventPublisher.publish(toCompleted(result));
-        log.info("Screened paymentId={} verdict={} riskScore={}",
-                result.paymentId(), result.verdict(), result.riskScore());
+        log.info(
+                "Screened paymentId={} verdict={} riskScore={}",
+                result.paymentId(),
+                result.verdict(),
+                result.riskScore());
     }
 
     private static HoldReview pendingReview(ScreeningResult result) {

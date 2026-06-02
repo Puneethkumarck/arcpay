@@ -1,20 +1,5 @@
 package com.arcpay.identity.agentidentity.infrastructure.temporal;
 
-import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningService;
-import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
-import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
-import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
-import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
-import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
-import io.temporal.failure.ApplicationFailure;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_WALLET_READY;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_TX_HASH;
@@ -24,6 +9,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+
+import com.arcpay.identity.agentidentity.domain.agent.AgentProvisioningService;
+import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
+import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
+import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
+import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
+import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
+import io.temporal.failure.ApplicationFailure;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class AgentProvisioningActivitiesImplTest {
@@ -53,8 +52,9 @@ class AgentProvisioningActivitiesImplTest {
         activities.createCircleWallet(SOME_AGENT_ID);
 
         // then
-        then(agentProvisioningService).should().completeWalletCreation(
-                SOME_AGENT_ID, SOME_WALLET_ID, SOME_WALLET_ADDRESS);
+        then(agentProvisioningService)
+                .should()
+                .completeWalletCreation(SOME_AGENT_ID, SOME_WALLET_ID, SOME_WALLET_ADDRESS);
     }
 
     @Test
@@ -70,8 +70,7 @@ class AgentProvisioningActivitiesImplTest {
         activities.registerOnChain(agent.agentId());
 
         // then
-        then(agentProvisioningService).should().completeOnChainRegistration(
-                agent.agentId(), SOME_TX_HASH, 42L);
+        then(agentProvisioningService).should().completeOnChainRegistration(agent.agentId(), SOME_TX_HASH, 42L);
     }
 
     @Test
@@ -93,7 +92,6 @@ class AgentProvisioningActivitiesImplTest {
         activities.failProvisioning(SOME_AGENT_ID, "WALLET_CREATION", "Circle API error");
 
         // then
-        then(agentProvisioningService).should().failProvisioning(
-                SOME_AGENT_ID, "WALLET_CREATION", "Circle API error");
+        then(agentProvisioningService).should().failProvisioning(SOME_AGENT_ID, "WALLET_CREATION", "Circle API error");
     }
 }

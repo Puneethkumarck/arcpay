@@ -1,13 +1,12 @@
 package com.arcpay.platform.infrastructure.messaging;
 
 import io.namastack.outbox.Outbox;
+import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -35,10 +34,12 @@ public abstract class AbstractOutboxEventPublisher {
             } catch (NoSuchMethodException ignored) {
             } catch (Exception e) {
                 throw new IllegalArgumentException(
-                        "Error invoking accessor '" + fieldName + "' on " + event.getClass().getName(), e);
+                        "Error invoking accessor '" + fieldName + "' on "
+                                + event.getClass().getName(),
+                        e);
             }
         }
-        throw new IllegalArgumentException(
-                "Event class has no non-null value for any of " + keyFieldNames + ": " + event.getClass().getName());
+        throw new IllegalArgumentException("Event class has no non-null value for any of " + keyFieldNames + ": "
+                + event.getClass().getName());
     }
 }

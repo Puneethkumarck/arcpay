@@ -2,11 +2,10 @@ package com.arcpay.settlement.infrastructure.db;
 
 import com.arcpay.settlement.domain.model.SettlementTransaction;
 import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor

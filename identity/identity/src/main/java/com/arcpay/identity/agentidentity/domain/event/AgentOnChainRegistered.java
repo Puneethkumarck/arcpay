@@ -4,8 +4,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public record AgentOnChainRegistered(UUID agentId, String txHash, long blockNumber,
-                                     Instant registeredAt) {
+public record AgentOnChainRegistered(UUID agentId, String txHash, long blockNumber, Instant registeredAt) {
 
     public static final String TOPIC = "agent.on-chain-registered";
 

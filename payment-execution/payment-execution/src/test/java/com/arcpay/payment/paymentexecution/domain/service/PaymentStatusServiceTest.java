@@ -1,20 +1,5 @@
 package com.arcpay.payment.paymentexecution.domain.service;
 
-import com.arcpay.payment.paymentexecution.domain.exception.MissingTransferHashException;
-import com.arcpay.payment.paymentexecution.domain.exception.PaymentNotFoundException;
-import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
-import com.arcpay.payment.paymentexecution.domain.model.Payment;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
-import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
-import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_ON_CHAIN_REF;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_TRANSITIONED_AT;
@@ -26,6 +11,20 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+
+import com.arcpay.payment.paymentexecution.domain.exception.MissingTransferHashException;
+import com.arcpay.payment.paymentexecution.domain.exception.PaymentNotFoundException;
+import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
+import com.arcpay.payment.paymentexecution.domain.model.Payment;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
+import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
+import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
+import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentStatusServiceTest {
@@ -140,7 +139,9 @@ class PaymentStatusServiceTest {
     @Test
     void shouldRecordOnChainRef() {
         // given
-        var current = somePayment(PaymentStatus.EXECUTING).toBuilder().txHash(SOME_TX_HASH).build();
+        var current = somePayment(PaymentStatus.EXECUTING).toBuilder()
+                .txHash(SOME_TX_HASH)
+                .build();
         given(paymentRepository.findById(SOME_PAYMENT_ID)).willReturn(Optional.of(current));
 
         // when
@@ -154,7 +155,9 @@ class PaymentStatusServiceTest {
     @Test
     void shouldNotOverwriteExistingOnChainRef() {
         // given
-        var current = somePayment(PaymentStatus.COMPLETED).toBuilder().onChainRef(SOME_ON_CHAIN_REF).build();
+        var current = somePayment(PaymentStatus.COMPLETED).toBuilder()
+                .onChainRef(SOME_ON_CHAIN_REF)
+                .build();
         given(paymentRepository.findById(SOME_PAYMENT_ID)).willReturn(Optional.of(current));
 
         // when

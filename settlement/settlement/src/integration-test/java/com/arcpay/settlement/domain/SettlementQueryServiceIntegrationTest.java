@@ -1,17 +1,16 @@
 package com.arcpay.settlement.domain;
 
-import com.arcpay.settlement.domain.model.TransferState;
-import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
-import com.arcpay.settlement.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.math.BigDecimal;
-import java.util.UUID;
-
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someTransactionWith;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.arcpay.settlement.domain.model.TransferState;
+import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
+import com.arcpay.settlement.test.FullContextIntegrationTest;
+import java.math.BigDecimal;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class SettlementQueryServiceIntegrationTest extends FullContextIntegrationTest {
 

@@ -1,22 +1,5 @@
 package com.arcpay.compliance.domain.service;
 
-import com.arcpay.compliance.domain.exception.MalformedAddressException;
-import com.arcpay.compliance.domain.model.CheckResult;
-import com.arcpay.compliance.domain.model.CheckType;
-import com.arcpay.compliance.domain.model.ScreeningCheck;
-import com.arcpay.compliance.domain.model.ScreeningResult;
-import com.arcpay.compliance.domain.model.ScreeningThreshold;
-import com.arcpay.compliance.domain.model.Verdict;
-import com.arcpay.compliance.domain.port.RiskSignalProvider;
-import com.arcpay.compliance.domain.port.SanctionsSetProvider;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Map;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_LIST_VERSION_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_PAYMENT_ID;
@@ -27,6 +10,22 @@ import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONS_S
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+
+import com.arcpay.compliance.domain.exception.MalformedAddressException;
+import com.arcpay.compliance.domain.model.CheckResult;
+import com.arcpay.compliance.domain.model.CheckType;
+import com.arcpay.compliance.domain.model.ScreeningCheck;
+import com.arcpay.compliance.domain.model.ScreeningResult;
+import com.arcpay.compliance.domain.model.ScreeningThreshold;
+import com.arcpay.compliance.domain.model.Verdict;
+import com.arcpay.compliance.domain.port.RiskSignalProvider;
+import com.arcpay.compliance.domain.port.SanctionsSetProvider;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class ScreeningServiceTest {
@@ -109,7 +108,8 @@ class ScreeningServiceTest {
                         .build()))
                 .listVersionId(SOME_LIST_VERSION_ID)
                 .build();
-        assertThat(result).usingRecursiveComparison()
+        assertThat(result)
+                .usingRecursiveComparison()
                 .ignoringFields("screeningId", "screenedAt", "durationMs")
                 .isEqualTo(expected);
     }
@@ -120,8 +120,8 @@ class ScreeningServiceTest {
         given(sanctionsSetProvider.getCurrentSanctionsSet()).willReturn(SOME_SANCTIONS_SET);
         given(watchlistSignalProvider.provideSignal(SOME_RECIPIENT_ADDRESS)).willReturn(WATCHLIST_HIT);
         given(onChainSignalProvider.provideSignal(SOME_RECIPIENT_ADDRESS)).willReturn(NOVELTY_HIT);
-        var service = new ScreeningService(sanctionsSetProvider,
-                List.of(watchlistSignalProvider, onChainSignalProvider), HOLD_THRESHOLD);
+        var service = new ScreeningService(
+                sanctionsSetProvider, List.of(watchlistSignalProvider, onChainSignalProvider), HOLD_THRESHOLD);
 
         // when
         var result = service.screen(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT_ADDRESS);
@@ -136,7 +136,8 @@ class ScreeningServiceTest {
                 .checks(List.of(WATCHLIST_HIT, NOVELTY_HIT))
                 .listVersionId(SOME_LIST_VERSION_ID)
                 .build();
-        assertThat(result).usingRecursiveComparison()
+        assertThat(result)
+                .usingRecursiveComparison()
                 .ignoringFields("screeningId", "screenedAt", "durationMs")
                 .isEqualTo(expected);
     }
@@ -147,8 +148,8 @@ class ScreeningServiceTest {
         given(sanctionsSetProvider.getCurrentSanctionsSet()).willReturn(SOME_SANCTIONS_SET);
         given(watchlistSignalProvider.provideSignal(SOME_RECIPIENT_ADDRESS)).willReturn(CLEAR_WATCHLIST);
         given(onChainSignalProvider.provideSignal(SOME_RECIPIENT_ADDRESS)).willReturn(INTERACTION_HIT);
-        var service = new ScreeningService(sanctionsSetProvider,
-                List.of(watchlistSignalProvider, onChainSignalProvider), HOLD_THRESHOLD);
+        var service = new ScreeningService(
+                sanctionsSetProvider, List.of(watchlistSignalProvider, onChainSignalProvider), HOLD_THRESHOLD);
 
         // when
         var result = service.screen(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT_ADDRESS);
@@ -163,7 +164,8 @@ class ScreeningServiceTest {
                 .checks(List.of(CLEAR_WATCHLIST, INTERACTION_HIT))
                 .listVersionId(SOME_LIST_VERSION_ID)
                 .build();
-        assertThat(result).usingRecursiveComparison()
+        assertThat(result)
+                .usingRecursiveComparison()
                 .ignoringFields("screeningId", "screenedAt", "durationMs")
                 .isEqualTo(expected);
     }
@@ -188,7 +190,8 @@ class ScreeningServiceTest {
                 .checks(List.of(CLEAR_WATCHLIST))
                 .listVersionId(SOME_LIST_VERSION_ID)
                 .build();
-        assertThat(result).usingRecursiveComparison()
+        assertThat(result)
+                .usingRecursiveComparison()
                 .ignoringFields("screeningId", "screenedAt", "durationMs")
                 .isEqualTo(expected);
     }
@@ -229,8 +232,8 @@ class ScreeningServiceTest {
         given(sanctionsSetProvider.getCurrentSanctionsSet()).willReturn(SOME_SANCTIONS_SET);
         given(watchlistSignalProvider.provideSignal(SOME_RECIPIENT_ADDRESS)).willReturn(WATCHLIST_HIT);
         given(onChainSignalProvider.provideSignal(SOME_RECIPIENT_ADDRESS)).willReturn(NOVELTY_HIT);
-        var service = new ScreeningService(sanctionsSetProvider,
-                List.of(watchlistSignalProvider, onChainSignalProvider), HOLD_THRESHOLD);
+        var service = new ScreeningService(
+                sanctionsSetProvider, List.of(watchlistSignalProvider, onChainSignalProvider), HOLD_THRESHOLD);
 
         // when
         var result = service.screen(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT_ADDRESS);

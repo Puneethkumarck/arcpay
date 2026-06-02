@@ -1,7 +1,6 @@
 package com.arcpay.compliance.domain.service;
 
 import com.arcpay.compliance.domain.exception.MalformedAddressException;
-
 import java.util.Locale;
 import java.util.regex.Pattern;
 

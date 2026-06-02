@@ -1,10 +1,9 @@
 package com.arcpay.compliance.infrastructure.temporal;
 
 import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.List;
 import java.util.Map;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "compliance.sanctions")
 public record SanctionsIngestionProperties(
@@ -13,6 +12,4 @@ public record SanctionsIngestionProperties(
         int stalenessCriticalHours,
         int downloadTimeoutSeconds,
         List<SanctionsSource> sources,
-        Map<SanctionsSource, String> sourceUrls
-) {
-}
+        Map<SanctionsSource, String> sourceUrls) {}

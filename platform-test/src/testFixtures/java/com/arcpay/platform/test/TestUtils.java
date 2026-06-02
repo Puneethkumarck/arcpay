@@ -1,6 +1,7 @@
 package com.arcpay.platform.test;
 
-import org.mockito.ArgumentMatcher;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.argThat;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -8,18 +9,12 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Set;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.argThat;
+import org.mockito.ArgumentMatcher;
 
 public final class TestUtils {
 
-    private static final Set<Class<?>> TIMESTAMP_TYPES = Set.of(
-            Instant.class,
-            LocalDateTime.class,
-            LocalDate.class,
-            ZonedDateTime.class
-    );
+    private static final Set<Class<?>> TIMESTAMP_TYPES =
+            Set.of(Instant.class, LocalDateTime.class, LocalDate.class, ZonedDateTime.class);
 
     private TestUtils() {}
 
@@ -55,7 +50,8 @@ public final class TestUtils {
         }
     }
 
-    private record RecursiveComparisonIgnoringFields<T>(T expected, String[] fieldsToIgnore) implements ArgumentMatcher<T> {
+    private record RecursiveComparisonIgnoringFields<T>(T expected, String[] fieldsToIgnore)
+            implements ArgumentMatcher<T> {
 
         @Override
         public boolean matches(T actual) {

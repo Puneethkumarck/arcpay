@@ -5,11 +5,10 @@ import com.arcpay.identity.agentidentity.domain.exception.InvalidAgentNameExcept
 import com.arcpay.identity.agentidentity.domain.exception.InvalidPolicyHashException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidPurposeException;
 import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.util.UUID;
 import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor

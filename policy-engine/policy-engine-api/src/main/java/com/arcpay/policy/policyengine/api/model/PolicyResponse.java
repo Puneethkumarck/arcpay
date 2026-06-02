@@ -1,11 +1,10 @@
 package com.arcpay.policy.policyengine.api.model;
 
 import com.arcpay.policy.policyengine.api.PolicyRule;
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record PolicyResponse(
@@ -15,5 +14,4 @@ public record PolicyResponse(
         List<PolicyRule> rules,
         String policyHash,
         String status,
-        Instant createdAt
-) {}
+        Instant createdAt) {}

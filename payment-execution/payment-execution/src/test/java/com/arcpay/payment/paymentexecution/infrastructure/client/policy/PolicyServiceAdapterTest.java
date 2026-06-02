@@ -1,5 +1,11 @@
 package com.arcpay.payment.paymentexecution.infrastructure.client.policy;
 
+import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+
 import com.arcpay.payment.paymentexecution.api.model.PolicyResult;
 import com.arcpay.payment.paymentexecution.domain.exception.PolicyServiceUnavailableException;
 import com.arcpay.policy.client.PolicyEngineCallException;
@@ -12,23 +18,16 @@ import feign.RequestTemplate;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.UUID;
-
-import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class PolicyServiceAdapterTest {
@@ -57,13 +56,15 @@ class PolicyServiceAdapterTest {
                 .amount(SOME_AMOUNT)
                 .build();
         given(policyClient.reserve(eqIgnoringTimestamps(expectedRequest)))
-                .willReturn(PolicyEvaluationResponse.builder().verdict("APPROVED").build());
+                .willReturn(
+                        PolicyEvaluationResponse.builder().verdict("APPROVED").build());
 
         // when
         var result = adapter.reserve(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT);
 
         // then
-        var expected = PolicyResult.builder().verdict("APPROVED").rulesEvaluated(0).build();
+        var expected =
+                PolicyResult.builder().verdict("APPROVED").rulesEvaluated(0).build();
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
 
@@ -97,8 +98,7 @@ class PolicyServiceAdapterTest {
                 .recipientAddress(SOME_RECIPIENT)
                 .amount(SOME_AMOUNT)
                 .build();
-        given(policyClient.reserve(eqIgnoringTimestamps(expectedRequest)))
-                .willThrow(unprocessableEntity());
+        given(policyClient.reserve(eqIgnoringTimestamps(expectedRequest))).willThrow(unprocessableEntity());
 
         // when / then
         assertThatThrownBy(() -> adapter.reserve(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_RECIPIENT, SOME_AMOUNT))
@@ -140,8 +140,13 @@ class PolicyServiceAdapterTest {
     }
 
     private FeignException.UnprocessableEntity unprocessableEntity() {
-        var request = Request.create(Request.HttpMethod.POST, "/api/v1/internal/policies/reservations",
-                Map.of(), new byte[0], StandardCharsets.UTF_8, new RequestTemplate());
+        var request = Request.create(
+                Request.HttpMethod.POST,
+                "/api/v1/internal/policies/reservations",
+                Map.of(),
+                new byte[0],
+                StandardCharsets.UTF_8,
+                new RequestTemplate());
         return new FeignException.UnprocessableEntity("policy rejected", request, new byte[0], Map.of());
     }
 }

@@ -1,19 +1,18 @@
 package com.arcpay.compliance.infrastructure.db;
 
+import static java.util.UUID.randomUUID;
+
 import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
 import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
 import com.arcpay.compliance.infrastructure.temporal.SanctionsSnapshotWriter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static java.util.UUID.randomUUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -30,8 +29,8 @@ class SanctionsSnapshotWriterAdapter implements SanctionsSnapshotWriter {
 
     @Override
     @Transactional
-    public void persistSnapshot(UUID versionId, String checksum,
-                                Map<SanctionsSource, List<SanctionedAddressRecord>> recordsBySource) {
+    public void persistSnapshot(
+            UUID versionId, String checksum, Map<SanctionsSource, List<SanctionedAddressRecord>> recordsBySource) {
         var now = Instant.now();
         var addressEntities = recordsBySource.values().stream()
                 .flatMap(List::stream)
@@ -49,15 +48,19 @@ class SanctionsSnapshotWriterAdapter implements SanctionsSnapshotWriter {
 
         sanctionsListVersionRepository.save(versionEntity);
         sanctionedAddressRepository.saveAll(addressEntities);
-        log.info("Persisted sanctions snapshot version {} with {} addresses across {} sources",
-                versionId, addressEntities.size(), recordsBySource.size());
+        log.info(
+                "Persisted sanctions snapshot version {} with {} addresses across {} sources",
+                versionId,
+                addressEntities.size(),
+                recordsBySource.size());
     }
 
     @Override
     @Transactional
     public void flipCurrentVersion(UUID versionId) {
         var now = Instant.now();
-        var pointer = currentListVersionRepository.findById(CURRENT_POINTER_ID)
+        var pointer = currentListVersionRepository
+                .findById(CURRENT_POINTER_ID)
                 .map(existing -> {
                     existing.setVersionId(versionId);
                     existing.setUpdatedAt(now);

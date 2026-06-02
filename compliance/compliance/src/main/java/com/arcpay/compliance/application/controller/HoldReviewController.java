@@ -5,6 +5,7 @@ import com.arcpay.compliance.application.dto.ReviewDecisionRequest;
 import com.arcpay.compliance.domain.exception.UnauthorizedException;
 import com.arcpay.compliance.domain.service.HoldReviewService;
 import com.arcpay.platform.api.OwnerPrincipal;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -16,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-
 @Slf4j
 @RestController
 @RequestMapping("/compliance/holds")
@@ -28,23 +27,19 @@ public class HoldReviewController {
     private final HoldReviewService holdReviewService;
 
     @PostMapping("/{paymentId}/approve")
-    public HoldReviewResponse approve(
-            @PathVariable UUID paymentId,
-            @RequestBody ReviewDecisionRequest request) {
+    public HoldReviewResponse approve(@PathVariable UUID paymentId, @RequestBody ReviewDecisionRequest request) {
         var reviewer = currentReviewer();
         log.info("Approve requested paymentId={} reviewerRole={}", paymentId, reviewer.role());
-        return HoldReviewResponse.from(holdReviewService.approveHold(
-                paymentId, reviewer.principal(), reviewer.role(), request.reason()));
+        return HoldReviewResponse.from(
+                holdReviewService.approveHold(paymentId, reviewer.principal(), reviewer.role(), request.reason()));
     }
 
     @PostMapping("/{paymentId}/reject")
-    public HoldReviewResponse reject(
-            @PathVariable UUID paymentId,
-            @RequestBody ReviewDecisionRequest request) {
+    public HoldReviewResponse reject(@PathVariable UUID paymentId, @RequestBody ReviewDecisionRequest request) {
         var reviewer = currentReviewer();
         log.info("Reject requested paymentId={} reviewerRole={}", paymentId, reviewer.role());
-        return HoldReviewResponse.from(holdReviewService.rejectHold(
-                paymentId, reviewer.principal(), reviewer.role(), request.reason()));
+        return HoldReviewResponse.from(
+                holdReviewService.rejectHold(paymentId, reviewer.principal(), reviewer.role(), request.reason()));
     }
 
     private Reviewer currentReviewer() {

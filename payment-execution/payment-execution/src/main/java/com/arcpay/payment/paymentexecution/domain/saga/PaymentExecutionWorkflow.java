@@ -7,7 +7,6 @@ import com.arcpay.payment.paymentexecution.domain.model.ScreeningResultSignal;
 import io.temporal.workflow.SignalMethod;
 import io.temporal.workflow.WorkflowInterface;
 import io.temporal.workflow.WorkflowMethod;
-
 import java.util.UUID;
 
 @WorkflowInterface

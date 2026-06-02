@@ -1,21 +1,5 @@
 package com.arcpay.settlement.application.read;
 
-import com.arcpay.settlement.application.controller.GlobalExceptionHandler;
-import com.arcpay.settlement.application.read.mapper.BalanceResponseMapper;
-import com.arcpay.settlement.application.read.mapper.TransferStatusResponseMapperImpl;
-import com.arcpay.settlement.domain.SettlementQueryService;
-import com.arcpay.settlement.domain.TransferNotFoundException;
-import com.arcpay.settlement.domain.model.TransferState;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.UUID;
-
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_WALLET_ID;
@@ -23,9 +7,24 @@ import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someS
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someWalletBalance;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+import com.arcpay.settlement.application.controller.GlobalExceptionHandler;
+import com.arcpay.settlement.application.read.mapper.BalanceResponseMapper;
+import com.arcpay.settlement.application.read.mapper.TransferStatusResponseMapperImpl;
+import com.arcpay.settlement.domain.SettlementQueryService;
+import com.arcpay.settlement.domain.TransferNotFoundException;
+import com.arcpay.settlement.domain.model.TransferState;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @ExtendWith(MockitoExtension.class)
 class InternalReadControllerTest {
@@ -37,11 +36,8 @@ class InternalReadControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(new InternalReadController(
-                        queryService,
-                        new TransferStatusResponseMapperImpl(),
-                        new BalanceResponseMapper()))
+        mockMvc = MockMvcBuilders.standaloneSetup(new InternalReadController(
+                        queryService, new TransferStatusResponseMapperImpl(), new BalanceResponseMapper()))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -82,7 +78,8 @@ class InternalReadControllerTest {
         // given
         var randomId = UUID.randomUUID();
         willThrow(new TransferNotFoundException("Settlement transaction not found for paymentId=" + randomId))
-                .given(queryService).findTransfer(randomId);
+                .given(queryService)
+                .findTransfer(randomId);
 
         // when
         mockMvc.perform(get("/api/v1/internal/transfers/{paymentId}", randomId))

@@ -1,5 +1,10 @@
 package com.arcpay.settlement.application.security;
 
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.arcpay.settlement.test.FullContextIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,11 +19,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.WebApplicationContext;
-
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @Import(SecurityConfigIntegrationTest.TestEndpoints.class)
@@ -43,8 +43,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         // given — no credentials
 
         // when / then — health is public
-        mockMvc.perform(get("/actuator/health"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/actuator/health")).andExpect(status().isOk());
     }
 
     @Test
@@ -52,8 +51,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         // given — no credentials
 
         // when / then — internal endpoints require ROLE_SERVICE → 401
-        mockMvc.perform(get("/api/v1/internal/test/ping"))
-                .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
+        mockMvc.perform(get("/api/v1/internal/test/ping")).andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
     }
 
     @Test
@@ -61,8 +59,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         // given — a wrong X-Service-Auth token
 
         // when / then — invalid token grants no authority → 401
-        mockMvc.perform(get("/api/v1/internal/test/ping")
-                        .header("X-Service-Auth", "wrong-token"))
+        mockMvc.perform(get("/api/v1/internal/test/ping").header("X-Service-Auth", "wrong-token"))
                 .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
     }
 
@@ -71,8 +68,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         // given — a valid X-Service-Auth token
 
         // when / then — service-to-service auth grants ROLE_SERVICE
-        mockMvc.perform(get("/api/v1/internal/test/ping")
-                        .header("X-Service-Auth", SERVICE_TOKEN))
+        mockMvc.perform(get("/api/v1/internal/test/ping").header("X-Service-Auth", SERVICE_TOKEN))
                 .andExpect(status().isOk());
     }
 
@@ -93,8 +89,7 @@ class SecurityConfigIntegrationTest extends FullContextIntegrationTest {
         // given — no credentials on a path outside the internal/webhook matchers
 
         // when / then — anyRequest().authenticated() → 401
-        mockMvc.perform(get("/api/v1/unknown"))
-                .andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
+        mockMvc.perform(get("/api/v1/unknown")).andExpect(status().is(HttpStatus.UNAUTHORIZED.value()));
     }
 
     @TestConfiguration

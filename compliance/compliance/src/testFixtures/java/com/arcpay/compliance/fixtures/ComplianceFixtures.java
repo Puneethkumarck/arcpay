@@ -8,7 +8,6 @@ import com.arcpay.compliance.domain.model.SanctionsSet;
 import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.model.ScreeningResult;
 import com.arcpay.compliance.domain.model.Verdict;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;

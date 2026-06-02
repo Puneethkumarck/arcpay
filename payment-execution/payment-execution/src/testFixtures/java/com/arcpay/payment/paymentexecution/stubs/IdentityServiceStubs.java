@@ -1,12 +1,11 @@
 package com.arcpay.payment.paymentexecution.stubs;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-
-import java.util.UUID;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
+import java.util.UUID;
 
 public final class IdentityServiceStubs {
 

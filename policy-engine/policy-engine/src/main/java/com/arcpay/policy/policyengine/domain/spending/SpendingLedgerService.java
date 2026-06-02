@@ -4,14 +4,13 @@ import com.arcpay.policy.policyengine.domain.model.SpendingLedgerEntry;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
 import com.arcpay.policy.policyengine.domain.port.SpendingLedgerRepository;
 import com.github.f4b6a3.uuid.UuidCreator;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -21,8 +20,8 @@ public class SpendingLedgerService {
     private final SpendingLedgerRepository spendingLedgerRepository;
 
     @Transactional
-    public SpendingLedgerEntry recordSpending(UUID agentId, UUID paymentId,
-            BigDecimal amount, String recipient, Instant executedAt) {
+    public SpendingLedgerEntry recordSpending(
+            UUID agentId, UUID paymentId, BigDecimal amount, String recipient, Instant executedAt) {
         var existing = spendingLedgerRepository.findByPaymentId(paymentId);
         if (existing.isPresent()) {
             log.debug("Spending already recorded for paymentId={}, returning existing entry", paymentId);
@@ -40,8 +39,7 @@ public class SpendingLedgerService {
                 .build();
 
         var saved = spendingLedgerRepository.save(entry);
-        log.debug("Recorded spending entryId={} for agentId={} paymentId={}",
-                saved.entryId(), agentId, paymentId);
+        log.debug("Recorded spending entryId={} for agentId={} paymentId={}", saved.entryId(), agentId, paymentId);
         return saved;
     }
 

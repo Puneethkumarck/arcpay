@@ -1,40 +1,5 @@
 package com.arcpay.compliance;
 
-import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
-import com.arcpay.compliance.domain.event.ScreeningCompleted;
-import com.arcpay.compliance.domain.model.CheckResult;
-import com.arcpay.compliance.domain.model.CheckType;
-import com.arcpay.compliance.domain.model.ReviewState;
-import com.arcpay.compliance.domain.model.ScreeningCheck;
-import com.arcpay.compliance.domain.model.Verdict;
-import com.arcpay.compliance.domain.port.SanctionsSetProvider;
-import com.arcpay.compliance.test.BusinessTest;
-import com.github.f4b6a3.uuid.UuidCreator;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
-import tools.jackson.databind.json.JsonMapper;
-
-import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
-
 import static com.arcpay.compliance.domain.model.CheckResult.CLEAR;
 import static com.arcpay.compliance.domain.model.CheckResult.FLAGGED;
 import static com.arcpay.compliance.domain.model.CheckType.ONCHAIN_INTERACTION;
@@ -56,10 +21,42 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-@TestPropertySource(properties = {
-        "compliance.sanctions.poll-interval-ms=500",
-        "compliance.onchain.scan-block-window=50000"
-})
+import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
+import com.arcpay.compliance.domain.event.ScreeningCompleted;
+import com.arcpay.compliance.domain.model.CheckResult;
+import com.arcpay.compliance.domain.model.CheckType;
+import com.arcpay.compliance.domain.model.ReviewState;
+import com.arcpay.compliance.domain.model.ScreeningCheck;
+import com.arcpay.compliance.domain.model.Verdict;
+import com.arcpay.compliance.domain.port.SanctionsSetProvider;
+import com.arcpay.compliance.test.BusinessTest;
+import com.github.f4b6a3.uuid.UuidCreator;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
+import tools.jackson.databind.json.JsonMapper;
+
+@TestPropertySource(
+        properties = {"compliance.sanctions.poll-interval-ms=500", "compliance.onchain.scan-block-window=50000"})
 class OnChainScreeningE2ETest extends BusinessTest {
 
     private static final long LATEST_BLOCK = 100000;
@@ -131,12 +128,13 @@ class OnChainScreeningE2ETest extends BusinessTest {
         var paymentId = UuidCreator.getTimeOrderedEpoch();
 
         // when
-        kafkaTemplate.send(PaymentScreeningRequested.TOPIC, paymentId.toString(),
-                requestFor(paymentId, SOME_RECIPIENT_ADDRESS));
+        kafkaTemplate.send(
+                PaymentScreeningRequested.TOPIC, paymentId.toString(), requestFor(paymentId, SOME_RECIPIENT_ADDRESS));
 
         // then
         var completed = awaitCompleted(paymentId);
-        assertThat(completed).usingRecursiveComparison()
+        assertThat(completed)
+                .usingRecursiveComparison()
                 .ignoringFieldsOfTypes(Instant.class)
                 .ignoringFields("checks")
                 .isEqualTo(ScreeningCompleted.builder()
@@ -154,15 +152,15 @@ class OnChainScreeningE2ETest extends BusinessTest {
                         check(ONCHAIN_INTERACTION, FLAGGED, 70),
                         check(ONCHAIN_NOVELTY, CLEAR, 0),
                         check(ONCHAIN_MIXER, CLEAR, 0)));
-        await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofMillis(200))
-                .untilAsserted(() -> assertThat(holdReviewState(paymentId))
-                        .isEqualTo(ReviewState.PENDING.name()));
+        await().atMost(Duration.ofSeconds(10))
+                .pollInterval(Duration.ofMillis(200))
+                .untilAsserted(() -> assertThat(holdReviewState(paymentId)).isEqualTo(ReviewState.PENDING.name()));
         rpcServer.verify(postRequestedFor(urlEqualTo("/"))
                 .withRequestBody(matchingJsonPath("$.method", equalTo("eth_getLogs")))
-                .withRequestBody(matchingJsonPath("$.params[0].fromBlock",
-                        equalTo("0x" + Long.toHexString(EXPECTED_FROM_BLOCK))))
-                .withRequestBody(matchingJsonPath("$.params[0].toBlock",
-                        equalTo("0x" + Long.toHexString(LATEST_BLOCK)))));
+                .withRequestBody(matchingJsonPath(
+                        "$.params[0].fromBlock", equalTo("0x" + Long.toHexString(EXPECTED_FROM_BLOCK))))
+                .withRequestBody(
+                        matchingJsonPath("$.params[0].toBlock", equalTo("0x" + Long.toHexString(LATEST_BLOCK)))));
     }
 
     private ScreeningCheck check(CheckType type, CheckResult result, int matchScore) {
@@ -188,7 +186,8 @@ class OnChainScreeningE2ETest extends BusinessTest {
         try (var consumer = newCompletedConsumer()) {
             consumer.subscribe(List.of(ScreeningCompleted.TOPIC));
             var captured = new AtomicReference<ScreeningCompleted>();
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (var record : consumer.poll(Duration.ofSeconds(2))) {
                             var event = jsonMapper.readValue(record.value(), ScreeningCompleted.class);
@@ -221,7 +220,8 @@ class OnChainScreeningE2ETest extends BusinessTest {
 
     private void awaitSanctionsLoaded(UUID versionId) {
         await().atMost(Duration.ofSeconds(10))
-                .until(() -> versionId.equals(sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
+                .until(() -> versionId.equals(
+                        sanctionsSetProvider.getCurrentSanctionsSet().versionId()));
     }
 
     private UUID seedSanctions(String address) {
@@ -230,14 +230,19 @@ class OnChainScreeningE2ETest extends BusinessTest {
                 "INSERT INTO sanctions_list_version "
                         + "(version_id, source, downloaded_at, record_count, checksum, status) "
                         + "VALUES (?, ?, now(), ?, ?, 'ACTIVE')",
-                versionId, "OFAC_SDN", 1, "checksum");
+                versionId,
+                "OFAC_SDN",
+                1,
+                "checksum");
         jdbcTemplate.update(
                 "INSERT INTO sanctioned_address (id, version_id, address, source) VALUES (?, ?, ?, ?)",
-                UuidCreator.getTimeOrderedEpoch(), versionId, address, "OFAC_SDN");
+                UuidCreator.getTimeOrderedEpoch(),
+                versionId,
+                address,
+                "OFAC_SDN");
         jdbcTemplate.update("DELETE FROM current_list_version WHERE id = 1");
         jdbcTemplate.update(
-                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())",
-                versionId);
+                "INSERT INTO current_list_version (id, version_id, updated_at) VALUES (1, ?, now())", versionId);
         return versionId;
     }
 }

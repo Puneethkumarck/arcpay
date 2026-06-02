@@ -1,24 +1,23 @@
 package com.arcpay.identity.agentidentity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
 import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
 import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import com.arcpay.identity.agentidentity.test.BusinessTest;
+import java.time.Duration;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.time.Duration;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.ArgumentMatchers.any;
 
 class AgentLifecycleBusinessTest extends BusinessTest {
 
@@ -57,7 +56,8 @@ class AgentLifecycleBusinessTest extends BusinessTest {
     void shouldCompleteFullAgentLifecycle() {
         // register agent
         var idempotencyKey = UUID.randomUUID().toString();
-        var createResponse = restClient().post()
+        var createResponse = restClient()
+                .post()
                 .uri("/api/v1/agents")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + apiKey)
@@ -85,7 +85,8 @@ class AgentLifecycleBusinessTest extends BusinessTest {
         assertThat(activeAgent.get("onChainTxHash")).isEqualTo(SOME_TX_HASH);
 
         // deactivate
-        var deactivateResponse = restClient().post()
+        var deactivateResponse = restClient()
+                .post()
                 .uri("/api/v1/agents/{agentId}/deactivate", agentId)
                 .header("Authorization", "Bearer " + apiKey)
                 .retrieve()
@@ -94,7 +95,8 @@ class AgentLifecycleBusinessTest extends BusinessTest {
         assertThat(deactivateResponse.getBody().get("status")).isEqualTo("SUSPENDED");
 
         // reactivate
-        var reactivateResponse = restClient().post()
+        var reactivateResponse = restClient()
+                .post()
                 .uri("/api/v1/agents/{agentId}/reactivate", agentId)
                 .header("Authorization", "Bearer " + apiKey)
                 .retrieve()
@@ -103,7 +105,8 @@ class AgentLifecycleBusinessTest extends BusinessTest {
         assertThat(reactivateResponse.getBody().get("status")).isEqualTo("ACTIVE");
 
         // update metadata
-        var updateResponse = restClient().put()
+        var updateResponse = restClient()
+                .put()
                 .uri("/api/v1/agents/{agentId}", agentId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Authorization", "Bearer " + apiKey)
@@ -119,7 +122,8 @@ class AgentLifecycleBusinessTest extends BusinessTest {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> getAgent() {
-        return restClient().get()
+        return restClient()
+                .get()
                 .uri("/api/v1/agents/{agentId}", agentId)
                 .header("Authorization", "Bearer " + apiKey)
                 .retrieve()
@@ -128,7 +132,8 @@ class AgentLifecycleBusinessTest extends BusinessTest {
 
     @SuppressWarnings("unchecked")
     private String registerOwner() {
-        var response = restClient().post()
+        var response = restClient()
+                .post()
                 .uri("/api/v1/owners/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""

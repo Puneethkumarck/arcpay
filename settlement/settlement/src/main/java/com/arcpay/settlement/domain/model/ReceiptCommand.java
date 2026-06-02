@@ -1,19 +1,12 @@
 package com.arcpay.settlement.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
-public record ReceiptCommand(
-        UUID paymentId,
-        String payerAgent,
-        String payee,
-        BigDecimal amount,
-        String memo
-) {
+public record ReceiptCommand(UUID paymentId, String payerAgent, String payee, BigDecimal amount, String memo) {
 
     public ReceiptCommand {
         Objects.requireNonNull(paymentId, "paymentId must not be null");

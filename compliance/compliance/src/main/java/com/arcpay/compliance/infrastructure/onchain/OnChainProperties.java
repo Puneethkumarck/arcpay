@@ -1,17 +1,11 @@
 package com.arcpay.compliance.infrastructure.onchain;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.List;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "compliance.onchain")
 record OnChainProperties(
-        String rpcUrl,
-        String usdcContract,
-        long scanBlockWindow,
-        List<String> mixerAddresses,
-        int mixerScore
-) {
+        String rpcUrl, String usdcContract, long scanBlockWindow, List<String> mixerAddresses, int mixerScore) {
 
     OnChainProperties {
         scanBlockWindow = scanBlockWindow <= 0 ? 50000 : scanBlockWindow;

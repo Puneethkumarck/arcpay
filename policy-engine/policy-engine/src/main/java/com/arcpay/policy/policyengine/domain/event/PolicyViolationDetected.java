@@ -11,8 +11,7 @@ public record PolicyViolationDetected(
         String violatedRuleType,
         String message,
         BigDecimal requestedAmount,
-        Instant detectedAt
-) {
+        Instant detectedAt) {
 
     public static final String TOPIC = "policy.violation-detected";
 }

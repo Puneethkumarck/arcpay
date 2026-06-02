@@ -1,11 +1,10 @@
 package com.arcpay.identity.agentidentity.domain.exception;
 
-import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
-import org.junit.jupiter.api.Test;
-
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
 
 class DomainExceptionsTest {
 
@@ -17,16 +16,13 @@ class DomainExceptionsTest {
         var exception = new AgentNotFoundException(SOME_ID);
 
         // then
-        assertThat(exception)
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining(SOME_ID.toString());
+        assertThat(exception).isInstanceOf(RuntimeException.class).hasMessageContaining(SOME_ID.toString());
     }
 
     @Test
     void shouldIncludeContextInAgentNotInExpectedStateException() {
         // given
-        var exception = new AgentNotInExpectedStateException(
-                SOME_ID, AgentStatus.PROVISIONING, AgentStatus.ACTIVE);
+        var exception = new AgentNotInExpectedStateException(SOME_ID, AgentStatus.PROVISIONING, AgentStatus.ACTIVE);
 
         // then
         assertThat(exception)
@@ -54,9 +50,7 @@ class DomainExceptionsTest {
         var exception = new OwnerEmailAlreadyExistsException("alice@example.com");
 
         // then
-        assertThat(exception)
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("alice@example.com");
+        assertThat(exception).isInstanceOf(RuntimeException.class).hasMessageContaining("alice@example.com");
     }
 
     @Test
@@ -65,9 +59,7 @@ class DomainExceptionsTest {
         var exception = new OwnerWalletAlreadyExistsException("0xabc123");
 
         // then
-        assertThat(exception)
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("0xabc123");
+        assertThat(exception).isInstanceOf(RuntimeException.class).hasMessageContaining("0xabc123");
     }
 
     @Test
@@ -76,9 +68,7 @@ class DomainExceptionsTest {
         var exception = new InvalidWalletAddressException("bad-address");
 
         // then
-        assertThat(exception)
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Invalid wallet address");
+        assertThat(exception).isInstanceOf(RuntimeException.class).hasMessageContaining("Invalid wallet address");
     }
 
     @Test
@@ -87,9 +77,7 @@ class DomainExceptionsTest {
         var exception = new InvalidEmailException("not-an-email");
 
         // then
-        assertThat(exception)
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Invalid email");
+        assertThat(exception).isInstanceOf(RuntimeException.class).hasMessageContaining("Invalid email");
     }
 
     @Test
@@ -98,9 +86,7 @@ class DomainExceptionsTest {
         var exception = new InvalidAgentNameException("ab");
 
         // then
-        assertThat(exception)
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("ab");
+        assertThat(exception).isInstanceOf(RuntimeException.class).hasMessageContaining("ab");
     }
 
     @Test
@@ -109,9 +95,7 @@ class DomainExceptionsTest {
         var exception = new InvalidPolicyHashException("0xbad");
 
         // then
-        assertThat(exception)
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("0xbad");
+        assertThat(exception).isInstanceOf(RuntimeException.class).hasMessageContaining("0xbad");
     }
 
     @Test
@@ -120,9 +104,7 @@ class DomainExceptionsTest {
         var exception = new MissingIdempotencyKeyException();
 
         // then
-        assertThat(exception)
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Idempotency-Key");
+        assertThat(exception).isInstanceOf(RuntimeException.class).hasMessageContaining("Idempotency-Key");
     }
 
     @Test

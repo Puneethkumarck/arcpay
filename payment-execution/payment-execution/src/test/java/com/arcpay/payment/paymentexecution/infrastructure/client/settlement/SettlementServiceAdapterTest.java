@@ -1,5 +1,11 @@
 package com.arcpay.payment.paymentexecution.infrastructure.client.settlement;
 
+import static com.arcpay.platform.test.TestUtils.eqIgnoring;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+
 import com.arcpay.payment.paymentexecution.api.model.PaymentReceipt;
 import com.arcpay.payment.paymentexecution.domain.exception.SettlementServiceUnavailableException;
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
@@ -14,23 +20,16 @@ import feign.RequestTemplate;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
-
-import static com.arcpay.platform.test.TestUtils.eqIgnoring;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SettlementServiceAdapterTest {
@@ -73,7 +72,8 @@ class SettlementServiceAdapterTest {
                 .amount(SOME_AMOUNT)
                 .build();
         given(settlementClient.submitTransfer(eqIgnoring(expectedRequest)))
-                .willReturn(TransferStatusResponse.builder().circleTxId("ctx-123").build());
+                .willReturn(
+                        TransferStatusResponse.builder().circleTxId("ctx-123").build());
 
         // when
         var txId = adapter.transfer(SOME_PAYMENT_ID, SOME_WALLET_ID, SOME_RECIPIENT, SOME_AMOUNT);
@@ -86,7 +86,9 @@ class SettlementServiceAdapterTest {
     void shouldReturnBalanceAmount() {
         // given
         given(settlementClient.balance(SOME_AGENT_ID.toString()))
-                .willReturn(BalanceResponse.builder().amount(new BigDecimal("100.00")).build());
+                .willReturn(BalanceResponse.builder()
+                        .amount(new BigDecimal("100.00"))
+                        .build());
 
         // when
         var balance = adapter.balance(SOME_AGENT_ID);
@@ -111,7 +113,9 @@ class SettlementServiceAdapterTest {
 
         // then
         then(settlementClient).should().recordReceipt(eqIgnoring(expectedRequest));
-        assertThat(receipt).usingRecursiveComparison().isEqualTo(PaymentReceipt.builder().build());
+        assertThat(receipt)
+                .usingRecursiveComparison()
+                .isEqualTo(PaymentReceipt.builder().build());
     }
 
     @Test
@@ -144,8 +148,7 @@ class SettlementServiceAdapterTest {
                 .recipientAddress(SOME_RECIPIENT)
                 .amount(SOME_AMOUNT)
                 .build();
-        given(settlementClient.submitTransfer(eqIgnoring(expectedRequest)))
-                .willThrow(unprocessableEntity());
+        given(settlementClient.submitTransfer(eqIgnoring(expectedRequest))).willThrow(unprocessableEntity());
 
         // when / then
         assertThatThrownBy(() -> adapter.transfer(SOME_PAYMENT_ID, SOME_WALLET_ID, SOME_RECIPIENT, SOME_AMOUNT))
@@ -157,7 +160,8 @@ class SettlementServiceAdapterTest {
     void shouldMapCallFailureToUnavailableOnBalance() {
         // given
         given(settlementClient.balance(SOME_AGENT_ID.toString()))
-                .willThrow(new SettlementServiceCallException("Settlement service call failed", new RuntimeException("boom")));
+                .willThrow(new SettlementServiceCallException(
+                        "Settlement service call failed", new RuntimeException("boom")));
 
         // when / then
         assertThatThrownBy(() -> adapter.balance(SOME_AGENT_ID))
@@ -166,8 +170,13 @@ class SettlementServiceAdapterTest {
     }
 
     private FeignException.UnprocessableEntity unprocessableEntity() {
-        var request = Request.create(Request.HttpMethod.POST, "/api/v1/internal/transfers",
-                Map.of(), new byte[0], StandardCharsets.UTF_8, new RequestTemplate());
+        var request = Request.create(
+                Request.HttpMethod.POST,
+                "/api/v1/internal/transfers",
+                Map.of(),
+                new byte[0],
+                StandardCharsets.UTF_8,
+                new RequestTemplate());
         return new FeignException.UnprocessableEntity("insufficient balance", request, new byte[0], Map.of());
     }
 }

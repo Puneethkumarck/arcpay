@@ -13,6 +13,9 @@ import com.arcpay.policy.policyengine.domain.exception.PolicyNotFoundException;
 import com.arcpay.policy.policyengine.domain.exception.PolicyViolationException;
 import com.arcpay.policy.policyengine.domain.exception.ReservationNotFoundException;
 import jakarta.validation.ConstraintViolationException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,19 +23,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler({PolicyNotFoundException.class, AgentNotFoundException.class})
     public ResponseEntity<ApiError> handleNotFound(RuntimeException ex) {
-        var code = ex instanceof AgentNotFoundException
-                ? ErrorCodes.AGENT_NOT_FOUND
-                : ErrorCodes.POLICY_NOT_FOUND;
+        var code = ex instanceof AgentNotFoundException ? ErrorCodes.AGENT_NOT_FOUND : ErrorCodes.POLICY_NOT_FOUND;
         return toError(ex, code, HttpStatus.NOT_FOUND);
     }
 
@@ -81,8 +78,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
         var errors = ex.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.groupingBy(
-                        fe -> fe.getField(),
-                        Collectors.mapping(fe -> fe.getDefaultMessage(), Collectors.toList())));
+                        fe -> fe.getField(), Collectors.mapping(fe -> fe.getDefaultMessage(), Collectors.toList())));
         return toErrorWithDetail("Validation failed", ErrorCodes.INVALID_POLICY, HttpStatus.BAD_REQUEST, errors);
     }
 
@@ -102,8 +98,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
-        return toError(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                ErrorCodes.INTERNAL_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        return toError(
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                ErrorCodes.INTERNAL_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseEntity<ApiError> toError(Exception ex, String code, HttpStatus status) {
@@ -119,8 +117,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(error);
     }
 
-    private ResponseEntity<ApiError> toErrorWithDetail(String message, String code, HttpStatus status,
-                                                       Map<String, List<String>> errors) {
+    private ResponseEntity<ApiError> toErrorWithDetail(
+            String message, String code, HttpStatus status, Map<String, List<String>> errors) {
         var detail = ApiError.Detail.builder().errors(errors).build();
         var error = ApiError.builder()
                 .code(code)

@@ -1,19 +1,18 @@
 package com.arcpay.policy.policyengine.infrastructure.db.spending;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.domain.model.SpendingLedgerEntry;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
 import com.arcpay.policy.policyengine.domain.port.SpendingLedgerRepository;
 import com.arcpay.policy.policyengine.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
 class SpendingLedgerRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {

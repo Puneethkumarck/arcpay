@@ -8,12 +8,11 @@ import com.arcpay.compliance.domain.model.HoldReview;
 import com.arcpay.compliance.domain.port.EventPublisher;
 import com.arcpay.compliance.domain.port.HoldReviewStore;
 import com.arcpay.compliance.domain.port.ReviewAuthorizer;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -62,7 +61,6 @@ public class HoldReviewService {
     }
 
     private HoldReview load(UUID paymentId) {
-        return holdReviewStore.findByPaymentId(paymentId)
-                .orElseThrow(() -> new HoldNotFoundException(paymentId));
+        return holdReviewStore.findByPaymentId(paymentId).orElseThrow(() -> new HoldNotFoundException(paymentId));
     }
 }

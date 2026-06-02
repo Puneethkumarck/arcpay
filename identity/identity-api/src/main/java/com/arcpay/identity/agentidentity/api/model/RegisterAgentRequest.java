@@ -10,10 +10,7 @@ public record RegisterAgentRequest(
         @Size(min = 3, max = 64, message = ErrorMessages.AGENT_NAME_SIZE)
         String name,
 
-        @NotBlank(message = ErrorMessages.PURPOSE_REQUIRED)
-        @Size(max = 256, message = ErrorMessages.PURPOSE_SIZE)
+        @NotBlank(message = ErrorMessages.PURPOSE_REQUIRED) @Size(max = 256, message = ErrorMessages.PURPOSE_SIZE)
         String purpose,
 
-        @ValidPolicyHash
-        String policyHash
-) {}
+        @ValidPolicyHash String policyHash) {}

@@ -2,12 +2,8 @@ package com.arcpay.policy.policyengine.domain.policy;
 
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.erdtman.jcs.JsonCanonicalizer;
-import org.web3j.crypto.Hash;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -18,6 +14,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.erdtman.jcs.JsonCanonicalizer;
+import org.web3j.crypto.Hash;
 
 public final class PolicyHashUtil {
 
@@ -55,9 +53,8 @@ public final class PolicyHashUtil {
     private static String typeName(PolicyRule rule) {
         var name = TYPE_NAMES.get(rule.getClass());
         if (name == null) {
-            throw new IllegalStateException(
-                    "PolicyRule subtype is not registered in @JsonSubTypes on PolicyRule: "
-                            + rule.getClass().getName());
+            throw new IllegalStateException("PolicyRule subtype is not registered in @JsonSubTypes on PolicyRule: "
+                    + rule.getClass().getName());
         }
         return name;
     }
@@ -80,15 +77,17 @@ public final class PolicyHashUtil {
             case PolicyRule.ApprovalThreshold r -> Map.of("type", type, "amount", amount(r.amount()));
             case PolicyRule.RecipientAllowlist r -> Map.of("type", type, "addresses", sortAddresses(r.addresses()));
             case PolicyRule.RecipientBlocklist r -> Map.of("type", type, "addresses", sortAddresses(r.addresses()));
-            case PolicyRule.TimeWindow r -> Map.of(
-                    "type", type,
-                    "startHour", r.startHour(),
-                    "endHour", r.endHour(),
-                    "daysOfWeek", sortDays(r.daysOfWeek()));
-            case PolicyRule.Velocity r -> Map.of(
-                    "type", type,
-                    "maxTransactions", r.maxTransactions(),
-                    "periodMinutes", r.periodMinutes());
+            case PolicyRule.TimeWindow r ->
+                Map.of(
+                        "type", type,
+                        "startHour", r.startHour(),
+                        "endHour", r.endHour(),
+                        "daysOfWeek", sortDays(r.daysOfWeek()));
+            case PolicyRule.Velocity r ->
+                Map.of(
+                        "type", type,
+                        "maxTransactions", r.maxTransactions(),
+                        "periodMinutes", r.periodMinutes());
             case PolicyRule.Cooldown r -> Map.of("type", type, "seconds", r.seconds());
         };
     }
@@ -106,16 +105,10 @@ public final class PolicyHashUtil {
     }
 
     private static List<String> sortAddresses(Set<String> addresses) {
-        return addresses.stream()
-                .map(a -> a.toLowerCase(Locale.ROOT))
-                .sorted()
-                .toList();
+        return addresses.stream().map(a -> a.toLowerCase(Locale.ROOT)).sorted().toList();
     }
 
     private static List<String> sortDays(Set<DayOfWeek> days) {
-        return days.stream()
-                .sorted()
-                .map(DayOfWeek::name)
-                .toList();
+        return days.stream().sorted().map(DayOfWeek::name).toList();
     }
 }

@@ -1,5 +1,13 @@
 package com.arcpay.identity.agentidentity.domain.owner;
 
+import static com.arcpay.platform.test.TestUtils.eqIgnoring;
+import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
+
 import com.arcpay.identity.agentidentity.domain.event.OwnerRegistered;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidEmailException;
 import com.arcpay.identity.agentidentity.domain.exception.InvalidWalletAddressException;
@@ -10,22 +18,13 @@ import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
 import com.arcpay.identity.agentidentity.domain.model.OwnerWithApiKey;
 import com.arcpay.identity.agentidentity.domain.port.EventPublisher;
 import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
+import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.UUID;
-
-import static com.arcpay.platform.test.TestUtils.eqIgnoring;
-import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class OwnerCommandHandlerTest {
@@ -76,9 +75,9 @@ class OwnerCommandHandlerTest {
         assertThat(result.rawApiKey()).isEqualTo(rawApiKey);
 
         then(ownerValidator).should().validateRegistration(VALID_EMAIL, VALID_WALLET);
-        then(eventPublisher).should().publish(eqIgnoring(
-                new OwnerRegistered(ownerId, VALID_EMAIL, VALID_WALLET, now),
-                "registeredAt"));
+        then(eventPublisher)
+                .should()
+                .publish(eqIgnoring(new OwnerRegistered(ownerId, VALID_EMAIL, VALID_WALLET, now), "registeredAt"));
     }
 
     @Test
@@ -105,7 +104,8 @@ class OwnerCommandHandlerTest {
 
         // then
         var expected = new OwnerWithApiKey(owner, rawApiKey);
-        assertThat(result).usingRecursiveComparison()
+        assertThat(result)
+                .usingRecursiveComparison()
                 .ignoringFields("owner.createdAt", "owner.updatedAt")
                 .isEqualTo(expected);
     }
@@ -114,7 +114,8 @@ class OwnerCommandHandlerTest {
     void shouldThrowWhenEmailAlreadyExists() {
         // given
         willThrow(new OwnerEmailAlreadyExistsException(VALID_EMAIL))
-                .given(ownerValidator).validateRegistration(VALID_EMAIL, VALID_WALLET);
+                .given(ownerValidator)
+                .validateRegistration(VALID_EMAIL, VALID_WALLET);
 
         // when / then
         assertThatThrownBy(() -> ownerCommandHandler.registerOwner(VALID_EMAIL, VALID_WALLET))
@@ -125,7 +126,8 @@ class OwnerCommandHandlerTest {
     void shouldThrowWhenWalletAlreadyExists() {
         // given
         willThrow(new OwnerWalletAlreadyExistsException(VALID_WALLET))
-                .given(ownerValidator).validateRegistration(VALID_EMAIL, VALID_WALLET);
+                .given(ownerValidator)
+                .validateRegistration(VALID_EMAIL, VALID_WALLET);
 
         // when / then
         assertThatThrownBy(() -> ownerCommandHandler.registerOwner(VALID_EMAIL, VALID_WALLET))
@@ -136,7 +138,8 @@ class OwnerCommandHandlerTest {
     void shouldThrowWhenEmailInvalid() {
         // given
         willThrow(new InvalidEmailException("not-an-email"))
-                .given(ownerValidator).validateRegistration("not-an-email", VALID_WALLET);
+                .given(ownerValidator)
+                .validateRegistration("not-an-email", VALID_WALLET);
 
         // when / then
         assertThatThrownBy(() -> ownerCommandHandler.registerOwner("not-an-email", VALID_WALLET))
@@ -147,7 +150,8 @@ class OwnerCommandHandlerTest {
     void shouldThrowWhenWalletAddressInvalid() {
         // given
         willThrow(new InvalidWalletAddressException("0xshort"))
-                .given(ownerValidator).validateRegistration(VALID_EMAIL, "0xshort");
+                .given(ownerValidator)
+                .validateRegistration(VALID_EMAIL, "0xshort");
 
         // when / then
         assertThatThrownBy(() -> ownerCommandHandler.registerOwner(VALID_EMAIL, "0xshort"))

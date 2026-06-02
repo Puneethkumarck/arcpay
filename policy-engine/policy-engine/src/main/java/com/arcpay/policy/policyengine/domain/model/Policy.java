@@ -1,12 +1,11 @@
 package com.arcpay.policy.policyengine.domain.model;
 
 import com.arcpay.policy.policyengine.api.PolicyRule;
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record Policy(
@@ -18,8 +17,7 @@ public record Policy(
         String policyHash,
         PolicyStatus status,
         Instant createdAt,
-        Instant updatedAt
-) {
+        Instant updatedAt) {
 
     public Policy {
         Objects.requireNonNull(policyId, "policyId must not be null");

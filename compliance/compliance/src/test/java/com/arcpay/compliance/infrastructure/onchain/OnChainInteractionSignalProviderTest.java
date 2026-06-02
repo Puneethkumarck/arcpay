@@ -1,23 +1,22 @@
 package com.arcpay.compliance.infrastructure.onchain;
 
-import com.arcpay.compliance.domain.model.CheckResult;
-import com.arcpay.compliance.domain.model.CheckType;
-import com.arcpay.compliance.domain.model.ScreeningCheck;
-import com.arcpay.compliance.domain.port.SanctionsSetProvider;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Map;
-import java.util.Set;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_CLEAN_COUNTERPARTY;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONS_SET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+
+import com.arcpay.compliance.domain.model.CheckResult;
+import com.arcpay.compliance.domain.model.CheckType;
+import com.arcpay.compliance.domain.model.ScreeningCheck;
+import com.arcpay.compliance.domain.port.SanctionsSetProvider;
+import java.util.Map;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class OnChainInteractionSignalProviderTest {

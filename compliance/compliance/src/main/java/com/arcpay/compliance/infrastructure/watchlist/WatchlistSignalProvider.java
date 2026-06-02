@@ -5,10 +5,9 @@ import com.arcpay.compliance.domain.model.CheckType;
 import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.port.RiskSignalProvider;
 import com.arcpay.compliance.domain.port.WatchlistStore;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -25,9 +24,10 @@ class WatchlistSignalProvider implements RiskSignalProvider {
                 .type(CheckType.WATCHLIST)
                 .result(matched ? CheckResult.MATCH : CheckResult.CLEAR)
                 .matchScore(matched ? WATCHLIST_SCORE : 0)
-                .details(matched
-                        ? Map.of("matched", Boolean.TRUE, "address", recipientAddress)
-                        : Map.of("matched", Boolean.FALSE))
+                .details(
+                        matched
+                                ? Map.of("matched", Boolean.TRUE, "address", recipientAddress)
+                                : Map.of("matched", Boolean.FALSE))
                 .build();
     }
 }

@@ -35,7 +35,8 @@ public class ApprovalThresholdEvaluator implements RuleEvaluator<PolicyRule.Appr
                 .verdict(RuleVerdict.REQUIRES_APPROVAL)
                 .limit(threshold)
                 .requested(amount)
-                .message("Amount %s exceeds approval threshold of %s, owner approval required".formatted(amount, threshold))
+                .message("Amount %s exceeds approval threshold of %s, owner approval required"
+                        .formatted(amount, threshold))
                 .build();
     }
 }

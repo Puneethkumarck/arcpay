@@ -6,7 +6,6 @@ import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.model.Policy;
 import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
 import com.arcpay.policy.policyengine.domain.policy.PolicyHashUtil;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -42,23 +41,21 @@ public final class PolicyFixtures {
             .updatedAt(SOME_UPDATED_AT)
             .build();
 
-    public static final Policy SOME_SUPERSEDED_POLICY = SOME_ACTIVE_POLICY.toBuilder()
-            .status(PolicyStatus.SUPERSEDED)
-            .build();
+    public static final Policy SOME_SUPERSEDED_POLICY =
+            SOME_ACTIVE_POLICY.toBuilder().status(PolicyStatus.SUPERSEDED).build();
 
     /** Hash actually produced by {@link PolicyHashUtil#computePolicyHash} for {@link #SOME_RULES}. */
     public static final String SOME_COMPUTED_HASH = PolicyHashUtil.computePolicyHash(SOME_RULES);
 
     /** ACTIVE policy whose hash matches the computed hash of {@link #SOME_RULES} — used for idempotency tests. */
-    public static final Policy SOME_ACTIVE_POLICY_WITH_COMPUTED_HASH = SOME_ACTIVE_POLICY.toBuilder()
-            .policyHash(SOME_COMPUTED_HASH)
-            .build();
+    public static final Policy SOME_ACTIVE_POLICY_WITH_COMPUTED_HASH =
+            SOME_ACTIVE_POLICY.toBuilder().policyHash(SOME_COMPUTED_HASH).build();
 
-    public static final AgentInfo SOME_ACTIVE_AGENT = new AgentInfo(
-            SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", SOME_POLICY_HASH);
+    public static final AgentInfo SOME_ACTIVE_AGENT =
+            new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", SOME_POLICY_HASH);
 
-    public static final AgentInfo SOME_SUSPENDED_AGENT = new AgentInfo(
-            SOME_AGENT_ID, SOME_OWNER_ID, "SUSPENDED", SOME_POLICY_HASH);
+    public static final AgentInfo SOME_SUSPENDED_AGENT =
+            new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "SUSPENDED", SOME_POLICY_HASH);
 
     public static final AgentInfo SOME_AGENT_OWNED_BY_OTHER = new AgentInfo(
             SOME_AGENT_ID, UUID.fromString("019576a0-0000-7000-8000-000000000099"), "ACTIVE", SOME_POLICY_HASH);

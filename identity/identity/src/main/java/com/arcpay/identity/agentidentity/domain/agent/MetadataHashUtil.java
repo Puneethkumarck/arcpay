@@ -1,10 +1,9 @@
 package com.arcpay.identity.agentidentity.domain.agent;
 
-import org.web3j.crypto.Hash;
-
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import java.util.Objects;
+import org.web3j.crypto.Hash;
 
 public final class MetadataHashUtil {
 

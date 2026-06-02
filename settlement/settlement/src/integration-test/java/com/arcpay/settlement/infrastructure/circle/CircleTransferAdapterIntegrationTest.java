@@ -1,23 +1,5 @@
 package com.arcpay.settlement.infrastructure.circle;
 
-import com.arcpay.settlement.domain.InsufficientBalanceException;
-import com.arcpay.settlement.domain.model.TransferCommand;
-import com.arcpay.settlement.domain.model.TransferState;
-import com.arcpay.settlement.domain.port.CustodyProvider;
-import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
-import com.arcpay.settlement.test.FullContextIntegrationTest;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import static com.arcpay.settlement.fixtures.CircleKeyFixtures.publicKeyPem;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_WALLET_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someTransferCommand;
@@ -29,6 +11,23 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.arcpay.settlement.domain.InsufficientBalanceException;
+import com.arcpay.settlement.domain.model.TransferCommand;
+import com.arcpay.settlement.domain.model.TransferState;
+import com.arcpay.settlement.domain.port.CustodyProvider;
+import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
+import com.arcpay.settlement.test.FullContextIntegrationTest;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class CircleTransferAdapterIntegrationTest extends FullContextIntegrationTest {
 
@@ -134,17 +133,18 @@ class CircleTransferAdapterIntegrationTest extends FullContextIntegrationTest {
         custodyProvider.submitTransfer(command);
 
         // then
-        var body = objectMapper.readTree(
-                circleServer.findAll(postRequestedFor(urlPathEqualTo(TRANSFER_PATH)))
-                        .getFirst().getBodyAsString());
+        var body = objectMapper.readTree(circleServer
+                .findAll(postRequestedFor(urlPathEqualTo(TRANSFER_PATH)))
+                .getFirst()
+                .getBodyAsString());
         assertThat(body.get("walletId").asText()).isEqualTo(SOME_WALLET_ID);
-        assertThat(body.get("tokenAddress").asText())
-                .isEqualTo("0x3600000000000000000000000000000000000000");
+        assertThat(body.get("tokenAddress").asText()).isEqualTo("0x3600000000000000000000000000000000000000");
         assertThat(body.get("blockchain").asText()).isEqualTo("ARC-TESTNET");
         assertThat(body.get("feeLevel").asText()).isEqualTo("MEDIUM");
         assertThat(body.get("refId").asText()).isEqualTo(command.paymentId().toString());
         assertThat(body.get("idempotencyKey").asText())
-                .isEqualTo(CircleTransferAdapter.idempotencyKey(command.paymentId()).toString());
+                .isEqualTo(CircleTransferAdapter.idempotencyKey(command.paymentId())
+                        .toString());
         assertThat(amounts(body)).containsExactly("25.00");
     }
 
@@ -160,7 +160,10 @@ class CircleTransferAdapterIntegrationTest extends FullContextIntegrationTest {
 
     private String ciphertextOf(String requestBody) {
         try {
-            return objectMapper.readTree(requestBody).get("entitySecretCiphertext").asText();
+            return objectMapper
+                    .readTree(requestBody)
+                    .get("entitySecretCiphertext")
+                    .asText();
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

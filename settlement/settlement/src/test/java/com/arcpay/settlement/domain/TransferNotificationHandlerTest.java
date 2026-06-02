@@ -1,27 +1,7 @@
 package com.arcpay.settlement.domain;
 
-import com.arcpay.settlement.domain.event.TransferConfirmed;
-import com.arcpay.settlement.domain.event.TransferReverted;
-import com.arcpay.settlement.domain.model.SettlementTransaction;
-import com.arcpay.settlement.domain.model.TransferNotification;
-import com.arcpay.settlement.domain.model.TransferState;
-import com.arcpay.settlement.domain.port.EventPublisher;
-import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
-import static com.arcpay.settlement.domain.model.TransferState.CANCELLED;
 import static com.arcpay.settlement.domain.model.TransferState.COMPLETED;
 import static com.arcpay.settlement.domain.model.TransferState.CONFIRMED;
-import static com.arcpay.settlement.domain.model.TransferState.DENIED;
-import static com.arcpay.settlement.domain.model.TransferState.FAILED;
 import static com.arcpay.settlement.domain.model.TransferState.SENT;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_ERROR_REASON;
@@ -33,6 +13,21 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+
+import com.arcpay.settlement.domain.event.TransferConfirmed;
+import com.arcpay.settlement.domain.event.TransferReverted;
+import com.arcpay.settlement.domain.model.TransferNotification;
+import com.arcpay.settlement.domain.model.TransferState;
+import com.arcpay.settlement.domain.port.EventPublisher;
+import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class TransferNotificationHandlerTest {
@@ -52,8 +47,7 @@ class TransferNotificationHandlerTest {
     @Test
     void shouldPublishTransferConfirmedWhenCompleted() {
         // given
-        given(repository.findByCircleTxId(SOME_CIRCLE_TX_ID))
-                .willReturn(Optional.of(someSettlementTransaction(SENT)));
+        given(repository.findByCircleTxId(SOME_CIRCLE_TX_ID)).willReturn(Optional.of(someSettlementTransaction(SENT)));
         given(repository.update(any())).willAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -67,11 +61,12 @@ class TransferNotificationHandlerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransferState.class, names = {"FAILED", "DENIED", "CANCELLED"})
+    @EnumSource(
+            value = TransferState.class,
+            names = {"FAILED", "DENIED", "CANCELLED"})
     void shouldPublishTransferRevertedWhenFailedDeniedOrCancelled(TransferState state) {
         // given
-        given(repository.findByCircleTxId(SOME_CIRCLE_TX_ID))
-                .willReturn(Optional.of(someSettlementTransaction(SENT)));
+        given(repository.findByCircleTxId(SOME_CIRCLE_TX_ID)).willReturn(Optional.of(someSettlementTransaction(SENT)));
         given(repository.update(any())).willAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -87,8 +82,7 @@ class TransferNotificationHandlerTest {
     @Test
     void shouldNotPublishWhenConfirmed() {
         // given
-        given(repository.findByCircleTxId(SOME_CIRCLE_TX_ID))
-                .willReturn(Optional.of(someSettlementTransaction(SENT)));
+        given(repository.findByCircleTxId(SOME_CIRCLE_TX_ID)).willReturn(Optional.of(someSettlementTransaction(SENT)));
         given(repository.update(any())).willAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -100,7 +94,9 @@ class TransferNotificationHandlerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TransferState.class, names = {"COMPLETED", "FAILED", "DENIED", "CANCELLED"})
+    @EnumSource(
+            value = TransferState.class,
+            names = {"COMPLETED", "FAILED", "DENIED", "CANCELLED"})
     void shouldBeNoOpWhenAlreadyTerminal(TransferState terminal) {
         // given
         given(repository.findByCircleTxId(SOME_CIRCLE_TX_ID))

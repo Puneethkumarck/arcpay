@@ -1,5 +1,9 @@
 package com.arcpay.settlement.infrastructure.circle;
 
+import static java.util.Collections.emptyList;
+
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -7,11 +11,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-
-import java.util.List;
-import java.util.Map;
-
-import static java.util.Collections.emptyList;
 
 @Slf4j
 @Component
@@ -37,12 +36,8 @@ class CircleSubscriptionBootstrap implements ApplicationRunner {
 
     private boolean existsFor(String endpoint) {
         try {
-            var response = restClient.get()
-                    .uri(SUBSCRIPTIONS_PATH)
-                    .retrieve()
-                    .body(SubscriptionsResponse.class);
-            return subscriptions(response).stream()
-                    .anyMatch(subscription -> endpoint.equals(subscription.endpoint()));
+            var response = restClient.get().uri(SUBSCRIPTIONS_PATH).retrieve().body(SubscriptionsResponse.class);
+            return subscriptions(response).stream().anyMatch(subscription -> endpoint.equals(subscription.endpoint()));
         } catch (Exception e) {
             log.warn("Failed to list Circle subscriptions: {}", e.getMessage());
             return false;
@@ -51,7 +46,8 @@ class CircleSubscriptionBootstrap implements ApplicationRunner {
 
     private void create(String endpoint) {
         try {
-            restClient.post()
+            restClient
+                    .post()
                     .uri(SUBSCRIPTIONS_PATH)
                     .body(Map.of("endpoint", endpoint, "notificationTypes", NOTIFICATION_TYPES))
                     .retrieve()

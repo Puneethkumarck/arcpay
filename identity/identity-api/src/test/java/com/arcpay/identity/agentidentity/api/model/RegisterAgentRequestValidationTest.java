@@ -1,5 +1,7 @@
 package com.arcpay.identity.agentidentity.api.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeAll;
@@ -7,8 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class RegisterAgentRequestValidationTest {
 
@@ -22,11 +22,7 @@ class RegisterAgentRequestValidationTest {
     @Test
     void shouldAcceptValidRequest() {
         // given
-        var request = new RegisterAgentRequest(
-                "shopping-agent",
-                "Automated USDC payments",
-                "0x" + "a".repeat(64)
-        );
+        var request = new RegisterAgentRequest("shopping-agent", "Automated USDC payments", "0x" + "a".repeat(64));
 
         // when
         var violations = validator.validate(request);

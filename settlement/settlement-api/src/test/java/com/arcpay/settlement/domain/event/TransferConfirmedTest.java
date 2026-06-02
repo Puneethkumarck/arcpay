@@ -1,13 +1,12 @@
 package com.arcpay.settlement.domain.event;
 
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
 
 class TransferConfirmedTest {
 
@@ -37,9 +36,8 @@ class TransferConfirmedTest {
     @Test
     void shouldRejectNullRequiredField() {
         // given
-        var builder = TransferConfirmed.builder()
-                .txHash("0xdeadbeef")
-                .confirmedAt(Instant.parse("2026-05-30T10:00:00Z"));
+        var builder =
+                TransferConfirmed.builder().txHash("0xdeadbeef").confirmedAt(Instant.parse("2026-05-30T10:00:00Z"));
 
         // when / then
         assertThatThrownBy(builder::build).isInstanceOf(NullPointerException.class);

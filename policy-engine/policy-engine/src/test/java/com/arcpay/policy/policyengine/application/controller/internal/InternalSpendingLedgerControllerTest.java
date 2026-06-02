@@ -1,5 +1,11 @@
 package com.arcpay.policy.policyengine.application.controller.internal;
 
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AGENT_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_EXECUTED_AT;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_SPENDING_SUMMARY;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.policy.policyengine.api.model.SpendingSummaryResponse;
 import com.arcpay.policy.policyengine.application.controller.internal.mapper.SpendingResponseMapper;
 import com.arcpay.policy.policyengine.domain.spending.SpendingLedgerService;
@@ -10,12 +16,6 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AGENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_EXECUTED_AT;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_SPENDING_SUMMARY;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-
 @ExtendWith(MockitoExtension.class)
 class InternalSpendingLedgerControllerTest {
 
@@ -24,8 +24,7 @@ class InternalSpendingLedgerControllerTest {
     @Mock
     private SpendingLedgerService spendingLedgerService;
 
-    private final SpendingResponseMapper spendingResponseMapper =
-            Mappers.getMapper(SpendingResponseMapper.class);
+    private final SpendingResponseMapper spendingResponseMapper = Mappers.getMapper(SpendingResponseMapper.class);
 
     private InternalSpendingLedgerController controller;
 

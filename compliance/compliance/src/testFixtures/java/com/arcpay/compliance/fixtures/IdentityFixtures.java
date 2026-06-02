@@ -6,7 +6,6 @@ import com.arcpay.identity.agentidentity.api.model.OwnerPrincipalResponse;
 import com.arcpay.identity.client.IdentityServiceCallException;
 import feign.FeignException;
 import feign.Request;
-
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collections;
@@ -61,8 +60,8 @@ public final class IdentityFixtures {
     }
 
     public static FeignException feignServerError() {
-        return new FeignException.InternalServerError("Internal Server Error",
-                someRequest(), null, Collections.emptyMap());
+        return new FeignException.InternalServerError(
+                "Internal Server Error", someRequest(), null, Collections.emptyMap());
     }
 
     public static IdentityServiceCallException clientUnavailable() {
@@ -74,7 +73,7 @@ public final class IdentityFixtures {
     }
 
     private static Request someRequest() {
-        return Request.create(Request.HttpMethod.GET, "/test",
-                Collections.emptyMap(), null, StandardCharsets.UTF_8, null);
+        return Request.create(
+                Request.HttpMethod.GET, "/test", Collections.emptyMap(), null, StandardCharsets.UTF_8, null);
     }
 }

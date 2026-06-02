@@ -1,10 +1,9 @@
 package com.arcpay.payment.paymentexecution.api.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record PaymentResponse(
@@ -22,5 +21,4 @@ public record PaymentResponse(
         ComplianceResult complianceResult,
         PaymentReceipt receipt,
         Instant createdAt,
-        Instant completedAt
-) {}
+        Instant completedAt) {}

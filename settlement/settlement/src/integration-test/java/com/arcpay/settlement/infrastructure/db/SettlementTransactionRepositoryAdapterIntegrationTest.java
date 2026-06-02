@@ -1,22 +1,21 @@
 package com.arcpay.settlement.infrastructure.db;
 
-import com.arcpay.settlement.domain.model.TransferState;
-import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
-import com.arcpay.settlement.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
-
-import java.math.BigDecimal;
-import java.util.UUID;
-
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someSettlementTransaction;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.someTransactionWith;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.settlement.domain.model.TransferState;
+import com.arcpay.settlement.domain.port.SettlementTransactionRepository;
+import com.arcpay.settlement.test.FullContextIntegrationTest;
+import java.math.BigDecimal;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 class SettlementTransactionRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
 
@@ -57,7 +56,8 @@ class SettlementTransactionRepositoryAdapterIntegrationTest extends FullContextI
         repository.save(transaction);
 
         // when
-        var persistedState = jpaRepository.findById(SOME_PAYMENT_ID).orElseThrow().getState();
+        var persistedState =
+                jpaRepository.findById(SOME_PAYMENT_ID).orElseThrow().getState();
 
         // then
         assertThat(persistedState).isEqualTo(TransferState.CONFIRMED);
@@ -109,9 +109,7 @@ class SettlementTransactionRepositoryAdapterIntegrationTest extends FullContextI
         var loaded = repository.findByCircleTxId(SOME_CIRCLE_TX_ID);
 
         // then
-        assertThat(loaded).get()
-                .extracting(tx -> tx.paymentId())
-                .isEqualTo(SOME_PAYMENT_ID);
+        assertThat(loaded).get().extracting(tx -> tx.paymentId()).isEqualTo(SOME_PAYMENT_ID);
     }
 
     @Test

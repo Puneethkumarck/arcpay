@@ -2,11 +2,10 @@ package com.arcpay.identity.agentidentity.domain.port;
 
 import com.arcpay.identity.agentidentity.domain.model.Agent;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface AgentRepository {
 

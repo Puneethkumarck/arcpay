@@ -3,12 +3,11 @@ package com.arcpay.settlement.application.receipt;
 import com.arcpay.settlement.domain.model.ReceiptCommand;
 import com.arcpay.settlement.domain.port.ReceiptWriter;
 import jakarta.annotation.PreDestroy;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Slf4j
 @Component

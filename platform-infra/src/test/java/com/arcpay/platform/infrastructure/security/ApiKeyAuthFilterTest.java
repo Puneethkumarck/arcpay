@@ -1,8 +1,14 @@
 package com.arcpay.platform.infrastructure.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.platform.api.OwnerPrincipal;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,13 +19,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.io.IOException;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class ApiKeyAuthFilterTest {
@@ -39,7 +38,8 @@ class ApiKeyAuthFilterTest {
     }
 
     @Test
-    void shouldGrantComplianceOfficerRoleWhenPrincipalAuthorityIsComplianceOfficer() throws ServletException, IOException {
+    void shouldGrantComplianceOfficerRoleWhenPrincipalAuthorityIsComplianceOfficer()
+            throws ServletException, IOException {
         // given
         var rawApiKey = "ak_officer_key";
         var hash = ApiKeyAuthFilter.hashApiKey(rawApiKey);

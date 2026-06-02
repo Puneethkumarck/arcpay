@@ -1,16 +1,5 @@
 package com.arcpay.settlement.infrastructure.circle;
 
-import com.arcpay.settlement.domain.model.WalletBalance;
-import com.arcpay.settlement.domain.port.CustodyProvider;
-import com.arcpay.settlement.test.FullContextIntegrationTest;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.math.BigDecimal;
-
 import static com.arcpay.settlement.fixtures.CircleKeyFixtures.publicKeyPem;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_WALLET_ID;
 import static com.arcpay.settlement.test.stubs.CircleStubs.stubEmptyWalletBalance;
@@ -20,6 +9,16 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.settlement.domain.model.WalletBalance;
+import com.arcpay.settlement.domain.port.CustodyProvider;
+import com.arcpay.settlement.test.FullContextIntegrationTest;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import java.math.BigDecimal;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 class CircleBalanceQueryIntegrationTest extends FullContextIntegrationTest {
 
@@ -79,6 +78,7 @@ class CircleBalanceQueryIntegrationTest extends FullContextIntegrationTest {
 
         // then
         circleServer.verify(getRequestedFor(urlPathEqualTo(BALANCES_PATH))
-                .withQueryParam("tokenAddress", com.github.tomakehurst.wiremock.client.WireMock.equalTo(USDC_TOKEN_ADDRESS)));
+                .withQueryParam(
+                        "tokenAddress", com.github.tomakehurst.wiremock.client.WireMock.equalTo(USDC_TOKEN_ADDRESS)));
     }
 }

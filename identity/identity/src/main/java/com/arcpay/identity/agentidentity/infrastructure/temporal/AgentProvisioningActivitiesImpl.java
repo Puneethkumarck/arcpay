@@ -7,11 +7,10 @@ import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import io.temporal.failure.ApplicationFailure;
 import io.temporal.spring.boot.ActivityImpl;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -35,9 +34,10 @@ class AgentProvisioningActivitiesImpl implements AgentProvisioningActivities {
     @Override
     public void registerOnChain(UUID agentId) {
         log.info("Registering agent on-chain agentId={}", agentId);
-        var agent = agentRepository.findById(agentId)
-                .orElseThrow(() -> ApplicationFailure.newNonRetryableFailure(
-                        "Agent not found: " + agentId, "AGENT_NOT_FOUND"));
+        var agent = agentRepository
+                .findById(agentId)
+                .orElseThrow(() ->
+                        ApplicationFailure.newNonRetryableFailure("Agent not found: " + agentId, "AGENT_NOT_FOUND"));
         var result = blockchainService.registerAgent(agentId, agent.ownerId(), agent.metadataHash());
         agentProvisioningService.completeOnChainRegistration(agentId, result.txHash(), result.blockNumber());
         log.info("On-chain registration complete for agentId={} txHash={}", agentId, result.txHash());

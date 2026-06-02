@@ -1,23 +1,5 @@
 package com.arcpay.policy.policyengine.infrastructure.client.identity;
 
-import com.arcpay.identity.agentidentity.api.model.AgentStatusEnum;
-import com.arcpay.identity.agentidentity.api.model.UpdateAgentPolicyRequest;
-import com.arcpay.identity.client.IdentityServiceClient;
-import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
-import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
-import com.arcpay.policy.policyengine.domain.model.AgentInfo;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-import java.util.concurrent.TimeoutException;
-
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_AGENT_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_AGENT_RESPONSE;
 import static com.arcpay.policy.policyengine.test.fixtures.IdentityFixtures.SOME_OWNER_ID;
@@ -29,6 +11,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+
+import com.arcpay.identity.agentidentity.api.model.AgentStatusEnum;
+import com.arcpay.identity.agentidentity.api.model.UpdateAgentPolicyRequest;
+import com.arcpay.identity.client.IdentityServiceClient;
+import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
+import com.arcpay.policy.policyengine.domain.exception.IdentityServiceUnavailableException;
+import com.arcpay.policy.policyengine.domain.model.AgentInfo;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import java.util.Optional;
+import java.util.concurrent.TimeoutException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class IdentityServiceAdapterTest {
@@ -54,14 +53,9 @@ class IdentityServiceAdapterTest {
         var result = adapter.getAgent(SOME_AGENT_ID);
 
         // then
-        var expected = Optional.of(new AgentInfo(
-                SOME_AGENT_ID,
-                SOME_OWNER_ID,
-                AgentStatusEnum.ACTIVE.name(),
-                SOME_POLICY_HASH));
-        assertThat(result)
-                .usingRecursiveComparison()
-                .isEqualTo(expected);
+        var expected = Optional.of(
+                new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, AgentStatusEnum.ACTIVE.name(), SOME_POLICY_HASH));
+        assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
 
     @Test
@@ -102,8 +96,7 @@ class IdentityServiceAdapterTest {
     @Test
     void shouldThrowTimedOutMessageWhenClientTimedOutOnGetAgent() {
         // given
-        given(identityClient.getAgent(SOME_AGENT_ID))
-                .willThrow(clientCallFailedWithCause(new TimeoutException()));
+        given(identityClient.getAgent(SOME_AGENT_ID)).willThrow(clientCallFailedWithCause(new TimeoutException()));
 
         // when / then
         assertThatThrownBy(() -> adapter.getAgent(SOME_AGENT_ID))

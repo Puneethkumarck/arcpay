@@ -1,5 +1,11 @@
 package com.arcpay.compliance.test;
 
+import static com.arcpay.platform.test.TestContainerSupport.kafka;
+import static com.arcpay.platform.test.TestContainerSupport.postgres;
+import static com.arcpay.platform.test.TestContainerSupport.registerKafkaProperties;
+import static com.arcpay.platform.test.TestContainerSupport.registerPostgresProperties;
+import static com.arcpay.platform.test.TestContainerSupport.startAll;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -11,12 +17,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.client.RestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.kafka.KafkaContainer;
-
-import static com.arcpay.platform.test.TestContainerSupport.kafka;
-import static com.arcpay.platform.test.TestContainerSupport.postgres;
-import static com.arcpay.platform.test.TestContainerSupport.registerKafkaProperties;
-import static com.arcpay.platform.test.TestContainerSupport.registerPostgresProperties;
-import static com.arcpay.platform.test.TestContainerSupport.startAll;
 
 @SuppressWarnings("resource")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -48,9 +48,8 @@ public abstract class BusinessTest {
 
     protected RestClient restClient() {
         if (cachedRestClient == null) {
-            cachedRestClient = RestClient.builder()
-                    .baseUrl("http://localhost:" + port)
-                    .build();
+            cachedRestClient =
+                    RestClient.builder().baseUrl("http://localhost:" + port).build();
         }
         return cachedRestClient;
     }

@@ -1,11 +1,10 @@
 package com.arcpay.compliance.domain.model;
 
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record ScreeningResult(
@@ -18,8 +17,7 @@ public record ScreeningResult(
         List<ScreeningCheck> checks,
         UUID listVersionId,
         Instant screenedAt,
-        long durationMs
-) {
+        long durationMs) {
 
     public ScreeningResult {
         Objects.requireNonNull(paymentId, "paymentId must not be null");

@@ -2,11 +2,6 @@ package com.arcpay.settlement.infrastructure.circle;
 
 import com.arcpay.settlement.domain.WebhookSignatureException;
 import com.arcpay.settlement.domain.port.WebhookSignatureVerifier;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
-
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -14,6 +9,10 @@ import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 @Slf4j
 @Component
@@ -54,7 +53,8 @@ class CircleWebhookSignatureVerifier implements WebhookSignatureVerifier {
 
     private PublicKey fetchPublicKey(String keyId) {
         try {
-            var response = restClient.get()
+            var response = restClient
+                    .get()
                     .uri("/v2/notifications/publicKey/{keyId}", keyId)
                     .retrieve()
                     .body(PublicKeyResponse.class);
@@ -72,8 +72,7 @@ class CircleWebhookSignatureVerifier implements WebhookSignatureVerifier {
 
     private PublicKey parsePublicKey(String pem) {
         try {
-            var base64 = pem
-                    .replace("-----BEGIN PUBLIC KEY-----", "")
+            var base64 = pem.replace("-----BEGIN PUBLIC KEY-----", "")
                     .replace("-----END PUBLIC KEY-----", "")
                     .replaceAll("\\s", "");
             var keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(base64));

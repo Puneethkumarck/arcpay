@@ -1,15 +1,14 @@
 package com.arcpay.compliance.fixtures;
 
-import com.arcpay.platform.api.OwnerPrincipal;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.List;
-
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OFFICER_EMAIL;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_EMAIL;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
+
+import com.arcpay.platform.api.OwnerPrincipal;
+import java.util.List;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 public final class SecurityContextFixtures {
 
@@ -23,7 +22,8 @@ public final class SecurityContextFixtures {
     }
 
     public static UsernamePasswordAuthenticationToken officerAuth() {
-        return tokenFor(new OwnerPrincipal(SOME_OWNER_ID, SOME_OFFICER_EMAIL, COMPLIANCE_OFFICER),
+        return tokenFor(
+                new OwnerPrincipal(SOME_OWNER_ID, SOME_OFFICER_EMAIL, COMPLIANCE_OFFICER),
                 "ROLE_" + COMPLIANCE_OFFICER);
     }
 

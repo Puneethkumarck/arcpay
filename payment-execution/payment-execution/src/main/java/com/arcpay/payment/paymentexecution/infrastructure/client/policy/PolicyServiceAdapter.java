@@ -7,14 +7,13 @@ import com.arcpay.policy.client.PolicyEngineCallException;
 import com.arcpay.policy.client.PolicyEngineClient;
 import com.arcpay.policy.policyengine.api.model.ReserveRequest;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -58,13 +57,14 @@ class PolicyServiceAdapter implements PolicyPort {
         }
     }
 
-    private PolicyServiceUnavailableException toUnavailable(String operation, UUID paymentId, PolicyEngineCallException e) {
-        var reason = switch (e.getCause()) {
-            case CallNotPermittedException _ -> "Policy service circuit breaker is open";
-            case TimeoutException _ -> "Policy service call timed out";
-            case null, default -> "Policy service call failed";
-        };
-        return new PolicyServiceUnavailableException(
-                reason + " during " + operation + " for payment " + paymentId, e);
+    private PolicyServiceUnavailableException toUnavailable(
+            String operation, UUID paymentId, PolicyEngineCallException e) {
+        var reason =
+                switch (e.getCause()) {
+                    case CallNotPermittedException _ -> "Policy service circuit breaker is open";
+                    case TimeoutException _ -> "Policy service call timed out";
+                    case null, default -> "Policy service call failed";
+                };
+        return new PolicyServiceUnavailableException(reason + " during " + operation + " for payment " + paymentId, e);
     }
 }

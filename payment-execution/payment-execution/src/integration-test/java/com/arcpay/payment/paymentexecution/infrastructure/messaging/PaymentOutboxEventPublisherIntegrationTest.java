@@ -1,21 +1,20 @@
 package com.arcpay.payment.paymentexecution.infrastructure.messaging;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.payment.paymentexecution.domain.event.PaymentRequested;
 import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
 import com.arcpay.payment.paymentexecution.test.FullContextIntegrationTest;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class PaymentOutboxEventPublisherIntegrationTest extends FullContextIntegrationTest {
 
@@ -57,7 +56,8 @@ class PaymentOutboxEventPublisherIntegrationTest extends FullContextIntegrationT
         // then
         var count = jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM paymentexecution_outbox_record WHERE record_key = ?",
-                Long.class, event.paymentId().toString());
+                Long.class,
+                event.paymentId().toString());
         assertThat(count).isEqualTo(1);
     }
 }

@@ -3,10 +3,9 @@ package com.arcpay.identity.agentidentity.domain.agent;
 import com.arcpay.identity.agentidentity.domain.model.Agent;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import com.github.f4b6a3.uuid.UuidCreator;
-import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
 @Service
 public class AgentCreationService {

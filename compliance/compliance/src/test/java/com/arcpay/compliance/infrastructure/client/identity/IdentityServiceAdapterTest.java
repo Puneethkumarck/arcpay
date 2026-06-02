@@ -1,14 +1,5 @@
 package com.arcpay.compliance.infrastructure.client.identity;
 
-import com.arcpay.compliance.domain.exception.IdentityServiceUnavailableException;
-import com.arcpay.identity.client.IdentityServiceClient;
-import feign.FeignException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_AGENT_RESPONSE;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OWNER_ID;
@@ -17,6 +8,15 @@ import static com.arcpay.compliance.fixtures.IdentityFixtures.feignNotFound;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+
+import com.arcpay.compliance.domain.exception.IdentityServiceUnavailableException;
+import com.arcpay.identity.client.IdentityServiceClient;
+import feign.FeignException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class IdentityServiceAdapterTest {
@@ -49,8 +49,7 @@ class IdentityServiceAdapterTest {
         given(identityClient.getAgent(SOME_AGENT_ID)).willThrow(feignNotFound());
 
         // when / then
-        assertThatThrownBy(() -> adapter.resolveOwner(SOME_AGENT_ID))
-                .isInstanceOf(FeignException.NotFound.class);
+        assertThatThrownBy(() -> adapter.resolveOwner(SOME_AGENT_ID)).isInstanceOf(FeignException.NotFound.class);
     }
 
     @Test

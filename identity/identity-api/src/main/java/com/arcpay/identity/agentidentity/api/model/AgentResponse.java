@@ -1,9 +1,8 @@
 package com.arcpay.identity.agentidentity.api.model;
 
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record AgentResponse(
@@ -19,5 +18,4 @@ public record AgentResponse(
         String metadataHash,
         String failureReason,
         Instant createdAt,
-        Instant updatedAt
-) {}
+        Instant updatedAt) {}

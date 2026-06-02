@@ -34,8 +34,7 @@ public class CircleWebhookController {
 
         signatureVerifier.verify(body, keyId, signature);
         var notification = notificationParser.parse(body);
-        log.info("Circle webhook accepted circleTxId={} state={}",
-                notification.circleTxId(), notification.state());
+        log.info("Circle webhook accepted circleTxId={} state={}", notification.circleTxId(), notification.state());
         notificationHandler.handle(notification);
         return ResponseEntity.ok().build();
     }

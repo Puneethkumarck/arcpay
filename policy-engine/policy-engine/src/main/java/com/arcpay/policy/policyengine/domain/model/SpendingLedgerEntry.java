@@ -1,11 +1,10 @@
 package com.arcpay.policy.policyengine.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record SpendingLedgerEntry(
@@ -15,8 +14,7 @@ public record SpendingLedgerEntry(
         BigDecimal amount,
         String recipient,
         Instant executedAt,
-        Instant createdAt
-) {
+        Instant createdAt) {
 
     public SpendingLedgerEntry {
         Objects.requireNonNull(entryId, "entryId must not be null");

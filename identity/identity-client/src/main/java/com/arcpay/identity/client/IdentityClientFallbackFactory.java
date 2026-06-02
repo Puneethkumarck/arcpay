@@ -4,10 +4,9 @@ import com.arcpay.identity.agentidentity.api.model.AgentResponse;
 import com.arcpay.identity.agentidentity.api.model.OwnerPrincipalResponse;
 import com.arcpay.identity.agentidentity.api.model.UpdateAgentPolicyRequest;
 import feign.FeignException;
-import org.springframework.cloud.openfeign.FallbackFactory;
-
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cloud.openfeign.FallbackFactory;
 
 public class IdentityClientFallbackFactory implements FallbackFactory<IdentityServiceClient> {
 

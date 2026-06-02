@@ -1,5 +1,18 @@
 package com.arcpay.settlement.application.transfer;
 
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_PAYMENT_ID;
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_RECIPIENT_ADDRESS;
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_WALLET_ID;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.arcpay.settlement.application.controller.GlobalExceptionHandler;
 import com.arcpay.settlement.application.transfer.mapper.TransferInitiatedResponseMapper;
 import com.arcpay.settlement.application.transfer.mapper.TransferRequestMapperImpl;
@@ -14,19 +27,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_CIRCLE_TX_ID;
-import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_PAYMENT_ID;
-import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_RECIPIENT_ADDRESS;
-import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_WALLET_ID;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class InternalTransferControllerTest {
@@ -57,8 +57,7 @@ class InternalTransferControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(new InternalTransferController(
+        mockMvc = MockMvcBuilders.standaloneSetup(new InternalTransferController(
                         transferSubmissionService,
                         new TransferRequestMapperImpl(),
                         new TransferInitiatedResponseMapper()))
@@ -69,8 +68,8 @@ class InternalTransferControllerTest {
     @Test
     void shouldSubmitTransferAndReturnInitiatedResponse() throws Exception {
         // given
-        given(transferSubmissionService.submit(argThat(
-                command -> command != null && SOME_PAYMENT_ID.equals(command.paymentId()))))
+        given(transferSubmissionService.submit(
+                        argThat(command -> command != null && SOME_PAYMENT_ID.equals(command.paymentId()))))
                 .willReturn(new TransferSubmission(SOME_CIRCLE_TX_ID, TransferState.INITIATED));
 
         // when
@@ -88,8 +87,8 @@ class InternalTransferControllerTest {
     void shouldReturnUnprocessableEntityWhenBalanceInsufficient() throws Exception {
         // given
         willThrow(new InsufficientBalanceException("Insufficient balance for paymentId=" + SOME_PAYMENT_ID))
-                .given(transferSubmissionService).submit(argThat(
-                        command -> command != null && SOME_PAYMENT_ID.equals(command.paymentId())));
+                .given(transferSubmissionService)
+                .submit(argThat(command -> command != null && SOME_PAYMENT_ID.equals(command.paymentId())));
 
         // when
         mockMvc.perform(post("/api/v1/internal/transfers")

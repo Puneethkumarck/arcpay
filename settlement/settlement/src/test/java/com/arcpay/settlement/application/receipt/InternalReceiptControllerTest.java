@@ -1,15 +1,5 @@
 package com.arcpay.settlement.application.receipt;
 
-import com.arcpay.settlement.application.receipt.mapper.ReceiptRequestMapper;
-import com.arcpay.settlement.domain.model.ReceiptCommand;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.SOME_PAYEE_ADDRESS;
 import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.SOME_PAYER_ADDRESS;
 import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.SOME_RECEIPT_PAYMENT_ID;
@@ -20,10 +10,20 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.arcpay.settlement.application.receipt.mapper.ReceiptRequestMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
 @ExtendWith(MockitoExtension.class)
 class InternalReceiptControllerTest {
 
-    private static final String VALID_REQUEST = """
+    private static final String VALID_REQUEST =
+            """
             {
               "paymentId": "%s",
               "payerAgent": "%s",
@@ -52,8 +52,8 @@ class InternalReceiptControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(new InternalReceiptController(receiptDispatcher, receiptRequestMapper))
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                        new InternalReceiptController(receiptDispatcher, receiptRequestMapper))
                 .build();
     }
 
@@ -62,7 +62,7 @@ class InternalReceiptControllerTest {
         // given
         var command = someReceiptCommand();
         given(receiptRequestMapper.toDomain(org.mockito.ArgumentMatchers.argThat(
-                request -> request != null && SOME_RECEIPT_PAYMENT_ID.equals(request.paymentId()))))
+                        request -> request != null && SOME_RECEIPT_PAYMENT_ID.equals(request.paymentId()))))
                 .willReturn(command);
 
         // when

@@ -3,11 +3,10 @@ package com.arcpay.identity.agentidentity.infrastructure.db.owner;
 import com.arcpay.identity.agentidentity.domain.model.Owner;
 import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
 import com.arcpay.identity.agentidentity.infrastructure.db.owner.mapper.OwnerEntityMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor

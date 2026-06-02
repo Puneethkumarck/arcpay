@@ -1,19 +1,18 @@
 package com.arcpay.policy.policyengine.application.controller.internal;
 
-import com.arcpay.policy.policyengine.test.RestControllerAbstractTest;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.arcpay.policy.policyengine.test.RestControllerAbstractTest;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 class InternalSpendingLedgerIntegrationTest extends RestControllerAbstractTest {
 
@@ -55,7 +54,8 @@ class InternalSpendingLedgerIntegrationTest extends RestControllerAbstractTest {
     }
 
     private void seedLedger(UUID agentId, UUID paymentId, BigDecimal amount, Instant executedAt) {
-        jdbcTemplate.update("""
+        jdbcTemplate.update(
+                """
                 INSERT INTO spending_ledger (entry_id, agent_id, payment_id, amount, recipient, executed_at, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, now())
                 """, UUID.randomUUID(), agentId, paymentId, amount, SOME_RECIPIENT, Timestamp.from(executedAt));

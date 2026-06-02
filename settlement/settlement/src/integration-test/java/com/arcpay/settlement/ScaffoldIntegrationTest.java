@@ -1,11 +1,11 @@
 package com.arcpay.settlement;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.settlement.test.FullContextIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class ScaffoldIntegrationTest extends FullContextIntegrationTest {
 
@@ -20,8 +20,8 @@ class ScaffoldIntegrationTest extends FullContextIntegrationTest {
 
         // when
         var tableCount = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' "
-                        + "AND table_name IN (" + tableNames + ")",
+                "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' " + "AND table_name IN ("
+                        + tableNames + ")",
                 Integer.class);
 
         // then

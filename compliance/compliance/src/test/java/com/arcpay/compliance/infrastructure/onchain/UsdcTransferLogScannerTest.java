@@ -1,5 +1,16 @@
 package com.arcpay.compliance.infrastructure.onchain;
 
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_CLEAN_COUNTERPARTY;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
+import static com.arcpay.compliance.fixtures.OnChainFixtures.SOME_USDC_CONTRACT;
+import static com.arcpay.compliance.fixtures.OnChainFixtures.ethLogResponse;
+import static com.arcpay.compliance.fixtures.OnChainFixtures.transferLog;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+
+import java.math.BigInteger;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -11,18 +22,6 @@ import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
 import org.web3j.protocol.core.methods.response.EthLog;
-
-import java.math.BigInteger;
-import java.util.List;
-
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_CLEAN_COUNTERPARTY;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
-import static com.arcpay.compliance.fixtures.OnChainFixtures.SOME_USDC_CONTRACT;
-import static com.arcpay.compliance.fixtures.OnChainFixtures.ethLogResponse;
-import static com.arcpay.compliance.fixtures.OnChainFixtures.transferLog;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class UsdcTransferLogScannerTest {
@@ -51,8 +50,7 @@ class UsdcTransferLogScannerTest {
         var filterCaptor = ArgumentCaptor.forClass(EthFilter.class);
         var fromQuery = ethLogResponse(List.of(transferLog(SOME_RECIPIENT_ADDRESS, SOME_SANCTIONED_ADDRESS)));
         var toQuery = ethLogResponse(List.of());
-        given(web3j.ethGetLogs(filterCaptor.capture()))
-                .willReturn((Request) ethLogRequest);
+        given(web3j.ethGetLogs(filterCaptor.capture())).willReturn((Request) ethLogRequest);
         given(ethLogRequest.send()).willReturn(fromQuery, toQuery);
         var scanner = new UsdcTransferLogScanner(web3j, properties);
 

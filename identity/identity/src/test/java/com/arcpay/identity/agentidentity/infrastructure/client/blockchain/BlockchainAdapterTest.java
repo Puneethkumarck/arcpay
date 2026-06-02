@@ -1,7 +1,14 @@
 package com.arcpay.identity.agentidentity.infrastructure.client.blockchain;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+
 import com.arcpay.identity.agentidentity.domain.exception.BlockchainRegistrationException;
 import com.arcpay.identity.agentidentity.domain.port.GasUsageRepository;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -9,16 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.EthBlockNumber;
-
-import java.math.BigInteger;
-import java.util.UUID;
-
-import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class BlockchainAdapterTest {
@@ -70,11 +67,11 @@ class BlockchainAdapterTest {
         adapter.registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, "0xmetahash");
 
         // then
-        then(gasUsageRepository).should().save(
-                org.mockito.ArgumentMatchers.argThat(gas ->
-                        gas.ownerId().equals(SOME_OWNER_ID)
-                                && gas.agentId().equals(SOME_AGENT_ID)
-                                && "REGISTER_AGENT".equals(gas.operation())));
+        then(gasUsageRepository)
+                .should()
+                .save(org.mockito.ArgumentMatchers.argThat(gas -> gas.ownerId().equals(SOME_OWNER_ID)
+                        && gas.agentId().equals(SOME_AGENT_ID)
+                        && "REGISTER_AGENT".equals(gas.operation())));
     }
 
     @Test

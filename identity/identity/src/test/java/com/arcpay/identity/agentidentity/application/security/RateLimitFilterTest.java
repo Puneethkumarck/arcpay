@@ -1,19 +1,18 @@
 package com.arcpay.identity.agentidentity.application.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-
-import java.io.IOException;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class RateLimitFilterTest {
@@ -63,8 +62,7 @@ class RateLimitFilterTest {
         // given
         for (int i = 0; i < 10; i++) {
             rateLimitFilter.doFilterInternal(
-                    createRegistrationRequest("192.168.1.3"),
-                    new MockHttpServletResponse(), filterChain);
+                    createRegistrationRequest("192.168.1.3"), new MockHttpServletResponse(), filterChain);
         }
 
         var request = createRegistrationRequest("192.168.1.4");

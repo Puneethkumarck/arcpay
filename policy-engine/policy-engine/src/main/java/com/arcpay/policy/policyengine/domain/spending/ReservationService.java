@@ -12,15 +12,14 @@ import com.arcpay.policy.policyengine.domain.model.ReservationStatus;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
 import com.arcpay.policy.policyengine.domain.port.ReservationRepository;
 import com.github.f4b6a3.uuid.UuidCreator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -36,19 +35,25 @@ public class ReservationService {
     private final PolicyRepository policyRepository;
 
     @Transactional
-    public PolicyEvaluationResult reserve(UUID paymentId, UUID agentId, AgentInfo agent,
-            String recipientAddress, BigDecimal amount, Instant requestedAt) {
+    public PolicyEvaluationResult reserve(
+            UUID paymentId,
+            UUID agentId,
+            AgentInfo agent,
+            String recipientAddress,
+            BigDecimal amount,
+            Instant requestedAt) {
         spendingLockService.acquireLock(agentId);
 
         var existing = reservationRepository.findByPaymentId(paymentId);
         if (existing.isPresent()) {
-            log.info("Reservation already exists for paymentId={} status={}, returning existing decision",
-                    paymentId, existing.get().status());
+            log.info(
+                    "Reservation already exists for paymentId={} status={}, returning existing decision",
+                    paymentId,
+                    existing.get().status());
             return idempotentResult(existing.get());
         }
 
-        var result = policyEvaluationService.evaluate(
-                agentId, agent, recipientAddress, amount, requestedAt, false);
+        var result = policyEvaluationService.evaluate(agentId, agent, recipientAddress, amount, requestedAt, false);
 
         if (result.verdict() == PolicyVerdict.APPROVED) {
             reservationRepository.save(Reservation.held(paymentId, agentId, amount, recipientAddress, Instant.now()));
@@ -68,8 +73,8 @@ public class ReservationService {
         }
 
         var committed = reservationRepository.save(reservation.commit());
-        spendingLedgerService.recordSpending(committed.agentId(), committed.paymentId(),
-                committed.amount(), committed.recipient(), Instant.now());
+        spendingLedgerService.recordSpending(
+                committed.agentId(), committed.paymentId(), committed.amount(), committed.recipient(), Instant.now());
         log.info("Committed reservation paymentId={} agentId={}", paymentId, committed.agentId());
         return committed;
     }
@@ -105,15 +110,16 @@ public class ReservationService {
     }
 
     private Reservation load(UUID paymentId) {
-        return reservationRepository.findByPaymentId(paymentId)
+        return reservationRepository
+                .findByPaymentId(paymentId)
                 .orElseThrow(() -> new ReservationNotFoundException(paymentId));
     }
 
     private PolicyEvaluationResult idempotentResult(Reservation reservation) {
-        var verdict = reservation.status() == ReservationStatus.RELEASED
-                ? PolicyVerdict.REJECTED
-                : PolicyVerdict.APPROVED;
-        var policyId = policyRepository.findActiveByAgentId(reservation.agentId())
+        var verdict =
+                reservation.status() == ReservationStatus.RELEASED ? PolicyVerdict.REJECTED : PolicyVerdict.APPROVED;
+        var policyId = policyRepository
+                .findActiveByAgentId(reservation.agentId())
                 .map(Policy::policyId)
                 .orElse(NO_POLICY_ID);
         return PolicyEvaluationResult.builder()

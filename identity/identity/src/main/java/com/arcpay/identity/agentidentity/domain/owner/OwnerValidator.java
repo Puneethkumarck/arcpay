@@ -5,20 +5,17 @@ import com.arcpay.identity.agentidentity.domain.exception.InvalidWalletAddressEx
 import com.arcpay.identity.agentidentity.domain.exception.OwnerEmailAlreadyExistsException;
 import com.arcpay.identity.agentidentity.domain.exception.OwnerWalletAlreadyExistsException;
 import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.regex.Pattern;
 
 @Component
 @RequiredArgsConstructor
 public class OwnerValidator {
 
     private static final int MAX_EMAIL_LENGTH = 255;
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    private static final Pattern WALLET_ADDRESS_PATTERN = Pattern.compile(
-            "^0x[0-9a-fA-F]{40}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    private static final Pattern WALLET_ADDRESS_PATTERN = Pattern.compile("^0x[0-9a-fA-F]{40}$");
 
     private final OwnerRepository ownerRepository;
 

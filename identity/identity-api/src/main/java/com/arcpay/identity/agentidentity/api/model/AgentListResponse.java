@@ -1,14 +1,7 @@
 package com.arcpay.identity.agentidentity.api.model;
 
+import java.util.List;
 import lombok.Builder;
 
-import java.util.List;
-
 @Builder
-public record AgentListResponse(
-        List<AgentResponse> content,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages
-) {}
+public record AgentListResponse(List<AgentResponse> content, int page, int size, long totalElements, int totalPages) {}

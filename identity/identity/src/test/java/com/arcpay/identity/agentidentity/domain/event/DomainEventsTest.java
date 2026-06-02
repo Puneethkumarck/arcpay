@@ -1,16 +1,15 @@
 package com.arcpay.identity.agentidentity.domain.event;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class DomainEventsTest {
 
@@ -35,8 +34,7 @@ class DomainEventsTest {
                 Arguments.of(AgentPolicyUpdated.TOPIC, "agent.policy-updated"),
                 Arguments.of(AgentDeactivated.TOPIC, "agent.deactivated"),
                 Arguments.of(AgentReactivated.TOPIC, "agent.reactivated"),
-                Arguments.of(AgentProvisioningFailed.TOPIC, "agent.provisioning-failed")
-        );
+                Arguments.of(AgentProvisioningFailed.TOPIC, "agent.provisioning-failed"));
     }
 
     @Test

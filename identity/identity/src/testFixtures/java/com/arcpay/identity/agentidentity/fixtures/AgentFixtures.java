@@ -1,21 +1,21 @@
 package com.arcpay.identity.agentidentity.fixtures;
 
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
+
 import com.arcpay.identity.agentidentity.domain.model.Agent;
 import com.arcpay.identity.agentidentity.domain.model.AgentOnChainSyncRequest;
 import com.arcpay.identity.agentidentity.domain.model.AgentProvisioningRequest;
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import com.arcpay.identity.agentidentity.domain.model.OnChainOperation;
-
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
-
 public final class AgentFixtures {
 
     public static final UUID SOME_AGENT_ID = UUID.fromString("019718a0-5678-7def-8000-abcdef567890");
-    public static final String SOME_METADATA_HASH = "0x9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+    public static final String SOME_METADATA_HASH =
+            "0x9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
     public static final String SOME_POLICY_HASH = "0xabc1230000000000000000000000000000000000000000000000000000def456";
     public static final String SOME_WALLET_ID = "circle-wallet-abc123";
     public static final String SOME_WALLET_ADDRESS = "0xabcdef1234567890abcdef1234567890abcdef12";

@@ -1,11 +1,11 @@
 package com.arcpay.compliance.domain.model;
 
-import org.junit.jupiter.api.Test;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONED_ADDRESS;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SANCTIONS_SET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.jupiter.api.Test;
 
 class SanctionsSetTest {
 

@@ -1,11 +1,10 @@
 package com.arcpay.settlement.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record SettlementTransaction(
@@ -16,8 +15,7 @@ public record SettlementTransaction(
         BigDecimal networkFee,
         String errorReason,
         Instant createdAt,
-        Instant updatedAt
-) {
+        Instant updatedAt) {
 
     public SettlementTransaction {
         Objects.requireNonNull(paymentId, "paymentId must not be null");
@@ -28,18 +26,12 @@ public record SettlementTransaction(
 
     public SettlementTransaction withCircleTxId(String circleTxId) {
         Objects.requireNonNull(circleTxId, "circleTxId must not be null");
-        return toBuilder()
-                .circleTxId(circleTxId)
-                .updatedAt(Instant.now())
-                .build();
+        return toBuilder().circleTxId(circleTxId).updatedAt(Instant.now()).build();
     }
 
     public SettlementTransaction withState(TransferState state) {
         Objects.requireNonNull(state, "state must not be null");
-        return toBuilder()
-                .state(state)
-                .updatedAt(Instant.now())
-                .build();
+        return toBuilder().state(state).updatedAt(Instant.now()).build();
     }
 
     public SettlementTransaction withOnChainResult(String txHash, BigDecimal networkFee, TransferState state) {

@@ -1,16 +1,15 @@
 package com.arcpay.policy.policyengine.domain.evaluation;
 
+import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextWith;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-
-import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextWith;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class VelocityEvaluatorTest {
 
@@ -45,9 +44,7 @@ class VelocityEvaluatorTest {
                     .current(new BigDecimal("12"))
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -67,9 +64,7 @@ class VelocityEvaluatorTest {
                     .current(new BigDecimal("0"))
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -90,9 +85,7 @@ class VelocityEvaluatorTest {
                     .message("Transaction count 50 in last 60 minutes would exceed limit of 50")
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -113,9 +106,7 @@ class VelocityEvaluatorTest {
                     .message("Transaction count 73 in last 60 minutes would exceed limit of 50")
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
     }
 }

@@ -1,15 +1,15 @@
 package com.arcpay.compliance.domain.model;
 
-import com.arcpay.compliance.domain.exception.HoldAlreadyDecidedException;
-import com.arcpay.compliance.domain.exception.ReviewReasonInvalidException;
-import org.junit.jupiter.api.Test;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_DECISION_REASON;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_HOLD_REVIEW_PENDING;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_REVIEWER_PRINCIPAL;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_REVIEWER_ROLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.arcpay.compliance.domain.exception.HoldAlreadyDecidedException;
+import com.arcpay.compliance.domain.exception.ReviewReasonInvalidException;
+import org.junit.jupiter.api.Test;
 
 class HoldReviewTest {
 
@@ -91,7 +91,8 @@ class HoldReviewTest {
     @Test
     void shouldThrowWhenDecidingAlreadyDecidedReview() {
         // given
-        var decided = SOME_HOLD_REVIEW_PENDING.approve(SOME_REVIEWER_PRINCIPAL, SOME_REVIEWER_ROLE, SOME_DECISION_REASON);
+        var decided =
+                SOME_HOLD_REVIEW_PENDING.approve(SOME_REVIEWER_PRINCIPAL, SOME_REVIEWER_ROLE, SOME_DECISION_REASON);
 
         // when / then
         assertThatThrownBy(() -> decided.reject(SOME_REVIEWER_PRINCIPAL, SOME_REVIEWER_ROLE, SOME_DECISION_REASON))

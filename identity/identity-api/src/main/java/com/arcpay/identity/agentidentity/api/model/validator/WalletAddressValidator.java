@@ -2,7 +2,6 @@ package com.arcpay.identity.agentidentity.api.model.validator;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-
 import java.util.regex.Pattern;
 
 public class WalletAddressValidator implements ConstraintValidator<ValidWalletAddress, String> {

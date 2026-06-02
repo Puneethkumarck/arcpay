@@ -4,8 +4,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public record AgentProvisioningFailed(UUID agentId, String failedStep, String reason,
-                                      Instant failedAt) {
+public record AgentProvisioningFailed(UUID agentId, String failedStep, String reason, Instant failedAt) {
 
     public static final String TOPIC = "agent.provisioning-failed";
 

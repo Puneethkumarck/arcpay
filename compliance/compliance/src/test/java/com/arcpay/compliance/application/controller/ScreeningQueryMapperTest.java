@@ -1,14 +1,5 @@
 package com.arcpay.compliance.application.controller;
 
-import com.arcpay.compliance.application.dto.ScreeningCheckResponse;
-import com.arcpay.compliance.application.dto.ScreeningQueryResponse;
-import com.arcpay.compliance.domain.model.Verdict;
-import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
-
-import java.util.List;
-import java.util.Map;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_PAYMENT_ID;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_RECIPIENT_ADDRESS;
@@ -17,6 +8,14 @@ import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SCREENING_I
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SCREENING_RESULT_HOLD;
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_SCREENING_RESULT_PASS;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.compliance.application.dto.ScreeningCheckResponse;
+import com.arcpay.compliance.application.dto.ScreeningQueryResponse;
+import com.arcpay.compliance.domain.model.Verdict;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 class ScreeningQueryMapperTest {
 
@@ -81,7 +80,8 @@ class ScreeningQueryMapperTest {
     @Test
     void shouldMapBlockResultSerializingVerdictAsString() {
         // given
-        var result = SOME_SCREENING_RESULT_HOLD.toBuilder().verdict(Verdict.BLOCK).build();
+        var result =
+                SOME_SCREENING_RESULT_HOLD.toBuilder().verdict(Verdict.BLOCK).build();
 
         // when
         var actual = mapper.toApi(result);

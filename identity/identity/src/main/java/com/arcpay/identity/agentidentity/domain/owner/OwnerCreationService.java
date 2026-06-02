@@ -4,8 +4,6 @@ import com.arcpay.identity.agentidentity.domain.model.Owner;
 import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
 import com.arcpay.identity.agentidentity.domain.model.OwnerWithApiKey;
 import com.github.f4b6a3.uuid.UuidCreator;
-import org.springframework.stereotype.Service;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -13,6 +11,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Locale;
+import org.springframework.stereotype.Service;
 
 @Service
 public class OwnerCreationService {

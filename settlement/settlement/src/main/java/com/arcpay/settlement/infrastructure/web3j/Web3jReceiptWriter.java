@@ -1,8 +1,15 @@
 package com.arcpay.settlement.infrastructure.web3j;
 
+import static java.util.Collections.emptyList;
+
 import com.arcpay.settlement.domain.model.ReceiptCommand;
 import com.arcpay.settlement.domain.port.ReceiptWriter;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.Address;
@@ -13,16 +20,7 @@ import org.web3j.abi.datatypes.generated.Uint64;
 import org.web3j.crypto.Hash;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.tx.FastRawTransactionManager;
-
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
-
-import static java.util.Collections.emptyList;
 
 @Slf4j
 class Web3jReceiptWriter implements ReceiptWriter {
@@ -38,11 +36,12 @@ class Web3jReceiptWriter implements ReceiptWriter {
     private final Clock clock;
     private final ReentrantLock writeLock = new ReentrantLock(true);
 
-    Web3jReceiptWriter(Web3j web3j,
-                       FastRawTransactionManager transactionManager,
-                       ReceiptContractProperties properties,
-                       MeterRegistry meterRegistry,
-                       Clock clock) {
+    Web3jReceiptWriter(
+            Web3j web3j,
+            FastRawTransactionManager transactionManager,
+            ReceiptContractProperties properties,
+            MeterRegistry meterRegistry,
+            Clock clock) {
         this.web3j = web3j;
         this.transactionManager = transactionManager;
         this.properties = properties;
@@ -56,8 +55,10 @@ class Web3jReceiptWriter implements ReceiptWriter {
         try {
             return submit(command);
         } catch (Exception e) {
-            log.warn("On-chain receipt write failed paymentId={}; payment stays COMPLETED, no onChainRef: {}",
-                    command.paymentId(), e.getMessage());
+            log.warn(
+                    "On-chain receipt write failed paymentId={}; payment stays COMPLETED, no onChainRef: {}",
+                    command.paymentId(),
+                    e.getMessage());
             resetNonceQuietly();
             return null;
         } finally {
@@ -134,8 +135,11 @@ class Web3jReceiptWriter implements ReceiptWriter {
                     .getBalance();
             if (balance.compareTo(properties.lowBalanceThresholdWei()) < 0) {
                 meterRegistry.counter(LOW_BALANCE_METRIC).increment();
-                log.warn("Gas wallet balance low address={} balanceWei={} thresholdWei={}",
-                        transactionManager.getFromAddress(), balance, properties.lowBalanceThresholdWei());
+                log.warn(
+                        "Gas wallet balance low address={} balanceWei={} thresholdWei={}",
+                        transactionManager.getFromAddress(),
+                        balance,
+                        properties.lowBalanceThresholdWei());
             }
         } catch (Exception e) {
             log.warn("Unable to read gas wallet balance: {}", e.getMessage());

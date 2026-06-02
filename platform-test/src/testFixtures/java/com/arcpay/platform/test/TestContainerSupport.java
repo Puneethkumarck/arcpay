@@ -46,21 +46,16 @@ public final class TestContainerSupport {
     }
 
     private static void registerShutdownHook(Startable... containers) {
-        Runtime.getRuntime().addShutdownHook(new Thread(
-                () -> safeStop(containers),
-                "testcontainers-shutdown"
-        ));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> safeStop(containers), "testcontainers-shutdown"));
     }
 
-    public static void registerPostgresProperties(DynamicPropertyRegistry registry,
-                                                   PostgreSQLContainer<?> postgres) {
+    public static void registerPostgresProperties(DynamicPropertyRegistry registry, PostgreSQLContainer<?> postgres) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
     }
 
-    public static void registerKafkaProperties(DynamicPropertyRegistry registry,
-                                                KafkaContainer kafka) {
+    public static void registerKafkaProperties(DynamicPropertyRegistry registry, KafkaContainer kafka) {
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
     }
 }

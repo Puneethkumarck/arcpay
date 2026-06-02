@@ -1,5 +1,18 @@
 package com.arcpay.policy.policyengine.application.controller;
 
+import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.FAIL_PER_TX;
+import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_RECIPIENT;
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_EMAIL;
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_POLICY_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.arcpay.platform.api.ApiError;
 import com.arcpay.platform.api.OwnerPrincipal;
 import com.arcpay.platform.infrastructure.security.Roles;
@@ -15,32 +28,18 @@ import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import com.arcpay.policy.policyengine.test.RestControllerAbstractTest;
-import tools.jackson.databind.json.JsonMapper;
 import com.github.f4b6a3.uuid.UuidCreator;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.FAIL_PER_TX;
-import static com.arcpay.policy.policyengine.test.fixtures.EvaluationFixtures.SOME_RECIPIENT;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_EMAIL;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_POLICY_ID;
-import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import tools.jackson.databind.json.JsonMapper;
 
 class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTest {
 
@@ -94,7 +93,9 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(EVALUATE_BODY))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, PolicyEvaluationResponse.class);
@@ -128,7 +129,9 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(EVALUATE_BODY))
                 .andExpect(status().isForbidden())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -146,7 +149,9 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(EVALUATE_BODY))
                 .andExpect(status().isNotFound())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -164,7 +169,9 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(EVALUATE_BODY))
                 .andExpect(status().isUnprocessableEntity())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -200,7 +207,9 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(EVALUATE_BODY))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, PolicyEvaluationResponse.class);
@@ -237,7 +246,9 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);
@@ -255,7 +266,9 @@ class PolicyEvaluationControllerIntegrationTest extends RestControllerAbstractTe
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(EVALUATE_BODY))
                 .andExpect(status().isServiceUnavailable())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         // then
         var actual = jsonMapper.readValue(response, ApiError.class);

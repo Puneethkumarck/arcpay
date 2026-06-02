@@ -4,10 +4,9 @@ import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-import org.springframework.stereotype.Component;
-
 import java.util.Locale;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RecipientBlocklistEvaluator implements RuleEvaluator<PolicyRule.RecipientBlocklist> {

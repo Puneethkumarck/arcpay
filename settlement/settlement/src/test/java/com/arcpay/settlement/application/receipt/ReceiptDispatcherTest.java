@@ -1,18 +1,17 @@
 package com.arcpay.settlement.application.receipt;
 
+import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.someReceiptCommand;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+
 import com.arcpay.settlement.domain.port.ReceiptWriter;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
-
-import java.time.Duration;
-
-import static com.arcpay.settlement.fixtures.ReceiptCommandFixtures.someReceiptCommand;
-import static org.awaitility.Awaitility.await;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class ReceiptDispatcherTest {

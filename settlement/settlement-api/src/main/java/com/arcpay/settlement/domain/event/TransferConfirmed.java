@@ -1,19 +1,14 @@
 package com.arcpay.settlement.domain.event;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
-public record TransferConfirmed(
-        UUID paymentId,
-        String txHash,
-        BigDecimal networkFee,
-        Instant confirmedAt
-) implements SettlementEvent {
+public record TransferConfirmed(UUID paymentId, String txHash, BigDecimal networkFee, Instant confirmedAt)
+        implements SettlementEvent {
 
     public static final String TOPIC = "transfer.confirmed";
 

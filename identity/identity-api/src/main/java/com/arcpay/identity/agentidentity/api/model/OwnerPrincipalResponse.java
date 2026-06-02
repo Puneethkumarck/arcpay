@@ -1,15 +1,10 @@
 package com.arcpay.identity.agentidentity.api.model;
 
+import java.util.UUID;
 import lombok.Builder;
 
-import java.util.UUID;
-
 @Builder
-public record OwnerPrincipalResponse(
-        UUID ownerId,
-        String email,
-        String authority
-) {
+public record OwnerPrincipalResponse(UUID ownerId, String email, String authority) {
 
     private static final String DEFAULT_AUTHORITY = "OWNER";
 

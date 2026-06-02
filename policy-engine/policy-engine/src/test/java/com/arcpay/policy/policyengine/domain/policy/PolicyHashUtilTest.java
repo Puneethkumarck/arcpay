@@ -1,17 +1,16 @@
 package com.arcpay.policy.policyengine.domain.policy;
 
-import com.arcpay.policy.policyengine.api.PolicyRule;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.arcpay.policy.policyengine.api.PolicyRule;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 class PolicyHashUtilTest {
 
@@ -24,8 +23,7 @@ class PolicyHashUtilTest {
             // given
             var rules = List.<PolicyRule>of(
                     new PolicyRule.DailyLimit(new BigDecimal("1000.00")),
-                    new PolicyRule.PerTransactionLimit(new BigDecimal("100.00"))
-            );
+                    new PolicyRule.PerTransactionLimit(new BigDecimal("100.00")));
 
             // when
             var hash1 = PolicyHashUtil.computePolicyHash(rules);
@@ -41,12 +39,10 @@ class PolicyHashUtilTest {
             // given
             var rulesOrder1 = List.<PolicyRule>of(
                     new PolicyRule.DailyLimit(new BigDecimal("1000.00")),
-                    new PolicyRule.PerTransactionLimit(new BigDecimal("100.00"))
-            );
+                    new PolicyRule.PerTransactionLimit(new BigDecimal("100.00")));
             var rulesOrder2 = List.<PolicyRule>of(
                     new PolicyRule.PerTransactionLimit(new BigDecimal("100.00")),
-                    new PolicyRule.DailyLimit(new BigDecimal("1000.00"))
-            );
+                    new PolicyRule.DailyLimit(new BigDecimal("1000.00")));
 
             // when
             var hash1 = PolicyHashUtil.computePolicyHash(rulesOrder1);
@@ -137,12 +133,8 @@ class PolicyHashUtilTest {
         @SneakyThrows
         void shouldProduceDifferentHashForDifferentRules() {
             // given
-            var rules1 = List.<PolicyRule>of(
-                    new PolicyRule.DailyLimit(new BigDecimal("1000.00"))
-            );
-            var rules2 = List.<PolicyRule>of(
-                    new PolicyRule.DailyLimit(new BigDecimal("2000.00"))
-            );
+            var rules1 = List.<PolicyRule>of(new PolicyRule.DailyLimit(new BigDecimal("1000.00")));
+            var rules2 = List.<PolicyRule>of(new PolicyRule.DailyLimit(new BigDecimal("2000.00")));
 
             // when
             var hash1 = PolicyHashUtil.computePolicyHash(rules1);
@@ -210,9 +202,7 @@ class PolicyHashUtilTest {
         @SneakyThrows
         void shouldReturnHexPrefixedHash() {
             // given
-            var rules = List.<PolicyRule>of(
-                    new PolicyRule.DailyLimit(new BigDecimal("1000.00"))
-            );
+            var rules = List.<PolicyRule>of(new PolicyRule.DailyLimit(new BigDecimal("1000.00")));
 
             // when
             var hash = PolicyHashUtil.computePolicyHash(rules);
@@ -232,13 +222,9 @@ class PolicyHashUtilTest {
             // given — different field ordering in source doesn't matter since Jackson controls serialization,
             // but canonical JSON ensures consistent key ordering across implementations
             var rules1 = List.<PolicyRule>of(
-                    new PolicyRule.Cooldown(300),
-                    new PolicyRule.ApprovalThreshold(new BigDecimal("10000.00"))
-            );
+                    new PolicyRule.Cooldown(300), new PolicyRule.ApprovalThreshold(new BigDecimal("10000.00")));
             var rules2 = List.<PolicyRule>of(
-                    new PolicyRule.ApprovalThreshold(new BigDecimal("10000.00")),
-                    new PolicyRule.Cooldown(300)
-            );
+                    new PolicyRule.ApprovalThreshold(new BigDecimal("10000.00")), new PolicyRule.Cooldown(300));
 
             // when
             var hash1 = PolicyHashUtil.computePolicyHash(rules1);

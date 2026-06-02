@@ -5,12 +5,11 @@ import com.arcpay.compliance.domain.model.CheckType;
 import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.port.RiskSignalProvider;
 import com.arcpay.compliance.domain.port.SanctionsSetProvider;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 import org.web3j.protocol.Web3j;
-
-import java.util.Map;
 
 @Component
 @ConditionalOnBean(Web3j.class)
@@ -28,7 +27,10 @@ class OnChainInteractionSignalProvider implements RiskSignalProvider {
         var sanctionsSet = sanctionsSetProvider.getCurrentSanctionsSet();
         var sanctionedCounterparty = sanctionsSet == null
                 ? null
-                : counterparties.stream().filter(sanctionsSet::contains).findFirst().orElse(null);
+                : counterparties.stream()
+                        .filter(sanctionsSet::contains)
+                        .findFirst()
+                        .orElse(null);
 
         if (sanctionedCounterparty == null) {
             return ScreeningCheck.builder()
@@ -43,9 +45,7 @@ class OnChainInteractionSignalProvider implements RiskSignalProvider {
                 .type(CheckType.ONCHAIN_INTERACTION)
                 .result(CheckResult.FLAGGED)
                 .matchScore(INTERACTION_SCORE)
-                .details(Map.of(
-                        "counterparty", sanctionedCounterparty,
-                        "txCount", counterparties.size()))
+                .details(Map.of("counterparty", sanctionedCounterparty, "txCount", counterparties.size()))
                 .build();
     }
 }

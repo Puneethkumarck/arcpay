@@ -19,8 +19,7 @@ class BlockchainClientConfig {
     }
 
     @Bean
-    String agentRegistryContractAddress(
-            @Value("${arcpay.contract.agent-registry-address}") String contractAddress) {
+    String agentRegistryContractAddress(@Value("${arcpay.contract.agent-registry-address}") String contractAddress) {
         return contractAddress;
     }
 }

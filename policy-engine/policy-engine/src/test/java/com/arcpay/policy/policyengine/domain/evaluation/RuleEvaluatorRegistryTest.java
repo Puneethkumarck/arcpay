@@ -1,14 +1,13 @@
 package com.arcpay.policy.policyengine.domain.evaluation;
 
-import com.arcpay.policy.policyengine.api.PolicyRule;
-import com.arcpay.policy.policyengine.domain.exception.EvaluatorRegistrationException;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.arcpay.policy.policyengine.api.PolicyRule;
+import com.arcpay.policy.policyengine.domain.exception.EvaluatorRegistrationException;
+import java.util.List;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 class RuleEvaluatorRegistryTest {
 
@@ -58,10 +57,8 @@ class RuleEvaluatorRegistryTest {
             // when / then
             assertThat(registry.getEvaluator(PolicyRule.PerTransactionLimit.class))
                     .isInstanceOf(PerTransactionLimitEvaluator.class);
-            assertThat(registry.getEvaluator(PolicyRule.DailyLimit.class))
-                    .isInstanceOf(DailyLimitEvaluator.class);
-            assertThat(registry.getEvaluator(PolicyRule.Velocity.class))
-                    .isInstanceOf(VelocityEvaluator.class);
+            assertThat(registry.getEvaluator(PolicyRule.DailyLimit.class)).isInstanceOf(DailyLimitEvaluator.class);
+            assertThat(registry.getEvaluator(PolicyRule.Velocity.class)).isInstanceOf(VelocityEvaluator.class);
             assertThat(registry.getEvaluator(PolicyRule.ApprovalThreshold.class))
                     .isInstanceOf(ApprovalThresholdEvaluator.class);
         }

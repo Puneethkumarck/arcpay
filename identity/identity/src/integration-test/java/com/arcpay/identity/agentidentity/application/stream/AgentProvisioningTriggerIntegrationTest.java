@@ -1,24 +1,5 @@
 package com.arcpay.identity.agentidentity.application.stream;
 
-import com.arcpay.identity.agentidentity.domain.event.AgentRegistrationRequested;
-import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
-import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
-import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
-import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
-import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
-import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
-import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.time.Duration;
-import java.time.Instant;
-
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_PROVISIONING;
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_METADATA_HASH;
@@ -29,6 +10,24 @@ import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.BDDMockito.given;
+
+import com.arcpay.identity.agentidentity.domain.event.AgentRegistrationRequested;
+import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import com.arcpay.identity.agentidentity.domain.model.RegistrationResult;
+import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
+import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
+import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
+import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
+import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
+import java.time.Duration;
+import java.time.Instant;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class AgentProvisioningTriggerIntegrationTest extends FullContextIntegrationTest {
 
@@ -53,8 +52,7 @@ class AgentProvisioningTriggerIntegrationTest extends FullContextIntegrationTest
         jdbcTemplate.update("""
                 INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
                 VALUES (?, ?, ?, ?, 'ACTIVE')
-                ON CONFLICT DO NOTHING""",
-                SOME_OWNER_ID, "test@example.com", "0xwallet", "hash");
+                ON CONFLICT DO NOTHING""", SOME_OWNER_ID, "test@example.com", "0xwallet", "hash");
         agentRepository.save(SOME_AGENT_PROVISIONING);
     }
 
@@ -77,8 +75,12 @@ class AgentProvisioningTriggerIntegrationTest extends FullContextIntegrationTest
                 .willReturn(new RegistrationResult(SOME_TX_HASH, 42L));
 
         var event = new AgentRegistrationRequested(
-                SOME_AGENT_ID, SOME_OWNER_ID, "shopping-agent-01",
-                "Automated USDC payments", SOME_METADATA_HASH, Instant.now());
+                SOME_AGENT_ID,
+                SOME_OWNER_ID,
+                "shopping-agent-01",
+                "Automated USDC payments",
+                SOME_METADATA_HASH,
+                Instant.now());
 
         // when
         kafkaTemplate.send(AgentRegistrationRequested.TOPIC, SOME_AGENT_ID.toString(), event);

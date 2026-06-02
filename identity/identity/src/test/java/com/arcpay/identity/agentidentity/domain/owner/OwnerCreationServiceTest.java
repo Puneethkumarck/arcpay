@@ -1,14 +1,13 @@
 package com.arcpay.identity.agentidentity.domain.owner;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.identity.agentidentity.domain.model.Owner;
 import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
-import org.junit.jupiter.api.Test;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 class OwnerCreationServiceTest {
 
@@ -40,7 +39,8 @@ class OwnerCreationServiceTest {
     @Test
     void shouldCreateOwnerWithUuidV7() {
         // given / when
-        var result = ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
+        var result =
+                ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
 
         // then
         assertThat(result.owner().ownerId().version()).isEqualTo(7);
@@ -65,8 +65,7 @@ class OwnerCreationServiceTest {
 
         // then
         var expectedDigest = MessageDigest.getInstance("SHA-256");
-        var expectedHash = HexFormat.of().formatHex(
-                expectedDigest.digest(rawApiKey.getBytes(StandardCharsets.UTF_8)));
+        var expectedHash = HexFormat.of().formatHex(expectedDigest.digest(rawApiKey.getBytes(StandardCharsets.UTF_8)));
         assertThat(hash).isEqualTo(expectedHash);
     }
 
@@ -85,7 +84,8 @@ class OwnerCreationServiceTest {
     @Test
     void shouldReturnRawApiKeyDistinctFromHash() {
         // given / when
-        var result = ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
+        var result =
+                ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
 
         // then
         assertThat(result.rawApiKey()).startsWith("ak_test_");
@@ -95,7 +95,8 @@ class OwnerCreationServiceTest {
     @Test
     void shouldSetCreatedAtAndUpdatedAtToSameValue() {
         // given / when
-        var result = ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
+        var result =
+                ownerCreationService.createOwner("alice@example.com", "0x1234567890abcdef1234567890abcdef12345678");
 
         // then
         assertThat(result.owner().createdAt()).isEqualTo(result.owner().updatedAt());

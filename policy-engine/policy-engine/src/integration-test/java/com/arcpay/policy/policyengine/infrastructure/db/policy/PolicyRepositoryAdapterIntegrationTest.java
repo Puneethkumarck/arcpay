@@ -1,20 +1,18 @@
 package com.arcpay.policy.policyengine.infrastructure.db.policy;
 
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY;
+import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
 import com.arcpay.policy.policyengine.test.FullContextIntegrationTest;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_SUPERSEDED_POLICY;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
 class PolicyRepositoryAdapterIntegrationTest extends FullContextIntegrationTest {
@@ -93,9 +91,7 @@ class PolicyRepositoryAdapterIntegrationTest extends FullContextIntegrationTest 
         var page = policyRepository.findByAgentId(SOME_AGENT_ID, PageRequest.of(0, 10));
 
         // then
-        assertThat(page.getContent())
-                .usingRecursiveComparison()
-                .isEqualTo(List.of(v2, SOME_ACTIVE_POLICY));
+        assertThat(page.getContent()).usingRecursiveComparison().isEqualTo(List.of(v2, SOME_ACTIVE_POLICY));
     }
 
     @Test

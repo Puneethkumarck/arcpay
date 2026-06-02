@@ -1,16 +1,14 @@
 package com.arcpay.policy.policyengine.domain.evaluation;
 
-import com.arcpay.policy.policyengine.api.PolicyRule;
-import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
-import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
-import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-
 import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextWith;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.policy.policyengine.api.PolicyRule;
+import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
+import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
+import java.math.BigDecimal;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 class ApprovalThresholdEvaluatorTest {
 
@@ -36,9 +34,7 @@ class ApprovalThresholdEvaluatorTest {
                     .requested(new BigDecimal("100.00"))
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -58,9 +54,7 @@ class ApprovalThresholdEvaluatorTest {
                     .requested(new BigDecimal("500.00"))
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -81,9 +75,7 @@ class ApprovalThresholdEvaluatorTest {
                     .message("Amount 750.00 exceeds approval threshold of 500.00, owner approval required")
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
     }
 }

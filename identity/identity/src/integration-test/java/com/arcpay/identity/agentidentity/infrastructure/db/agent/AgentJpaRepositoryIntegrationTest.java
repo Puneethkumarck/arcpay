@@ -1,7 +1,14 @@
 package com.arcpay.identity.agentidentity.infrastructure.db.agent;
 
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.OTHER_OWNER_ID;
+import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
+import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,14 +16,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.UUID;
-
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.OTHER_OWNER_ID;
-import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER_ID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Transactional
 class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
@@ -29,18 +28,16 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
 
     @BeforeEach
     void seedOwners() {
-        jdbcTemplate.update("""
+        jdbcTemplate.update(
+                """
                 INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
                 VALUES (?, ?, ?, ?, 'ACTIVE')
-                ON CONFLICT DO NOTHING""",
-                SOME_OWNER_ID, "alice@example.com",
-                "0x1234567890abcdef1234567890abcdef12345678", "a".repeat(64));
-        jdbcTemplate.update("""
+                ON CONFLICT DO NOTHING""", SOME_OWNER_ID, "alice@example.com", "0x1234567890abcdef1234567890abcdef12345678", "a".repeat(64));
+        jdbcTemplate.update(
+                """
                 INSERT INTO owners (owner_id, email, wallet_address, api_key_hash, status)
                 VALUES (?, ?, ?, ?, 'ACTIVE')
-                ON CONFLICT DO NOTHING""",
-                OTHER_OWNER_ID, "bob@example.com",
-                "0xfedcba9876543210fedcba9876543210fedcba98", "b".repeat(64));
+                ON CONFLICT DO NOTHING""", OTHER_OWNER_ID, "bob@example.com", "0xfedcba9876543210fedcba9876543210fedcba98", "b".repeat(64));
     }
 
     @Test
@@ -53,7 +50,8 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         var result = agentJpaRepository.findByIdForUpdate(entity.getAgentId()).orElseThrow();
 
         // then
-        assertThat(result).usingRecursiveComparison()
+        assertThat(result)
+                .usingRecursiveComparison()
                 .ignoringFields("createdAt", "updatedAt")
                 .isEqualTo(entity);
     }
@@ -85,9 +83,7 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         var page = agentJpaRepository.findByOwnerIdAndStatus(SOME_OWNER_ID, AgentStatus.ACTIVE, PageRequest.of(0, 10));
 
         // then
-        assertThat(page.getContent())
-                .extracting(AgentEntity::getStatus)
-                .containsOnly(AgentStatus.ACTIVE);
+        assertThat(page.getContent()).extracting(AgentEntity::getStatus).containsOnly(AgentStatus.ACTIVE);
     }
 
     @Test
@@ -98,7 +94,8 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "active-3", AgentStatus.ACTIVE));
 
         // when
-        var secondPage = agentJpaRepository.findByOwnerIdAndStatus(SOME_OWNER_ID, AgentStatus.ACTIVE, PageRequest.of(1, 2));
+        var secondPage =
+                agentJpaRepository.findByOwnerIdAndStatus(SOME_OWNER_ID, AgentStatus.ACTIVE, PageRequest.of(1, 2));
 
         // then
         assertThat(secondPage.getContent()).hasSize(1);
@@ -112,7 +109,8 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         // when
         var lowerExists = agentJpaRepository.existsByOwnerIdAndNameIgnoreCase(SOME_OWNER_ID, "shopping-agent");
         var upperExists = agentJpaRepository.existsByOwnerIdAndNameIgnoreCase(SOME_OWNER_ID, "SHOPPING-AGENT");
-        var otherOwnerSeesNothing = agentJpaRepository.existsByOwnerIdAndNameIgnoreCase(OTHER_OWNER_ID, "shopping-agent");
+        var otherOwnerSeesNothing =
+                agentJpaRepository.existsByOwnerIdAndNameIgnoreCase(OTHER_OWNER_ID, "shopping-agent");
 
         // then
         assertThat(lowerExists).isTrue();
@@ -141,9 +139,9 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         agentJpaRepository.save(newAgentEntity(SOME_OWNER_ID, "unique-name", AgentStatus.ACTIVE));
 
         // when / then
-        assertThatThrownBy(() ->
-                agentJpaRepository.saveAndFlush(newAgentEntity(SOME_OWNER_ID, "UNIQUE-NAME", AgentStatus.ACTIVE))
-        ).isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> agentJpaRepository.saveAndFlush(
+                        newAgentEntity(SOME_OWNER_ID, "UNIQUE-NAME", AgentStatus.ACTIVE)))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
@@ -153,10 +151,10 @@ class AgentJpaRepositoryIntegrationTest extends FullContextIntegrationTest {
         agentJpaRepository.save(existing);
 
         // when
-        var conflictsWithOther = agentJpaRepository
-                .existsByOwnerIdAndNameIgnoreCaseAndAgentIdNot(SOME_OWNER_ID, "rename-test", UUID.randomUUID());
-        var conflictsWithSelf = agentJpaRepository
-                .existsByOwnerIdAndNameIgnoreCaseAndAgentIdNot(SOME_OWNER_ID, "rename-test", existing.getAgentId());
+        var conflictsWithOther = agentJpaRepository.existsByOwnerIdAndNameIgnoreCaseAndAgentIdNot(
+                SOME_OWNER_ID, "rename-test", UUID.randomUUID());
+        var conflictsWithSelf = agentJpaRepository.existsByOwnerIdAndNameIgnoreCaseAndAgentIdNot(
+                SOME_OWNER_ID, "rename-test", existing.getAgentId());
 
         // then
         assertThat(conflictsWithOther).isTrue();

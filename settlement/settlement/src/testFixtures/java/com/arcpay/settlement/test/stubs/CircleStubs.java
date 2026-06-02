@@ -1,12 +1,12 @@
 package com.arcpay.settlement.test.stubs;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
 
 public final class CircleStubs {
 

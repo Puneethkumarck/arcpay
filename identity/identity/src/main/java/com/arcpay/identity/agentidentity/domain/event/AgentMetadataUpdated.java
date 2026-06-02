@@ -4,8 +4,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public record AgentMetadataUpdated(UUID agentId, String name, String purpose, String metadataHash,
-                                   Instant updatedAt) {
+public record AgentMetadataUpdated(UUID agentId, String name, String purpose, String metadataHash, Instant updatedAt) {
 
     public static final String TOPIC = "agent.metadata-updated";
 

@@ -1,5 +1,15 @@
 package com.arcpay.payment.paymentexecution.application.stream;
 
+import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AGENT_ID;
+import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_RECIPIENT;
+import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_TX_HASH;
+import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_WALLET_ID;
+import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.somePayment;
+import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.somePaymentRequested;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.BDDMockito.given;
+
 import com.arcpay.compliance.domain.event.ScreeningCompleted;
 import com.arcpay.compliance.domain.model.Verdict;
 import com.arcpay.payment.paymentexecution.api.model.PolicyResult;
@@ -14,29 +24,18 @@ import com.arcpay.payment.paymentexecution.domain.port.PolicyPort;
 import com.arcpay.payment.paymentexecution.domain.port.SettlementPort;
 import com.arcpay.payment.paymentexecution.test.FullContextIntegrationTest;
 import com.arcpay.settlement.domain.event.TransferConfirmed;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_AGENT_ID;
-import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_RECIPIENT;
-import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_TX_HASH;
-import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_WALLET_ID;
-import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.somePayment;
-import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.somePaymentRequested;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.mockito.BDDMockito.given;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class PaymentEventFlowIntegrationTest extends FullContextIntegrationTest {
 
@@ -107,7 +106,9 @@ class PaymentEventFlowIntegrationTest extends FullContextIntegrationTest {
         var unknownPaymentId = UUID.randomUUID();
 
         // when
-        kafkaTemplate.send(TransferConfirmed.TOPIC, unknownPaymentId.toString(),
+        kafkaTemplate.send(
+                TransferConfirmed.TOPIC,
+                unknownPaymentId.toString(),
                 new TransferConfirmed(unknownPaymentId, SOME_TX_HASH, new BigDecimal("0.01"), Instant.now()));
         kafkaTemplate.send(PaymentRequested.TOPIC, paymentId.toString(), paymentRequested(paymentId));
         awaitStatus(paymentId, PaymentStatus.SCREENING);
@@ -129,7 +130,10 @@ class PaymentEventFlowIntegrationTest extends FullContextIntegrationTest {
                 .build();
         paymentRepository.save(payment);
         given(policyPort.reserve(paymentId, SOME_AGENT_ID, SOME_RECIPIENT, payment.amount()))
-                .willReturn(PolicyResult.builder().verdict("APPROVED").rulesEvaluated(3).build());
+                .willReturn(PolicyResult.builder()
+                        .verdict("APPROVED")
+                        .rulesEvaluated(3)
+                        .build());
         given(settlementPort.transfer(paymentId, SOME_WALLET_ID, SOME_RECIPIENT, payment.amount()))
                 .willReturn(SOME_TX_HASH);
         return paymentId;

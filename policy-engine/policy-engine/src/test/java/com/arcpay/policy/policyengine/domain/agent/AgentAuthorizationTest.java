@@ -1,17 +1,5 @@
 package com.arcpay.policy.policyengine.domain.agent;
 
-import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
-import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
-import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_AGENT;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_OWNED_BY_OTHER;
@@ -20,6 +8,17 @@ import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_S
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+
+import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
+import com.arcpay.policy.policyengine.domain.exception.AgentNotFoundException;
+import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
+import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class AgentAuthorizationTest {

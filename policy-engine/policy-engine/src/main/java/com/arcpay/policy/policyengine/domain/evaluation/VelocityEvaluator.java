@@ -4,9 +4,8 @@ import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.EvaluationContext;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
+import org.springframework.stereotype.Component;
 
 @Component
 public class VelocityEvaluator implements RuleEvaluator<PolicyRule.Velocity> {
@@ -37,8 +36,8 @@ public class VelocityEvaluator implements RuleEvaluator<PolicyRule.Velocity> {
                 .verdict(RuleVerdict.FAIL)
                 .limit(BigDecimal.valueOf(max))
                 .current(BigDecimal.valueOf(count))
-                .message("Transaction count %d in last %d minutes would exceed limit of %d".formatted(
-                        count, rule.periodMinutes(), max))
+                .message("Transaction count %d in last %d minutes would exceed limit of %d"
+                        .formatted(count, rule.periodMinutes(), max))
                 .build();
     }
 }

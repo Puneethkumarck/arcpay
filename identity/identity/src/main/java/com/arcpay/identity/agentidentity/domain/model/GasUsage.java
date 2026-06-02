@@ -1,10 +1,9 @@
 package com.arcpay.identity.agentidentity.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record GasUsage(
@@ -15,6 +14,4 @@ public record GasUsage(
         String txHash,
         long gasUsed,
         BigDecimal gasCostUsdc,
-        Instant createdAt
-) {
-}
+        Instant createdAt) {}

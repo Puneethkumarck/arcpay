@@ -1,16 +1,15 @@
 package com.arcpay.policy.policyengine.domain.evaluation;
 
+import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextWith;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.arcpay.policy.policyengine.api.PolicyRule;
 import com.arcpay.policy.policyengine.domain.model.RuleEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.RuleVerdict;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-
-import static com.arcpay.policy.policyengine.domain.evaluation.EvaluatorTestSupport.contextWith;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class WeeklyLimitEvaluatorTest {
 
@@ -46,9 +45,7 @@ class WeeklyLimitEvaluatorTest {
                     .requested(new BigDecimal("100.00"))
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -69,9 +66,7 @@ class WeeklyLimitEvaluatorTest {
                     .requested(new BigDecimal("300.00"))
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -93,9 +88,7 @@ class WeeklyLimitEvaluatorTest {
                     .message("Weekly spending 200.00 + 301.00 would exceed limit of 500.00")
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
 
         @Test
@@ -117,9 +110,7 @@ class WeeklyLimitEvaluatorTest {
                     .message("Weekly spending 600.00 + 1.00 would exceed limit of 500.00")
                     .build();
 
-            assertThat(result)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expected);
+            assertThat(result).usingRecursiveComparison().isEqualTo(expected);
         }
     }
 }

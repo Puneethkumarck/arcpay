@@ -1,12 +1,11 @@
 package com.arcpay.payment.paymentexecution.stubs;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-
-import java.util.UUID;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
+import java.util.UUID;
 
 public final class PolicyServiceStubs {
 
@@ -55,13 +54,11 @@ public final class PolicyServiceStubs {
     }
 
     public static void stubReserveServerError(WireMockServer server) {
-        server.stubFor(post(urlPathEqualTo(RESERVE_PATH))
-                .willReturn(aResponse().withStatus(500)));
+        server.stubFor(post(urlPathEqualTo(RESERVE_PATH)).willReturn(aResponse().withStatus(500)));
     }
 
     public static void stubReserveClientError(WireMockServer server) {
-        server.stubFor(post(urlPathEqualTo(RESERVE_PATH))
-                .willReturn(aResponse().withStatus(422)));
+        server.stubFor(post(urlPathEqualTo(RESERVE_PATH)).willReturn(aResponse().withStatus(422)));
     }
 
     public static String reserveApprovedJson() {
@@ -83,9 +80,6 @@ public final class PolicyServiceStubs {
     }
 
     public static String reservationJson(UUID paymentId, String status) {
-        return "{"
-                + "\"paymentId\":\"" + paymentId + "\","
-                + "\"status\":\"" + status + "\""
-                + "}";
+        return "{" + "\"paymentId\":\"" + paymentId + "\"," + "\"status\":\"" + status + "\"" + "}";
     }
 }

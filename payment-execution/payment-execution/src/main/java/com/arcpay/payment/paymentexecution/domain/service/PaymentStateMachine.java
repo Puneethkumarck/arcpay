@@ -1,18 +1,5 @@
 package com.arcpay.payment.paymentexecution.domain.service;
 
-import com.arcpay.payment.paymentexecution.domain.event.PaymentStatusChanged;
-import com.arcpay.payment.paymentexecution.domain.exception.IllegalPaymentTransitionException;
-import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
-import com.arcpay.payment.paymentexecution.domain.model.Payment;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentTransition;
-import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
-import org.springframework.stereotype.Component;
-
-import java.time.Instant;
-import java.util.Map;
-import java.util.Set;
-
 import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.COMPLETED;
 import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.EXECUTING;
 import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.FAILED;
@@ -21,6 +8,18 @@ import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.PEN
 import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.POLICY_CHECK;
 import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.REJECTED;
 import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.SCREENING;
+
+import com.arcpay.payment.paymentexecution.domain.event.PaymentStatusChanged;
+import com.arcpay.payment.paymentexecution.domain.exception.IllegalPaymentTransitionException;
+import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
+import com.arcpay.payment.paymentexecution.domain.model.Payment;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentTransition;
+import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
+import org.springframework.stereotype.Component;
 
 @Component
 public class PaymentStateMachine {
@@ -73,9 +72,6 @@ public class PaymentStateMachine {
                 .transactionHash(to.txHash())
                 .changedAt(to.updatedAt())
                 .build();
-        return PaymentTransition.builder()
-                .payment(to)
-                .event(event)
-                .build();
+        return PaymentTransition.builder().payment(to).event(event).build();
     }
 }

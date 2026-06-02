@@ -3,14 +3,13 @@ package com.arcpay.identity.agentidentity.infrastructure.client.circle;
 import com.arcpay.identity.agentidentity.domain.model.WalletCreationResult;
 import com.arcpay.identity.agentidentity.domain.port.CircleWalletService;
 import com.arcpay.platform.infrastructure.circle.EntitySecretCiphertextProvider;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -26,19 +25,21 @@ class CircleWalletAdapter implements CircleWalletService {
         var requestBody = Map.of(
                 "idempotencyKey", agentId.toString(),
                 "walletSetId", properties.walletSetId(),
-                "blockchains", new String[]{properties.blockchain()},
+                "blockchains", new String[] {properties.blockchain()},
                 "count", 1,
-                "entitySecretCiphertext", ciphertextProvider.generate()
-        );
+                "entitySecretCiphertext", ciphertextProvider.generate());
 
         try {
-            var response = restClient.post()
+            var response = restClient
+                    .post()
                     .uri("/v1/w3s/developer/wallets")
                     .body(requestBody)
                     .retrieve()
                     .body(CreateWalletResponse.class);
 
-            if (response == null || response.data() == null || response.data().wallets() == null
+            if (response == null
+                    || response.data() == null
+                    || response.data().wallets() == null
                     || response.data().wallets().isEmpty()) {
                 throw new CircleApiException("Empty wallet response from Circle API for agentId=" + agentId);
             }

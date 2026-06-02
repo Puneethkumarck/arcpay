@@ -2,7 +2,6 @@ package com.arcpay.policy.policyengine.test.fixtures;
 
 import com.arcpay.policy.policyengine.domain.model.SpendingLedgerEntry;
 import com.arcpay.policy.policyengine.domain.model.SpendingSummary;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

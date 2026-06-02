@@ -1,12 +1,11 @@
 package com.arcpay.payment.paymentexecution.domain.event;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record PaymentRequested(
@@ -20,8 +19,7 @@ public record PaymentRequested(
         String currency,
         String memo,
         Map<String, String> metadata,
-        Instant requestedAt
-) {
+        Instant requestedAt) {
 
     public static final String TOPIC = "payment.requested";
 

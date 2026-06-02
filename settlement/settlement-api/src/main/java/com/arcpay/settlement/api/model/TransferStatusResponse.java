@@ -1,10 +1,9 @@
 package com.arcpay.settlement.api.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record TransferStatusResponse(
@@ -15,5 +14,4 @@ public record TransferStatusResponse(
         BigDecimal networkFee,
         String errorReason,
         Instant createdAt,
-        Instant updatedAt
-) {}
+        Instant updatedAt) {}

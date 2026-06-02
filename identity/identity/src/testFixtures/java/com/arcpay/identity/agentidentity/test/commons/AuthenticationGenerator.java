@@ -2,14 +2,14 @@ package com.arcpay.identity.agentidentity.test.commons;
 
 import com.arcpay.identity.agentidentity.domain.model.Owner;
 import com.arcpay.identity.agentidentity.domain.model.OwnerStatus;
-
 import java.time.Instant;
 import java.util.UUID;
 
 public final class AuthenticationGenerator {
 
     private static final Instant FIXED_TIMESTAMP = Instant.parse("2026-06-01T10:00:00Z");
-    private static final String REALISTIC_API_KEY_HASH = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+    private static final String REALISTIC_API_KEY_HASH =
+            "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
 
     private AuthenticationGenerator() {}
 

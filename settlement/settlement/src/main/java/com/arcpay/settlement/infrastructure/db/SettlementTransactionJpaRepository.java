@@ -1,9 +1,8 @@
 package com.arcpay.settlement.infrastructure.db;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 interface SettlementTransactionJpaRepository extends JpaRepository<SettlementTransactionEntity, UUID> {
 

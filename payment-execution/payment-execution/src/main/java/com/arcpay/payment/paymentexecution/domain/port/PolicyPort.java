@@ -1,7 +1,6 @@
 package com.arcpay.payment.paymentexecution.domain.port;
 
 import com.arcpay.payment.paymentexecution.api.model.PolicyResult;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 

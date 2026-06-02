@@ -1,14 +1,7 @@
 package com.arcpay.compliance.application.dto;
 
+import java.util.Map;
 import lombok.Builder;
 
-import java.util.Map;
-
 @Builder(toBuilder = true)
-public record ScreeningCheckResponse(
-        String type,
-        String result,
-        int matchScore,
-        Map<String, Object> details
-) {
-}
+public record ScreeningCheckResponse(String type, String result, int matchScore, Map<String, Object> details) {}

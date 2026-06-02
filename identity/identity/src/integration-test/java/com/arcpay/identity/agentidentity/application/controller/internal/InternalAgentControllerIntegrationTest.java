@@ -1,24 +1,5 @@
 package com.arcpay.identity.agentidentity.application.controller.internal;
 
-import com.arcpay.platform.api.OwnerPrincipal;
-import com.arcpay.platform.infrastructure.security.Roles;
-import com.arcpay.identity.agentidentity.application.controller.agent.handler.IdempotencyHandler;
-import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
-import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
-import com.arcpay.identity.agentidentity.domain.exception.AgentNotFoundException;
-import com.arcpay.identity.agentidentity.domain.owner.OwnerCommandHandler;
-import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
-import com.arcpay.identity.agentidentity.test.RestControllerAbstractTest;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ACTIVE;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -26,6 +7,23 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.arcpay.identity.agentidentity.application.controller.agent.handler.IdempotencyHandler;
+import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
+import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
+import com.arcpay.identity.agentidentity.domain.owner.OwnerCommandHandler;
+import com.arcpay.identity.agentidentity.domain.port.AgentRepository;
+import com.arcpay.identity.agentidentity.test.RestControllerAbstractTest;
+import com.arcpay.platform.api.OwnerPrincipal;
+import com.arcpay.platform.infrastructure.security.Roles;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class InternalAgentControllerIntegrationTest extends RestControllerAbstractTest {
 
@@ -153,8 +151,7 @@ class InternalAgentControllerIntegrationTest extends RestControllerAbstractTest 
         given(agentRepository.findById(agentId)).willReturn(Optional.empty());
 
         // when / then
-        mockMvc.perform(get("/api/v1/internal/agents/{agentId}", agentId)
-                        .with(authentication(serviceAuth())))
+        mockMvc.perform(get("/api/v1/internal/agents/{agentId}", agentId).with(authentication(serviceAuth())))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ARCPAY-IDENTITY-0002"));
     }

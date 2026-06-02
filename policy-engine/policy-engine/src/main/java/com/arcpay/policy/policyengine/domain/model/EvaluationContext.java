@@ -1,11 +1,10 @@
 package com.arcpay.policy.policyengine.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record EvaluationContext(
@@ -16,8 +15,7 @@ public record EvaluationContext(
         BigDecimal amount,
         Instant requestedAt,
         boolean dryRun,
-        SpendingSummary spendingSummary
-) {
+        SpendingSummary spendingSummary) {
 
     public EvaluationContext {
         Objects.requireNonNull(agentId, "agentId must not be null");

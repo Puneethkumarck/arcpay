@@ -1,15 +1,15 @@
 package com.arcpay.policy.policyengine.domain.policy;
 
-import com.arcpay.policy.policyengine.domain.model.Policy;
-import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
-import com.github.f4b6a3.uuid.UuidCreator;
-import org.junit.jupiter.api.Test;
-
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_AGENT_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_COMPUTED_HASH;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_OWNER_ID;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_RULES;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.policy.policyengine.domain.model.Policy;
+import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
+import com.github.f4b6a3.uuid.UuidCreator;
+import org.junit.jupiter.api.Test;
 
 class PolicyCreationServiceTest {
 
@@ -18,19 +18,20 @@ class PolicyCreationServiceTest {
     @Test
     void shouldCreatePolicyWithUuidV7() {
         // given / when
-        var policy = policyCreationService.createPolicy(
-                SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 1);
+        var policy =
+                policyCreationService.createPolicy(SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 1);
 
         // then
-        assertThat(UuidCreator.getTimeOrderedEpoch().version()).isEqualTo(policy.policyId().version());
+        assertThat(UuidCreator.getTimeOrderedEpoch().version())
+                .isEqualTo(policy.policyId().version());
         assertThat(policy.policyId().version()).isEqualTo(7);
     }
 
     @Test
     void shouldSetVersionToProvidedValue() {
         // given / when
-        var policy = policyCreationService.createPolicy(
-                SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 3);
+        var policy =
+                policyCreationService.createPolicy(SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 3);
 
         // then
         var expected = Policy.builder()
@@ -50,8 +51,8 @@ class PolicyCreationServiceTest {
     @Test
     void shouldCreateActivePolicyForFirstVersion() {
         // given / when
-        var policy = policyCreationService.createPolicy(
-                SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 1);
+        var policy =
+                policyCreationService.createPolicy(SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 1);
 
         // then
         assertThat(policy.version()).isEqualTo(1);

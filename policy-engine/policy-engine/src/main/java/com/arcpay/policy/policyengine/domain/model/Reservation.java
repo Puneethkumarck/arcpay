@@ -1,11 +1,10 @@
 package com.arcpay.policy.policyengine.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record Reservation(
@@ -14,8 +13,7 @@ public record Reservation(
         BigDecimal amount,
         String recipient,
         ReservationStatus status,
-        Instant createdAt
-) {
+        Instant createdAt) {
 
     public Reservation {
         Objects.requireNonNull(paymentId, "paymentId must not be null");
@@ -25,8 +23,8 @@ public record Reservation(
         Objects.requireNonNull(status, "status must not be null");
     }
 
-    public static Reservation held(UUID paymentId, UUID agentId, BigDecimal amount,
-            String recipient, Instant createdAt) {
+    public static Reservation held(
+            UUID paymentId, UUID agentId, BigDecimal amount, String recipient, Instant createdAt) {
         return Reservation.builder()
                 .paymentId(paymentId)
                 .agentId(agentId)

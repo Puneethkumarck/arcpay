@@ -1,12 +1,11 @@
 package com.arcpay.compliance.infrastructure.sanctions.parser;
 
+import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.EU;
+
 import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
 import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
-
-import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.EU;
+import org.springframework.stereotype.Component;
 
 @Component
 public class EuParser implements SanctionsFeedParser {

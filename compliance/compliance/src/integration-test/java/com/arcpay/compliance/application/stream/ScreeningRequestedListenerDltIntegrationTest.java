@@ -1,11 +1,30 @@
 package com.arcpay.compliance.application.stream;
 
+import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
+import static com.arcpay.compliance.fixtures.OnChainFixtures.blockNumberJson;
+import static com.arcpay.compliance.fixtures.OnChainFixtures.emptyLogsJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
 import com.arcpay.compliance.domain.event.PaymentScreeningRequested;
 import com.arcpay.compliance.test.FullContextIntegrationTest;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -25,26 +44,6 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
-import static com.arcpay.compliance.fixtures.OnChainFixtures.blockNumberJson;
-import static com.arcpay.compliance.fixtures.OnChainFixtures.emptyLogsJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 class ScreeningRequestedListenerDltIntegrationTest extends FullContextIntegrationTest {
 
@@ -103,14 +102,15 @@ class ScreeningRequestedListenerDltIntegrationTest extends FullContextIntegratio
         var before = dltCount();
 
         // when
-        kafkaTemplate.send(PaymentScreeningRequested.TOPIC, paymentId.toString(),
-                requestFor(paymentId, MALFORMED_ADDRESS));
+        kafkaTemplate.send(
+                PaymentScreeningRequested.TOPIC, paymentId.toString(), requestFor(paymentId, MALFORMED_ADDRESS));
 
         // then
         var dltRecord = awaitDeadLetterRecord(paymentId.toString());
         assertThat(dltRecord.value()).contains(paymentId.toString()).contains(MALFORMED_ADDRESS);
         assertThat(headerValue(dltRecord, KafkaHeaders.DLT_ORIGINAL_TOPIC)).isEqualTo(PaymentScreeningRequested.TOPIC);
-        assertThat(headerValue(dltRecord, KafkaHeaders.DLT_EXCEPTION_CAUSE_FQCN)).contains("MalformedAddressException");
+        assertThat(headerValue(dltRecord, KafkaHeaders.DLT_EXCEPTION_CAUSE_FQCN))
+                .contains("MalformedAddressException");
         assertThat(dltCount()).isGreaterThan(before);
     }
 
@@ -139,7 +139,8 @@ class ScreeningRequestedListenerDltIntegrationTest extends FullContextIntegratio
         try (var consumer = newDltConsumer()) {
             consumer.subscribe(List.of(DLT_TOPIC));
             var found = new AtomicReference<ConsumerRecord<String, String>>();
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(500))
+            await().atMost(Duration.ofSeconds(30))
+                    .pollInterval(Duration.ofMillis(500))
                     .until(() -> {
                         for (ConsumerRecord<String, String> record : consumer.poll(Duration.ofSeconds(2))) {
                             if (key.equals(record.key())) {

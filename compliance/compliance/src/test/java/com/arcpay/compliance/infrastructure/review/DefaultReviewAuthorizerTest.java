@@ -1,20 +1,5 @@
 package com.arcpay.compliance.infrastructure.review;
 
-import com.arcpay.compliance.domain.port.OwnerResolver;
-import com.arcpay.platform.api.OwnerPrincipal;
-import com.arcpay.platform.infrastructure.security.Roles;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.List;
-
 import static com.arcpay.compliance.fixtures.ComplianceFixtures.SOME_AGENT_ID;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OFFICER_EMAIL;
 import static com.arcpay.compliance.fixtures.IdentityFixtures.SOME_OTHER_OWNER_ID;
@@ -25,6 +10,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+
+import com.arcpay.compliance.domain.port.OwnerResolver;
+import com.arcpay.platform.api.OwnerPrincipal;
+import com.arcpay.platform.infrastructure.security.Roles;
+import java.util.List;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultReviewAuthorizerTest {
@@ -43,7 +42,8 @@ class DefaultReviewAuthorizerTest {
     @Test
     void shouldAuthorizeOfficerWithoutIdentityCall() {
         // given
-        authenticate(new OwnerPrincipal(SOME_OWNER_ID, SOME_OFFICER_EMAIL, Roles.COMPLIANCE_OFFICER),
+        authenticate(
+                new OwnerPrincipal(SOME_OWNER_ID, SOME_OFFICER_EMAIL, Roles.COMPLIANCE_OFFICER),
                 "ROLE_" + Roles.COMPLIANCE_OFFICER);
 
         // when
@@ -83,9 +83,9 @@ class DefaultReviewAuthorizerTest {
     @Test
     void shouldDenyWhenAuthenticatedPrincipalIsNotOwnerPrincipal() {
         // given
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("non-owner-principal", null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + Roles.OWNER))));
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(
+                        "non-owner-principal", null, List.of(new SimpleGrantedAuthority("ROLE_" + Roles.OWNER))));
         given(ownerResolver.resolveOwner(SOME_AGENT_ID)).willReturn(SOME_OWNER_ID);
 
         // when

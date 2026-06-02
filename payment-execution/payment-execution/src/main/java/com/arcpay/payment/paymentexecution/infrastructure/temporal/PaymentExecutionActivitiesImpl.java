@@ -13,13 +13,12 @@ import com.arcpay.payment.paymentexecution.domain.saga.PaymentExecutionActivitie
 import com.arcpay.payment.paymentexecution.domain.service.PaymentStatusService;
 import io.temporal.failure.ApplicationFailure;
 import io.temporal.spring.boot.ActivityImpl;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -38,7 +37,8 @@ class PaymentExecutionActivitiesImpl implements PaymentExecutionActivities {
 
     @Override
     public boolean verifyAgentActive(UUID agentId) {
-        return agentServiceClient.getAgent(agentId)
+        return agentServiceClient
+                .getAgent(agentId)
                 .map(agent -> ACTIVE_STATUS.equals(agent.status()))
                 .orElse(false);
     }
@@ -64,7 +64,8 @@ class PaymentExecutionActivitiesImpl implements PaymentExecutionActivities {
 
     @Override
     public void publishScreeningRequested(UUID paymentId) {
-        var payment = paymentRepository.findById(paymentId)
+        var payment = paymentRepository
+                .findById(paymentId)
                 .orElseThrow(() -> ApplicationFailure.newNonRetryableFailure(
                         "Payment not found: " + paymentId, PaymentNotFoundException.class.getSimpleName()));
         compliancePort.publishScreeningRequest(payment);
@@ -73,7 +74,8 @@ class PaymentExecutionActivitiesImpl implements PaymentExecutionActivities {
 
     @Override
     public String submitTransfer(UUID paymentId, UUID agentId, String recipient, BigDecimal amount) {
-        var walletId = agentServiceClient.getAgent(agentId)
+        var walletId = agentServiceClient
+                .getAgent(agentId)
                 .map(agent -> agent.walletId())
                 .orElseThrow(() -> ApplicationFailure.newNonRetryableFailure(
                         "Agent wallet not found: " + agentId, "AgentWalletNotFound"));
@@ -85,7 +87,8 @@ class PaymentExecutionActivitiesImpl implements PaymentExecutionActivities {
     @Override
     public void writeReceiptAsync(UUID paymentId) {
         try {
-            var payment = paymentRepository.findById(paymentId)
+            var payment = paymentRepository
+                    .findById(paymentId)
                     .orElseThrow(() -> ApplicationFailure.newNonRetryableFailure(
                             "Payment not found: " + paymentId, PaymentNotFoundException.class.getSimpleName()));
             var receipt = settlementPort.writeReceipt(payment);

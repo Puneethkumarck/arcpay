@@ -2,12 +2,11 @@ package com.arcpay.compliance.domain.event;
 
 import com.arcpay.compliance.domain.model.ScreeningCheck;
 import com.arcpay.compliance.domain.model.Verdict;
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record ScreeningCompleted(
@@ -17,8 +16,7 @@ public record ScreeningCompleted(
         int riskScore,
         List<ScreeningCheck> checks,
         UUID listVersionId,
-        Instant screenedAt
-) {
+        Instant screenedAt) {
 
     public static final String TOPIC = "screening.completed";
 

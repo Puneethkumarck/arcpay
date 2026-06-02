@@ -1,20 +1,5 @@
 package com.arcpay.compliance.infrastructure.temporal;
 
-import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
-import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
-import com.arcpay.compliance.infrastructure.sanctions.parser.OfacSdnParser;
-import com.arcpay.compliance.infrastructure.sanctions.parser.ParserRegistry;
-import io.temporal.failure.ApplicationFailure;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Map;
-
 import static com.arcpay.compliance.fixtures.SanctionsFeedFixtures.EXPECTED_OFAC_SDN_ADDRESSES;
 import static com.arcpay.compliance.fixtures.SanctionsFeedFixtures.OFAC_SDN_FEED;
 import static com.arcpay.compliance.fixtures.SanctionsIngestionFixtures.SOME_ALL_SOURCES_RECORDS;
@@ -25,6 +10,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
+import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
+import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
+import com.arcpay.compliance.infrastructure.sanctions.parser.OfacSdnParser;
+import com.arcpay.compliance.infrastructure.sanctions.parser.ParserRegistry;
+import io.temporal.failure.ApplicationFailure;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SanctionsIngestionActivitiesTest {
@@ -85,8 +84,7 @@ class SanctionsIngestionActivitiesTest {
         Map<SanctionsSource, List<SanctionedAddressRecord>> empty = Map.of();
 
         // when / then
-        assertThatThrownBy(() -> activities.validateSnapshot(empty))
-                .isInstanceOf(ApplicationFailure.class);
+        assertThatThrownBy(() -> activities.validateSnapshot(empty)).isInstanceOf(ApplicationFailure.class);
     }
 
     @Test
@@ -101,8 +99,8 @@ class SanctionsIngestionActivitiesTest {
         activities.persistSnapshot(versionId, SOME_ALL_SOURCES_RECORDS);
 
         // then
-        verify(snapshotWriter).persistSnapshot(versionCaptor.capture(), checksumCaptor.capture(),
-                recordsCaptor.capture());
+        verify(snapshotWriter)
+                .persistSnapshot(versionCaptor.capture(), checksumCaptor.capture(), recordsCaptor.capture());
         assertThat(versionCaptor.getValue()).isEqualTo(versionId);
         assertThat(checksumCaptor.getValue()).isNotBlank();
         assertThat(recordsCaptor.getValue()).isEqualTo(SOME_ALL_SOURCES_RECORDS);
@@ -121,8 +119,7 @@ class SanctionsIngestionActivitiesTest {
         // then
         verify(refreshTracker, times(SOME_ALL_SOURCES_RECORDS.size()))
                 .recordSuccess(sourceCaptor.capture(), instantCaptor.capture());
-        assertThat(sourceCaptor.getAllValues())
-                .containsExactlyInAnyOrderElementsOf(SOME_ALL_SOURCES_RECORDS.keySet());
+        assertThat(sourceCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(SOME_ALL_SOURCES_RECORDS.keySet());
     }
 
     @Test

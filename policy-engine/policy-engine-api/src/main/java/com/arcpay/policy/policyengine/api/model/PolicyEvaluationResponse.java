@@ -1,10 +1,9 @@
 package com.arcpay.policy.policyengine.api.model;
 
-import lombok.Builder;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record PolicyEvaluationResponse(
@@ -15,5 +14,4 @@ public record PolicyEvaluationResponse(
         List<RuleResultResponse> ruleResults,
         boolean dryRun,
         Instant evaluatedAt,
-        long durationMs
-) {}
+        long durationMs) {}

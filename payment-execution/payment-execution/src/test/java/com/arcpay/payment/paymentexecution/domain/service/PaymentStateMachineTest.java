@@ -1,16 +1,5 @@
 package com.arcpay.payment.paymentexecution.domain.service;
 
-import com.arcpay.payment.paymentexecution.domain.event.PaymentStatusChanged;
-import com.arcpay.payment.paymentexecution.domain.exception.IllegalPaymentTransitionException;
-import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
-import com.arcpay.payment.paymentexecution.domain.model.Payment;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
-import com.arcpay.payment.paymentexecution.domain.model.PaymentTransition;
-import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.COMPLETED;
 import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.EXECUTING;
 import static com.arcpay.payment.paymentexecution.domain.model.PaymentStatus.HELD;
@@ -22,6 +11,16 @@ import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.SOME_
 import static com.arcpay.payment.paymentexecution.fixtures.PaymentFixtures.somePayment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.arcpay.payment.paymentexecution.domain.event.PaymentStatusChanged;
+import com.arcpay.payment.paymentexecution.domain.exception.IllegalPaymentTransitionException;
+import com.arcpay.payment.paymentexecution.domain.model.FailureReason;
+import com.arcpay.payment.paymentexecution.domain.model.Payment;
+import com.arcpay.payment.paymentexecution.domain.model.PaymentTransition;
+import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentStateMachineTest {
@@ -102,7 +101,8 @@ class PaymentStateMachineTest {
         var result = stateMachine.reject(payment, RejectionReason.AGENT_NOT_ACTIVE, SOME_TRANSITIONED_AT);
 
         // then
-        var expected = expectedTransition(payment, payment.reject(RejectionReason.AGENT_NOT_ACTIVE, SOME_TRANSITIONED_AT));
+        var expected =
+                expectedTransition(payment, payment.reject(RejectionReason.AGENT_NOT_ACTIVE, SOME_TRANSITIONED_AT));
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
 
@@ -115,7 +115,8 @@ class PaymentStateMachineTest {
         var result = stateMachine.reject(payment, RejectionReason.POLICY_VIOLATION, SOME_TRANSITIONED_AT);
 
         // then
-        var expected = expectedTransition(payment, payment.reject(RejectionReason.POLICY_VIOLATION, SOME_TRANSITIONED_AT));
+        var expected =
+                expectedTransition(payment, payment.reject(RejectionReason.POLICY_VIOLATION, SOME_TRANSITIONED_AT));
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
 
@@ -128,7 +129,8 @@ class PaymentStateMachineTest {
         var result = stateMachine.reject(payment, RejectionReason.COMPLIANCE_BLOCK, SOME_TRANSITIONED_AT);
 
         // then
-        var expected = expectedTransition(payment, payment.reject(RejectionReason.COMPLIANCE_BLOCK, SOME_TRANSITIONED_AT));
+        var expected =
+                expectedTransition(payment, payment.reject(RejectionReason.COMPLIANCE_BLOCK, SOME_TRANSITIONED_AT));
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
 
@@ -154,7 +156,8 @@ class PaymentStateMachineTest {
         var result = stateMachine.fail(payment, FailureReason.POLICY_UNAVAILABLE, SOME_TRANSITIONED_AT);
 
         // then
-        var expected = expectedTransition(payment, payment.fail(FailureReason.POLICY_UNAVAILABLE, SOME_TRANSITIONED_AT));
+        var expected =
+                expectedTransition(payment, payment.fail(FailureReason.POLICY_UNAVAILABLE, SOME_TRANSITIONED_AT));
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
 
@@ -167,7 +170,8 @@ class PaymentStateMachineTest {
         var result = stateMachine.fail(payment, FailureReason.EXECUTION_REVERTED, SOME_TRANSITIONED_AT);
 
         // then
-        var expected = expectedTransition(payment, payment.fail(FailureReason.EXECUTION_REVERTED, SOME_TRANSITIONED_AT));
+        var expected =
+                expectedTransition(payment, payment.fail(FailureReason.EXECUTION_REVERTED, SOME_TRANSITIONED_AT));
         assertThat(result).usingRecursiveComparison().isEqualTo(expected);
     }
 
@@ -248,9 +252,6 @@ class PaymentStateMachineTest {
                 .transactionHash(to.txHash())
                 .changedAt(to.updatedAt())
                 .build();
-        return PaymentTransition.builder()
-                .payment(to)
-                .event(event)
-                .build();
+        return PaymentTransition.builder().payment(to).event(event).build();
     }
 }

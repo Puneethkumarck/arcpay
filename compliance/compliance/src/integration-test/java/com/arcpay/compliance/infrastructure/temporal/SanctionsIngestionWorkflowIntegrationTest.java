@@ -1,20 +1,5 @@
 package com.arcpay.compliance.infrastructure.temporal;
 
-import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
-import com.arcpay.compliance.test.FullContextIntegrationTest;
-import io.temporal.client.WorkflowClient;
-import io.temporal.client.WorkflowOptions;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.UUID;
-
 import static com.arcpay.compliance.fixtures.SanctionsIngestionFixtures.SOME_TRIGGER_TIMESTAMP;
 import static com.arcpay.compliance.fixtures.SanctionsIngestionFixtures.addressFor;
 import static com.arcpay.compliance.fixtures.SanctionsIngestionFixtures.feedFor;
@@ -22,6 +7,20 @@ import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFA
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.UN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+
+import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
+import com.arcpay.compliance.test.FullContextIntegrationTest;
+import io.temporal.client.WorkflowClient;
+import io.temporal.client.WorkflowOptions;
+import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class SanctionsIngestionWorkflowIntegrationTest extends FullContextIntegrationTest {
 
@@ -101,8 +100,8 @@ class SanctionsIngestionWorkflowIntegrationTest extends FullContextIntegrationTe
 
         // then
         var pointerVersionId = currentPointerVersionId();
-        var persistedVersionIds = jdbcTemplate.queryForList(
-                "SELECT version_id FROM sanctions_list_version", UUID.class);
+        var persistedVersionIds =
+                jdbcTemplate.queryForList("SELECT version_id FROM sanctions_list_version", UUID.class);
         assertThat(persistedVersionIds).containsExactly(pointerVersionId);
     }
 
@@ -118,8 +117,7 @@ class SanctionsIngestionWorkflowIntegrationTest extends FullContextIntegrationTe
     }
 
     private UUID currentPointerVersionId() {
-        return jdbcTemplate.queryForObject(
-                "SELECT version_id FROM current_list_version WHERE id = 1", UUID.class);
+        return jdbcTemplate.queryForObject("SELECT version_id FROM current_list_version WHERE id = 1", UUID.class);
     }
 
     private List<String> addressesForVersion(UUID versionId) {

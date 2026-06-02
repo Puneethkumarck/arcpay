@@ -1,19 +1,18 @@
 package com.arcpay.compliance.infrastructure.db;
 
+import static org.springframework.data.domain.Sort.Direction.DESC;
+
 import com.arcpay.compliance.domain.model.HoldReview;
 import com.arcpay.compliance.domain.model.ReviewState;
 import com.arcpay.compliance.domain.port.HoldReviewStore;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @Component
 @RequiredArgsConstructor

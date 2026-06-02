@@ -1,20 +1,19 @@
 package com.arcpay.policy.policyengine.test.fixtures;
 
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AGENT_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AMOUNT;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_PAYMENT_ID;
+import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_RECIPIENT;
+
 import com.arcpay.policy.policyengine.api.model.ReserveRequest;
 import com.arcpay.policy.policyengine.domain.model.AgentInfo;
 import com.arcpay.policy.policyengine.domain.model.PolicyEvaluationResult;
 import com.arcpay.policy.policyengine.domain.model.PolicyVerdict;
 import com.arcpay.policy.policyengine.domain.model.Reservation;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AGENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_AMOUNT;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_PAYMENT_ID;
-import static com.arcpay.policy.policyengine.test.fixtures.SpendingFixtures.SOME_RECIPIENT;
 
 public final class ReservationFixtures {
 
@@ -26,8 +25,7 @@ public final class ReservationFixtures {
     public static final String SOME_POLICY_HASH = "0xhash";
     public static final Instant SOME_REQUESTED_AT = Instant.parse("2026-01-01T12:00:00Z");
 
-    public static final AgentInfo SOME_AGENT =
-            new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", SOME_POLICY_HASH);
+    public static final AgentInfo SOME_AGENT = new AgentInfo(SOME_AGENT_ID, SOME_OWNER_ID, "ACTIVE", SOME_POLICY_HASH);
 
     public static final Reservation SOME_HELD_RESERVATION =
             Reservation.held(SOME_PAYMENT_ID, SOME_AGENT_ID, SOME_AMOUNT, SOME_RECIPIENT, SOME_REQUESTED_AT);

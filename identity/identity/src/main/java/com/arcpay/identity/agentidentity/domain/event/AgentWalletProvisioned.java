@@ -4,8 +4,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-public record AgentWalletProvisioned(UUID agentId, String walletId, String walletAddress,
-                                     Instant provisionedAt) {
+public record AgentWalletProvisioned(UUID agentId, String walletId, String walletAddress, Instant provisionedAt) {
 
     public static final String TOPIC = "agent.wallet-provisioned";
 

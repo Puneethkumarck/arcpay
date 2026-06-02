@@ -1,12 +1,11 @@
 package com.arcpay.payment.paymentexecution.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record Payment(
@@ -29,8 +28,7 @@ public record Payment(
         Map<String, String> metadata,
         Instant createdAt,
         Instant updatedAt,
-        Instant completedAt
-) {
+        Instant completedAt) {
 
     public Payment {
         metadata = metadata == null ? Map.of() : Map.copyOf(metadata);
@@ -50,10 +48,7 @@ public record Payment(
     public Payment withStatus(PaymentStatus toStatus, Instant transitionedAt) {
         Objects.requireNonNull(toStatus, "toStatus must not be null");
         Objects.requireNonNull(transitionedAt, "transitionedAt must not be null");
-        return toBuilder()
-                .status(toStatus)
-                .updatedAt(transitionedAt)
-                .build();
+        return toBuilder().status(toStatus).updatedAt(transitionedAt).build();
     }
 
     public Payment reject(RejectionReason reason, Instant transitionedAt) {

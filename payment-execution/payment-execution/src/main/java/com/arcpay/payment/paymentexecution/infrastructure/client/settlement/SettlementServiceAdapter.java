@@ -7,13 +7,12 @@ import com.arcpay.payment.paymentexecution.domain.port.SettlementPort;
 import com.arcpay.settlement.api.model.ReceiptRequest;
 import com.arcpay.settlement.api.model.TransferRequest;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -63,13 +62,14 @@ class SettlementServiceAdapter implements SettlementPort {
         }
     }
 
-    private SettlementServiceUnavailableException toUnavailable(String operation, UUID id, SettlementServiceCallException e) {
-        var reason = switch (e.getCause()) {
-            case CallNotPermittedException _ -> "Settlement service circuit breaker is open";
-            case TimeoutException _ -> "Settlement service call timed out";
-            case null, default -> "Settlement service call failed";
-        };
-        return new SettlementServiceUnavailableException(
-                reason + " during " + operation + " for " + id, e);
+    private SettlementServiceUnavailableException toUnavailable(
+            String operation, UUID id, SettlementServiceCallException e) {
+        var reason =
+                switch (e.getCause()) {
+                    case CallNotPermittedException _ -> "Settlement service circuit breaker is open";
+                    case TimeoutException _ -> "Settlement service call timed out";
+                    case null, default -> "Settlement service call failed";
+                };
+        return new SettlementServiceUnavailableException(reason + " during " + operation + " for " + id, e);
     }
 }

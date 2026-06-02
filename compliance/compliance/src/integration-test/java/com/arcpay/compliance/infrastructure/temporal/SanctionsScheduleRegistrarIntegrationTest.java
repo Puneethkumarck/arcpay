@@ -1,10 +1,10 @@
 package com.arcpay.compliance.infrastructure.temporal;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+
 import com.arcpay.compliance.test.FullContextIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 class SanctionsScheduleRegistrarIntegrationTest extends FullContextIntegrationTest {
 

@@ -9,11 +9,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableFeignClients(basePackages = {
-        "com.arcpay.identity.client",
-        "com.arcpay.policy.client",
-        "com.arcpay.payment.paymentexecution.infrastructure.client.settlement"
-})
+@EnableFeignClients(
+        basePackages = {
+            "com.arcpay.identity.client",
+            "com.arcpay.policy.client",
+            "com.arcpay.payment.paymentexecution.infrastructure.client.settlement"
+        })
 public class FeignConfig {
 
     @Bean

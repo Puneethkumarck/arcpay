@@ -3,15 +3,14 @@ package com.arcpay.compliance.infrastructure.sanctions;
 import com.arcpay.compliance.domain.model.SanctionsSet;
 import com.arcpay.compliance.domain.port.SanctionsSetProvider;
 import jakarta.annotation.PostConstruct;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Primary
@@ -47,12 +46,16 @@ class SanctionsSetCache implements SanctionsSetProvider {
             var current = cache.get();
             if (!Objects.equals(current.versionId(), latest.versionId())) {
                 cache.set(latest);
-                log.info("Sanctions set swapped to version {} with {} addresses",
-                        latest.versionId(), latest.addresses().size());
+                log.info(
+                        "Sanctions set swapped to version {} with {} addresses",
+                        latest.versionId(),
+                        latest.addresses().size());
             }
         } catch (RuntimeException ex) {
-            log.error("Sanctions set refresh failed; retaining previous snapshot version {}",
-                    cache.get().versionId(), ex);
+            log.error(
+                    "Sanctions set refresh failed; retaining previous snapshot version {}",
+                    cache.get().versionId(),
+                    ex);
         }
     }
 

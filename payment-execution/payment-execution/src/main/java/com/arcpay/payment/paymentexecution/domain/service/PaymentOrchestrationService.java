@@ -8,14 +8,13 @@ import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentTransition;
 import com.arcpay.payment.paymentexecution.domain.model.RejectionReason;
 import com.github.f4b6a3.uuid.UuidCreator;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.web3j.crypto.Hash;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.web3j.crypto.Hash;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +50,8 @@ public class PaymentOrchestrationService {
     }
 
     public String fingerprint(PaymentRequest request) {
-        var canonical = String.join(FINGERPRINT_DELIMITER,
+        var canonical = String.join(
+                FINGERPRINT_DELIMITER,
                 request.agentId().toString(),
                 request.recipientAddress().toLowerCase(Locale.ROOT),
                 request.amount().stripTrailingZeros().toPlainString(),
@@ -84,11 +84,12 @@ public class PaymentOrchestrationService {
             throw new InvalidPaymentRequestException("Invalid recipient address: " + request.recipientAddress());
         }
         if (request.amount().compareTo(MIN_AMOUNT) < 0) {
-            throw new InvalidPaymentRequestException("Amount below minimum: " + request.amount().toPlainString());
+            throw new InvalidPaymentRequestException(
+                    "Amount below minimum: " + request.amount().toPlainString());
         }
         if (request.amount().stripTrailingZeros().scale() > MAX_AMOUNT_SCALE) {
-            throw new InvalidPaymentRequestException("Amount exceeds maximum of " + MAX_AMOUNT_SCALE + " decimal places: "
-                    + request.amount().toPlainString());
+            throw new InvalidPaymentRequestException("Amount exceeds maximum of " + MAX_AMOUNT_SCALE
+                    + " decimal places: " + request.amount().toPlainString());
         }
         if (request.memo() != null && request.memo().length() > MAX_MEMO_LENGTH) {
             throw new InvalidPaymentRequestException("Memo exceeds maximum length of " + MAX_MEMO_LENGTH);

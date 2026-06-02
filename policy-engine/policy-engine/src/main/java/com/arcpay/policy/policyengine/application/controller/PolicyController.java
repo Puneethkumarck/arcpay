@@ -8,6 +8,7 @@ import com.arcpay.policy.policyengine.application.controller.mapper.PolicyRespon
 import com.arcpay.policy.policyengine.domain.policy.PolicyCommandHandler;
 import com.arcpay.policy.policyengine.domain.policy.PolicyQueryHandler;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -22,8 +23,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -48,8 +47,7 @@ public class PolicyController {
 
     @GetMapping("/active")
     public PolicyResponse getActivePolicy(
-            @AuthenticationPrincipal OwnerPrincipal principal,
-            @PathVariable UUID agentId) {
+            @AuthenticationPrincipal OwnerPrincipal principal, @PathVariable UUID agentId) {
         var policy = policyQueryHandler.getActivePolicy(agentId, principal.ownerId());
         return policyResponseMapper.toApi(policy);
     }

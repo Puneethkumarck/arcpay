@@ -1,24 +1,5 @@
 package com.arcpay.payment.paymentexecution.infrastructure.client.settlement;
 
-import com.arcpay.payment.paymentexecution.domain.exception.SettlementServiceUnavailableException;
-import com.arcpay.payment.paymentexecution.domain.port.SettlementPort;
-import com.arcpay.payment.paymentexecution.test.FullContextIntegrationTest;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import feign.FeignException;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
-
-import java.math.BigDecimal;
-import java.util.UUID;
-
 import static com.arcpay.payment.paymentexecution.stubs.SettlementServiceStubs.TRANSFERS_PATH;
 import static com.arcpay.payment.paymentexecution.stubs.SettlementServiceStubs.balancePath;
 import static com.arcpay.payment.paymentexecution.stubs.SettlementServiceStubs.stubBalance;
@@ -32,13 +13,32 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@TestPropertySource(properties = {
-        "resilience4j.circuitbreaker.configs.default.sliding-window-size=3",
-        "resilience4j.circuitbreaker.configs.default.minimum-number-of-calls=3",
-        "resilience4j.circuitbreaker.configs.default.failure-rate-threshold=50",
-        "resilience4j.circuitbreaker.configs.default.wait-duration-in-open-state=30s",
-        "resilience4j.timelimiter.configs.default.timeout-duration=2s"
-})
+import com.arcpay.payment.paymentexecution.domain.exception.SettlementServiceUnavailableException;
+import com.arcpay.payment.paymentexecution.domain.port.SettlementPort;
+import com.arcpay.payment.paymentexecution.test.FullContextIntegrationTest;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import java.math.BigDecimal;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
+
+@TestPropertySource(
+        properties = {
+            "resilience4j.circuitbreaker.configs.default.sliding-window-size=3",
+            "resilience4j.circuitbreaker.configs.default.minimum-number-of-calls=3",
+            "resilience4j.circuitbreaker.configs.default.failure-rate-threshold=50",
+            "resilience4j.circuitbreaker.configs.default.wait-duration-in-open-state=30s",
+            "resilience4j.timelimiter.configs.default.timeout-duration=2s"
+        })
 class SettlementResilienceIntegrationTest extends FullContextIntegrationTest {
 
     private static final UUID SOME_PAYMENT_ID = UUID.fromString("0197aa00-1111-7def-8000-111111111111");
@@ -114,7 +114,8 @@ class SettlementResilienceIntegrationTest extends FullContextIntegrationTest {
 
         // when
         for (int i = 0; i < 3; i++) {
-            assertThatThrownBy(() -> settlementPort.transfer(SOME_PAYMENT_ID, SOME_WALLET_ID, SOME_RECIPIENT, SOME_AMOUNT))
+            assertThatThrownBy(
+                            () -> settlementPort.transfer(SOME_PAYMENT_ID, SOME_WALLET_ID, SOME_RECIPIENT, SOME_AMOUNT))
                     .isInstanceOf(SettlementServiceUnavailableException.class);
         }
 
@@ -132,7 +133,8 @@ class SettlementResilienceIntegrationTest extends FullContextIntegrationTest {
 
         // when
         for (int i = 0; i < 5; i++) {
-            assertThatThrownBy(() -> settlementPort.transfer(SOME_PAYMENT_ID, SOME_WALLET_ID, SOME_RECIPIENT, SOME_AMOUNT))
+            assertThatThrownBy(
+                            () -> settlementPort.transfer(SOME_PAYMENT_ID, SOME_WALLET_ID, SOME_RECIPIENT, SOME_AMOUNT))
                     .isInstanceOf(FeignException.class)
                     .isNotInstanceOf(SettlementServiceUnavailableException.class);
         }
@@ -149,8 +151,7 @@ class SettlementResilienceIntegrationTest extends FullContextIntegrationTest {
                 .filter(b -> b.getName().startsWith("SettlementServiceClient")
                         && b.getMetrics().getNumberOfBufferedCalls() > 0)
                 .findFirst()
-                .orElseThrow(() -> new AssertionError(
-                        "No SettlementServiceClient circuit breaker recorded any calls — "
-                                + "the OpenFeign circuit-breaker integration did not engage"));
+                .orElseThrow(() -> new AssertionError("No SettlementServiceClient circuit breaker recorded any calls — "
+                        + "the OpenFeign circuit-breaker integration did not engage"));
     }
 }

@@ -1,7 +1,6 @@
 package com.arcpay.identity.agentidentity.domain.port;
 
 import com.arcpay.identity.agentidentity.domain.model.Owner;
-
 import java.util.Optional;
 import java.util.UUID;
 

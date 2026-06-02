@@ -1,14 +1,13 @@
 package com.arcpay.policy.policyengine.infrastructure.db.policy;
 
 import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
+import java.util.Optional;
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.Optional;
-import java.util.UUID;
 
 interface PolicyJpaRepository extends JpaRepository<PolicyEntity, UUID> {
 

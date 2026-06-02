@@ -1,11 +1,10 @@
 package com.arcpay.identity.agentidentity.domain.agent;
 
-import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
-import org.junit.jupiter.api.Test;
-
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.arcpay.identity.agentidentity.domain.model.AgentStatus;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
 
 class AgentCreationServiceTest {
 

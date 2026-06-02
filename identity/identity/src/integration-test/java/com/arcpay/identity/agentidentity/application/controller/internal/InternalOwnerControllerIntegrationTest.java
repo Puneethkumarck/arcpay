@@ -1,22 +1,5 @@
 package com.arcpay.identity.agentidentity.application.controller.internal;
 
-import com.arcpay.platform.api.OwnerPrincipal;
-import com.arcpay.platform.infrastructure.security.Roles;
-import com.arcpay.identity.agentidentity.application.controller.agent.handler.IdempotencyHandler;
-import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
-import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
-import com.arcpay.identity.agentidentity.domain.owner.OwnerCommandHandler;
-import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
-import com.arcpay.identity.agentidentity.test.RestControllerAbstractTest;
-import org.junit.jupiter.api.Test;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_API_KEY_HASH;
 import static com.arcpay.identity.agentidentity.fixtures.OwnerFixtures.SOME_OWNER;
 import static org.mockito.BDDMockito.given;
@@ -24,6 +7,22 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.arcpay.identity.agentidentity.application.controller.agent.handler.IdempotencyHandler;
+import com.arcpay.identity.agentidentity.domain.agent.AgentCommandHandler;
+import com.arcpay.identity.agentidentity.domain.agent.AgentQueryHandler;
+import com.arcpay.identity.agentidentity.domain.owner.OwnerCommandHandler;
+import com.arcpay.identity.agentidentity.domain.port.OwnerRepository;
+import com.arcpay.identity.agentidentity.test.RestControllerAbstractTest;
+import com.arcpay.platform.api.OwnerPrincipal;
+import com.arcpay.platform.infrastructure.security.Roles;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class InternalOwnerControllerIntegrationTest extends RestControllerAbstractTest {
 

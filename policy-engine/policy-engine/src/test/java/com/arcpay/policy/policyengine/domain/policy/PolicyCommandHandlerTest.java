@@ -1,25 +1,5 @@
 package com.arcpay.policy.policyengine.domain.policy;
 
-import com.arcpay.policy.policyengine.domain.agent.AgentAuthorization;
-import com.arcpay.policy.policyengine.domain.event.PolicyCreated;
-import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
-import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
-import com.arcpay.policy.policyengine.domain.exception.InvalidPolicyException;
-import com.arcpay.policy.policyengine.domain.model.Policy;
-import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
-import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
-import com.arcpay.policy.policyengine.domain.port.EventPublisher;
-import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
-import com.arcpay.policy.policyengine.domain.port.SpendingLockRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Instant;
-import java.util.Optional;
-
 import static com.arcpay.platform.test.TestUtils.eqIgnoring;
 import static com.arcpay.platform.test.TestUtils.eqIgnoringTimestamps;
 import static com.arcpay.policy.policyengine.test.fixtures.PolicyFixtures.SOME_ACTIVE_POLICY_WITH_COMPUTED_HASH;
@@ -34,6 +14,25 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
+
+import com.arcpay.policy.policyengine.domain.agent.AgentAuthorization;
+import com.arcpay.policy.policyengine.domain.event.PolicyCreated;
+import com.arcpay.policy.policyengine.domain.exception.AgentNotActiveException;
+import com.arcpay.policy.policyengine.domain.exception.AgentOwnershipException;
+import com.arcpay.policy.policyengine.domain.exception.InvalidPolicyException;
+import com.arcpay.policy.policyengine.domain.model.Policy;
+import com.arcpay.policy.policyengine.domain.model.PolicyStatus;
+import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
+import com.arcpay.policy.policyengine.domain.port.EventPublisher;
+import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
+import com.arcpay.policy.policyengine.domain.port.SpendingLockRepository;
+import java.time.Instant;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PolicyCommandHandlerTest {
@@ -100,15 +99,18 @@ class PolicyCommandHandlerTest {
     @Test
     void shouldUpdatePolicyAndSupersedeOldVersion() {
         // given
-        var existing = SOME_ACTIVE_POLICY_WITH_COMPUTED_HASH.toBuilder().version(1).build();
+        var existing =
+                SOME_ACTIVE_POLICY_WITH_COMPUTED_HASH.toBuilder().version(1).build();
         var differentRulesHash = "0xdifferent";
-        var existingDifferent = existing.toBuilder().policyHash(differentRulesHash).build();
+        var existingDifferent =
+                existing.toBuilder().policyHash(differentRulesHash).build();
         var created = newActivePolicy(2);
         given(policyRepository.findActiveByAgentId(SOME_AGENT_ID)).willReturn(Optional.of(existingDifferent));
         given(policyRepository.findMaxVersionByAgentId(SOME_AGENT_ID)).willReturn(Optional.of(1));
         given(policyCreationService.createPolicy(SOME_AGENT_ID, SOME_OWNER_ID, SOME_RULES, SOME_COMPUTED_HASH, 2))
                 .willReturn(created);
-        given(policyRepository.save(eqIgnoringTimestamps(existingDifferent.supersede()))).willReturn(existingDifferent.supersede());
+        given(policyRepository.save(eqIgnoringTimestamps(existingDifferent.supersede())))
+                .willReturn(existingDifferent.supersede());
         given(policyRepository.save(eqIgnoringTimestamps(created))).willReturn(created);
 
         // when
@@ -134,19 +136,29 @@ class PolicyCommandHandlerTest {
         then(policyRepository).should(never()).save(eqIgnoringTimestamps(existing));
         then(policyRepository).should(never()).findMaxVersionByAgentId(SOME_AGENT_ID);
         then(agentServiceClient).should(never()).updatePolicy(SOME_AGENT_ID, SOME_COMPUTED_HASH);
-        then(eventPublisher).should(never()).publish(eqIgnoring(
-                new PolicyCreated(existing.policyId(), SOME_AGENT_ID, SOME_OWNER_ID, 1, SOME_COMPUTED_HASH, Instant.now()),
-                "createdAt"));
+        then(eventPublisher)
+                .should(never())
+                .publish(eqIgnoring(
+                        new PolicyCreated(
+                                existing.policyId(),
+                                SOME_AGENT_ID,
+                                SOME_OWNER_ID,
+                                1,
+                                SOME_COMPUTED_HASH,
+                                Instant.now()),
+                        "createdAt"));
     }
 
     @Test
     void shouldRejectWhenAgentNotOwnedByPrincipal() {
         // given
         willThrow(new AgentOwnershipException(SOME_AGENT_ID, SOME_OWNER_ID))
-                .given(agentAuthorization).verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
+                .given(agentAuthorization)
+                .verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
 
         // when / then
-        assertThatThrownBy(() -> policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES))
+        assertThatThrownBy(() ->
+                        policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES))
                 .isInstanceOf(AgentOwnershipException.class);
     }
 
@@ -154,10 +166,12 @@ class PolicyCommandHandlerTest {
     void shouldRejectWhenAgentNotActive() {
         // given
         willThrow(new AgentNotActiveException(SOME_AGENT_ID, "SUSPENDED"))
-                .given(agentAuthorization).verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
+                .given(agentAuthorization)
+                .verifyOwnershipAndActive(SOME_AGENT_ID, SOME_OWNER_ID);
 
         // when / then
-        assertThatThrownBy(() -> policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES))
+        assertThatThrownBy(() ->
+                        policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES))
                 .isInstanceOf(AgentNotActiveException.class);
     }
 
@@ -165,10 +179,12 @@ class PolicyCommandHandlerTest {
     void shouldRejectInvalidRules() {
         // given
         willThrow(new InvalidPolicyException("bad rules"))
-                .given(policyValidator).validate(SOME_RULES);
+                .given(policyValidator)
+                .validate(SOME_RULES);
 
         // when / then
-        assertThatThrownBy(() -> policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES))
+        assertThatThrownBy(() ->
+                        policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES))
                 .isInstanceOf(InvalidPolicyException.class);
         then(policyRepository).should(never()).save(eqIgnoringTimestamps(newActivePolicy(1)));
     }
@@ -204,9 +220,11 @@ class PolicyCommandHandlerTest {
         policyCommandHandler.createOrUpdatePolicy(SOME_AGENT_ID, SOME_OWNER_PRINCIPAL, SOME_RULES);
 
         // then
-        then(eventPublisher).should().publish(eqIgnoring(
-                new PolicyCreated(
-                        created.policyId(), SOME_AGENT_ID, SOME_OWNER_ID, 1, SOME_COMPUTED_HASH, Instant.now()),
-                "createdAt"));
+        then(eventPublisher)
+                .should()
+                .publish(eqIgnoring(
+                        new PolicyCreated(
+                                created.policyId(), SOME_AGENT_ID, SOME_OWNER_ID, 1, SOME_COMPUTED_HASH, Instant.now()),
+                        "createdAt"));
     }
 }

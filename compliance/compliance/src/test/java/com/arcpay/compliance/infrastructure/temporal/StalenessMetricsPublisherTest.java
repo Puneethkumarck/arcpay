@@ -1,23 +1,21 @@
 package com.arcpay.compliance.infrastructure.temporal;
 
-import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.jupiter.api.Test;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.OFAC_SDN;
 import static com.arcpay.compliance.infrastructure.sanctions.SanctionsSource.UN;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 class StalenessMetricsPublisherTest {
 
     private final SanctionsRefreshTracker refreshTracker = new SanctionsRefreshTracker();
     private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
-    private final SanctionsIngestionProperties properties = new SanctionsIngestionProperties(
-            "0 0 */6 * * *", 12, 24, 30, List.of(OFAC_SDN, UN), Map.of());
+    private final SanctionsIngestionProperties properties =
+            new SanctionsIngestionProperties("0 0 */6 * * *", 12, 24, 30, List.of(OFAC_SDN, UN), Map.of());
     private final StalenessMetricsPublisher publisher =
             new StalenessMetricsPublisher(refreshTracker, properties, meterRegistry);
 
@@ -44,7 +42,8 @@ class StalenessMetricsPublisherTest {
         publisher.publishStaleness();
 
         // then
-        var staleHours = meterRegistry.find("compliance.sanctions.staleness.hours")
+        var staleHours = meterRegistry
+                .find("compliance.sanctions.staleness.hours")
                 .tag("source", OFAC_SDN.name())
                 .gauge()
                 .value();

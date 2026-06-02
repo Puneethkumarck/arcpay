@@ -1,11 +1,10 @@
 package com.arcpay.payment.paymentexecution.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder(toBuilder = true)
 public record PaymentRequest(
@@ -16,8 +15,7 @@ public record PaymentRequest(
         BigDecimal amount,
         String currency,
         String memo,
-        Map<String, String> metadata
-) {
+        Map<String, String> metadata) {
 
     public PaymentRequest {
         Objects.requireNonNull(agentId, "agentId must not be null");

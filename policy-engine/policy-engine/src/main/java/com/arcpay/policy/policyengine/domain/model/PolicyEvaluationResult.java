@@ -1,12 +1,11 @@
 package com.arcpay.policy.policyengine.domain.model;
 
-import lombok.Builder;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record PolicyEvaluationResult(
@@ -19,8 +18,7 @@ public record PolicyEvaluationResult(
         String recipientAddress,
         boolean dryRun,
         Instant evaluatedAt,
-        long durationMs
-) {
+        long durationMs) {
 
     public PolicyEvaluationResult {
         Objects.requireNonNull(evaluationId, "evaluationId must not be null");

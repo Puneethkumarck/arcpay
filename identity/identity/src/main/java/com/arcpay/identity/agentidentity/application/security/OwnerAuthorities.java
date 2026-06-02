@@ -1,9 +1,8 @@
 package com.arcpay.identity.agentidentity.application.security;
 
 import com.arcpay.platform.infrastructure.security.Roles;
-import org.springframework.stereotype.Component;
-
 import java.util.Set;
+import org.springframework.stereotype.Component;
 
 @Component
 public class OwnerAuthorities {
@@ -17,8 +16,6 @@ public class OwnerAuthorities {
     }
 
     public String forApiKeyHash(String apiKeyHash) {
-        return complianceOfficerKeyHashes.contains(apiKeyHash)
-                ? Roles.COMPLIANCE_OFFICER
-                : Roles.OWNER;
+        return complianceOfficerKeyHashes.contains(apiKeyHash) ? Roles.COMPLIANCE_OFFICER : Roles.OWNER;
     }
 }

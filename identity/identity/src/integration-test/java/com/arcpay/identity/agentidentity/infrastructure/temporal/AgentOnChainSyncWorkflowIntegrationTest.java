@@ -1,5 +1,10 @@
 package com.arcpay.identity.agentidentity.infrastructure.temporal;
 
+import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.atLeastOnce;
+
 import com.arcpay.identity.agentidentity.domain.agent.AgentOnChainSyncWorkflow;
 import com.arcpay.identity.agentidentity.domain.model.AgentOnChainSyncRequest;
 import com.arcpay.identity.agentidentity.domain.model.OnChainOperation;
@@ -7,17 +12,11 @@ import com.arcpay.identity.agentidentity.domain.port.BlockchainService;
 import com.arcpay.identity.agentidentity.test.FullContextIntegrationTest;
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowOptions;
+import java.time.Duration;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.time.Duration;
-import java.util.Map;
-
-import static com.arcpay.identity.agentidentity.fixtures.AgentFixtures.SOME_AGENT_ID;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.atLeastOnce;
 
 class AgentOnChainSyncWorkflowIntegrationTest extends FullContextIntegrationTest {
 

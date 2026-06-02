@@ -11,13 +11,12 @@ import com.arcpay.payment.paymentexecution.domain.port.EventPublisher;
 import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
 import com.arcpay.payment.paymentexecution.domain.service.PaymentOrchestrationService;
 import com.arcpay.platform.api.OwnerPrincipal;
+import java.util.Locale;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Locale;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -41,11 +40,13 @@ public class PaymentCreationService {
 
         if (created) {
             eventPublisher.publish(toEvent(saved, agent));
-            log.info("Payment created paymentId={} agentId={} ownerId={}",
-                    saved.paymentId(), saved.agentId(), ownerId);
+            log.info("Payment created paymentId={} agentId={} ownerId={}", saved.paymentId(), saved.agentId(), ownerId);
         } else {
-            log.info("Idempotent payment replay paymentId={} agentId={} idempotencyKey={}",
-                    saved.paymentId(), saved.agentId(), saved.idempotencyKey());
+            log.info(
+                    "Idempotent payment replay paymentId={} agentId={} idempotencyKey={}",
+                    saved.paymentId(),
+                    saved.agentId(),
+                    saved.idempotencyKey());
         }
 
         return new PaymentCreationResult(saved, created);
@@ -53,7 +54,8 @@ public class PaymentCreationService {
 
     private void rejectSelfPayment(CreatePaymentRequest request, AgentInfo agent) {
         if (agent.walletAddress() != null
-                && agent.walletAddress().toLowerCase(Locale.ROOT)
+                && agent.walletAddress()
+                        .toLowerCase(Locale.ROOT)
                         .equals(request.recipientAddress().toLowerCase(Locale.ROOT))) {
             throw new InvalidPaymentRequestException(
                     "Recipient must not be the agent's own wallet address: " + request.recipientAddress());

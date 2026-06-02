@@ -5,12 +5,11 @@ import com.arcpay.payment.paymentexecution.domain.exception.PaymentNotFoundExcep
 import com.arcpay.payment.paymentexecution.domain.model.Payment;
 import com.arcpay.payment.paymentexecution.domain.model.PaymentStatus;
 import com.arcpay.payment.paymentexecution.domain.port.PaymentRepository;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -19,8 +18,7 @@ public class PaymentQueryService {
     private final PaymentRepository paymentRepository;
 
     public Payment getPayment(UUID paymentId, UUID ownerId) {
-        var payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+        var payment = paymentRepository.findById(paymentId).orElseThrow(() -> new PaymentNotFoundException(paymentId));
         if (!payment.ownerId().equals(ownerId)) {
             throw new PaymentAccessDeniedException(paymentId, ownerId);
         }

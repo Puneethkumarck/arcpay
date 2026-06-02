@@ -25,18 +25,20 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())
+        return http.csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
-                        .requestMatchers("/api/v1/webhooks/circle").permitAll()
-                        .requestMatchers("/api/v1/internal/**").hasRole(Roles.SERVICE)
-                        .anyRequest().authenticated())
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .authorizeHttpRequests(
+                        auth -> auth.requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info")
+                                .permitAll()
+                                .requestMatchers("/api/v1/webhooks/circle")
+                                .permitAll()
+                                .requestMatchers("/api/v1/internal/**")
+                                .hasRole(Roles.SERVICE)
+                                .anyRequest()
+                                .authenticated())
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(serviceAuthFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

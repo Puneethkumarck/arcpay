@@ -1,21 +1,20 @@
 package com.arcpay.policy.policyengine.infrastructure.messaging;
 
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+
 import com.arcpay.policy.policyengine.domain.event.PolicyCreated;
 import com.arcpay.policy.policyengine.domain.event.PolicyViolationDetected;
 import io.namastack.outbox.handler.OutboxRecordMetadata;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class PolicyEngineOutboxHandlerTest {
@@ -34,15 +33,9 @@ class PolicyEngineOutboxHandlerTest {
         // given
         var handler = new PolicyEngineOutboxHandler(kafkaTemplate);
         var event = new PolicyCreated(
-                UUID.randomUUID(),
-                AGENT_ID,
-                UUID.randomUUID(),
-                1,
-                "0xabc",
-                Instant.parse("2026-05-29T10:00:00Z"));
+                UUID.randomUUID(), AGENT_ID, UUID.randomUUID(), 1, "0xabc", Instant.parse("2026-05-29T10:00:00Z"));
         given(metadata.getKey()).willReturn(KEY);
-        given(kafkaTemplate.send("policy.created", KEY, event))
-                .willReturn(CompletableFuture.completedFuture(null));
+        given(kafkaTemplate.send("policy.created", KEY, event)).willReturn(CompletableFuture.completedFuture(null));
 
         // when
         handler.handle(event, metadata);

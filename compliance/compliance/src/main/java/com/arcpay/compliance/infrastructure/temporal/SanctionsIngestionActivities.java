@@ -4,7 +4,6 @@ import com.arcpay.compliance.infrastructure.sanctions.SanctionedAddressRecord;
 import com.arcpay.compliance.infrastructure.sanctions.SanctionsSource;
 import io.temporal.activity.ActivityInterface;
 import io.temporal.activity.ActivityMethod;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

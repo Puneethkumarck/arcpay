@@ -9,13 +9,12 @@ import com.arcpay.policy.policyengine.domain.port.AgentServiceClient;
 import com.arcpay.policy.policyengine.domain.port.EventPublisher;
 import com.arcpay.policy.policyengine.domain.port.PolicyRepository;
 import com.arcpay.policy.policyengine.domain.port.SpendingLockRepository;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Component
@@ -42,15 +41,21 @@ public class PolicyCommandHandler {
 
         var existing = policyRepository.findActiveByAgentId(agentId);
         if (existing.isPresent() && existing.get().policyHash().equals(policyHash)) {
-            log.info("Policy unchanged, returning existing agentId={} policyId={} hash={}",
-                    agentId, existing.get().policyId(), policyHash);
+            log.info(
+                    "Policy unchanged, returning existing agentId={} policyId={} hash={}",
+                    agentId,
+                    existing.get().policyId(),
+                    policyHash);
             return existing.get();
         }
 
         existing.ifPresent(active -> {
             var superseded = policyRepository.save(active.supersede());
-            log.info("Superseded policy agentId={} policyId={} version={}",
-                    agentId, superseded.policyId(), superseded.version());
+            log.info(
+                    "Superseded policy agentId={} policyId={} version={}",
+                    agentId,
+                    superseded.policyId(),
+                    superseded.version());
         });
 
         var nextVersion = policyRepository.findMaxVersionByAgentId(agentId).orElse(0) + 1;
@@ -67,8 +72,12 @@ public class PolicyCommandHandler {
                 savedPolicy.policyHash(),
                 savedPolicy.createdAt()));
 
-        log.info("Policy created agentId={} policyId={} version={} hash={}",
-                agentId, savedPolicy.policyId(), savedPolicy.version(), policyHash);
+        log.info(
+                "Policy created agentId={} policyId={} version={} hash={}",
+                agentId,
+                savedPolicy.policyId(),
+                savedPolicy.version(),
+                policyHash);
         return savedPolicy;
     }
 }
