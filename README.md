@@ -311,6 +311,10 @@ Both are hand-encoded via web3j (`FunctionEncoder`) — no generated wrappers.
 
 ## 🔐 Key custody & the critical secrets
 
+<div align="center">
+<img src="assets/about_agent_keys.png" alt="ArcPay key custody — Circle custody vs Arc L1 identity, the secrets each needs, and the three different wallets (owner, agent's Circle wallet, platform signer)" width="920">
+</div>
+
 ArcPay talks to **two separate trust systems**, each with its own credentials. This is
 the part worth slowing down for.
 
