@@ -22,6 +22,20 @@
 
 ---
 
+## 📚 Table of Contents
+
+- [🤔 Why does this exist?](#-why-does-this-exist)
+- [🏛️ Architecture](#️-architecture)
+- [🧱 The services](#-the-services) — Agent Identity · Policy Engine · Compliance · Payment Execution · Settlement
+- [🔁 The payment flow](#-the-payment-flow)
+- [🔗 On-chain](#-on-chain)
+- [🔐 Key custody](#-key-custody)
+- [🚀 Run the stack locally](#-run-the-stack-locally)
+- [🎛️ Configuration](#️-configuration)
+- [🧪 Build & test](#-build--test)
+- [📦 Tech stack](#-tech-stack)
+- [📜 License](#-license)
+
 ## 🤔 Why does this exist?
 
 An AI agent that can spend money needs two things that pull in opposite directions:
