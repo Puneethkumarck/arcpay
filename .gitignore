@@ -36,3 +36,6 @@ Thumbs.db
 
 # Circle entity-secret material (recovery file, raw secret) — never commit
 .circle/
+
+# Local-only agent instructions (keep out of the repo)
+CLAUDE.md
