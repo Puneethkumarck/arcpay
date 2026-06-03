@@ -70,13 +70,106 @@ coordinating over Kafka events + internal REST (no service touches another's dat
 
 ## 🧱 The services
 
-| Service | Port | Implemented surface |
-|---------|------|---------------------|
-| **identity** | 8080 | Owner & agent registration; agent lifecycle (`deactivate`/`reactivate`/`update`/`update policy`); API-key-hash lookup. `AgentProvisioning` saga (DB → Circle wallet → on-chain register) and `AgentOnChainSync` workflow. Writes the on-chain **AgentRegistry**. |
-| **policy-engine** | 8081 | Policy CRUD + `/evaluate`; atomic spending **reservations** (`reserve` → `commit`/`release`/`ops-release`); per-agent spending summary. |
-| **compliance** | 8082 | Kafka screening consumer with a **dead-letter topic**; watchlist management; **hold review** (`approve`/`reject`); `SanctionsIngestion` scheduled Temporal workflow; on-chain interaction screening (web3j `eth_getLogs`, bounded window). |
-| **payment-execution** | 8083 | Payment create/get; the **`PaymentExecution` Temporal saga** orchestrating precondition → policy reserve → compliance screen → settlement transfer → commit/release; idempotent on duplicate requests. |
-| **settlement** | 8084 | Signature-verified **Circle webhook**; internal transfer/receipt APIs; wallet balance; web3j on-chain **`PaymentReceipts`** writer. |
+### 🪪 identity · `:8080`
+
+*Gives an agent a verifiable identity and a wallet to spend from.*
+
+Registration kicks off a Temporal **provisioning saga** — and if any step fails, the
+agent ends up `FAILED`, never half-provisioned:
+
+```
+POST /api/v1/agents/register
+        │   emits agent.registration-requested
+        ▼
+   ┌── AgentProvisioning saga ─────────────────────────────────────┐
+   │  1. persist agent  ─▶  2. create Circle USDC wallet  ─▶  3. register on-chain │
+   │      (Postgres)             (custodial)                  (AgentRegistry.sol)   │
+   └───────────────────────────────────────────────────────────────┘
+        │ any step fails                         │ all steps ok
+        ▼                                        ▼
+   agent.provisioning-failed                 agent → ACTIVE
+```
+
+Later lifecycle changes (`deactivate` / `reactivate` / `update` / `update policy`)
+run through the `AgentOnChainSync` workflow so the chain stays in step. Other
+services authenticate an agent via the API-key-hash lookup.
+
+### 📏 policy-engine · `:8081`
+
+*The owner's spending rules — enforced as money, not suggestions.*
+
+It doesn't just say yes/no; it **reserves** funds up front so two concurrent payments
+can't both slip under the limit, then settles the reservation based on the outcome:
+
+```
+   reserve(payment, amount)                 commit(paymentId)   ← payment confirmed
+     │  checks daily / total limits             │  spend becomes final
+     ▼                                          ▼
+  [ RESERVED ] ──────────────────────────▶ [ COMMITTED ]
+     │
+     │  release(paymentId)   ← payment blocked / failed
+     ▼
+  [ RELEASED ]   (the hold is freed; nothing was spent)
+```
+
+Also serves policy CRUD, `/evaluate`, and a per-agent spending summary.
+
+### 🛡️ compliance · `:8082`
+
+*Decides whether a payment's recipient is allowed — fail-closed.*
+
+It consumes screening requests off Kafka, checks the recipient against the watchlist
+**and** the recipient's on-chain interactions (web3j `eth_getLogs` over a bounded
+block window), and returns a verdict:
+
+```
+screening.requested ─▶ ┌─ watchlist + on-chain interaction screen ─┐
+                       │                                           │─▶ PASS  ─▶ screening.completed
+                       │   (bounded block window, web3j)           │─▶ BLOCK ─▶ screening.rejected
+                       └───────────────────────────────────────────┘─▶ HOLD  ─▶ human review
+                                                                                  approve / reject
+   ✗ un-deserializable / failed  ─────────────────────────────────────────────▶ dead-letter topic (.dlt)
+```
+
+A `SanctionsIngestion` Temporal workflow refreshes the sanctions set on a schedule;
+held payments wait for an officer's `approve`/`reject`.
+
+### 💸 payment-execution · `:8083`
+
+*The conductor — turns one API call into a safe, multi-service payment.*
+
+`POST /api/v1/payments` starts a **Temporal saga** that walks the payment through
+every guardrail and compensates (releases the reservation) on any failure. It's
+idempotent — a duplicate request rides the same workflow:
+
+```
+POST /api/v1/payments
+        │
+        ▼
+  precondition ─▶ reserve ─▶ screen ─▶ settle ─▶ commit          (happy path)
+   (identity)    (policy)  (compliance)(settlement)(policy)
+                              │ BLOCK / revert / review-rejected
+                              ▼
+                           release (policy)                      (compensate)
+```
+
+(Full cross-service sequence below.)
+
+### 🏦 settlement · `:8084`
+
+*Where USDC actually moves, and where it's proven on-chain.*
+
+It executes the transfer via Circle, then reconciles asynchronously from Circle's
+**signature-verified webhook**, and writes a tamper-evident on-chain receipt:
+
+```
+internal transfer request ─▶ Circle (USDC transfer) ─▶ on-chain PaymentReceipts.sol
+                                       │
+        Circle webhook (HMAC-verified) ─▶ transfer.confirmed   ─▶ (saga commits)
+                                       └▶ transfer.reverted    ─▶ (saga releases)
+```
+
+Also serves wallet-balance and transfer-status reads.
 
 ## 🔁 The payment flow
 
