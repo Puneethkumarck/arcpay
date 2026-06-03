@@ -3,6 +3,7 @@ package com.arcpay.settlement.application.webhook;
 import com.arcpay.settlement.domain.model.TransferNotification;
 import com.arcpay.settlement.domain.model.TransferState;
 import java.math.BigDecimal;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
@@ -12,24 +13,34 @@ import tools.jackson.databind.json.JsonMapper;
 @RequiredArgsConstructor
 class CircleNotificationParser {
 
+    private static final String TRANSACTION_TYPE_PREFIX = "transactions";
+
     private final JsonMapper jsonMapper;
 
-    TransferNotification parse(String body) {
+    Optional<TransferNotification> parse(String body) {
         try {
             var root = jsonMapper.readTree(body);
+            if (!isTransactionNotification(root)) {
+                return Optional.empty();
+            }
             var notification = root.has("notification") ? root.get("notification") : root;
-            return TransferNotification.builder()
+            return Optional.of(TransferNotification.builder()
                     .circleTxId(text(notification, "id"))
                     .state(toState(text(notification, "state")))
                     .txHash(text(notification, "txHash"))
                     .networkFee(decimal(notification, "networkFee"))
                     .errorReason(text(notification, "errorReason"))
-                    .build();
+                    .build());
         } catch (CircleNotificationException e) {
             throw e;
         } catch (Exception e) {
             throw new CircleNotificationException("Malformed Circle notification payload", e);
         }
+    }
+
+    private boolean isTransactionNotification(JsonNode root) {
+        var type = text(root, "notificationType");
+        return type != null && type.startsWith(TRANSACTION_TYPE_PREFIX);
     }
 
     private TransferState toState(String state) {

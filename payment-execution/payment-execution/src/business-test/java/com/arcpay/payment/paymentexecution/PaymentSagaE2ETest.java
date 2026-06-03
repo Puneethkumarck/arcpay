@@ -19,6 +19,7 @@ import static com.arcpay.payment.paymentexecution.stubs.SettlementServiceStubs.T
 import static com.arcpay.payment.paymentexecution.stubs.SettlementServiceStubs.stubReceiptAccepted;
 import static com.arcpay.payment.paymentexecution.stubs.SettlementServiceStubs.stubTransferAccepted;
 import static com.arcpay.payment.paymentexecution.stubs.SettlementServiceStubs.stubTransferClientError;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
@@ -100,7 +101,9 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
                         .rejectionReason(RejectionReason.POLICY_VIOLATION)
                         .txHash(null)
                         .build());
-        settlementServer.verify(exactly(0), postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)));
+        settlementServer.verify(
+                exactly(0),
+                postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)).withRequestBody(containing(paymentId.toString())));
         policyServer.verify(exactly(0), postRequestedFor(urlPathEqualTo(commitPath(paymentId))));
         policyServer.verify(exactly(0), postRequestedFor(urlPathEqualTo(releasePath(paymentId))));
     }
@@ -128,7 +131,9 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
                         .paymentId(paymentId)
                         .rejectionReason(RejectionReason.COMPLIANCE_BLOCK)
                         .build());
-        settlementServer.verify(exactly(0), postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)));
+        settlementServer.verify(
+                exactly(0),
+                postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)).withRequestBody(containing(paymentId.toString())));
         policyServer.verify(exactly(1), postRequestedFor(urlPathEqualTo(releasePath(paymentId))));
     }
 
@@ -192,7 +197,9 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
                         .paymentId(paymentId)
                         .rejectionReason(RejectionReason.REVIEW_DENIED)
                         .build());
-        settlementServer.verify(exactly(0), postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)));
+        settlementServer.verify(
+                exactly(0),
+                postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)).withRequestBody(containing(paymentId.toString())));
         policyServer.verify(exactly(1), postRequestedFor(urlPathEqualTo(releasePath(paymentId))));
     }
 
@@ -246,7 +253,9 @@ class PaymentSagaE2ETest extends PaymentExecutionBusinessTest {
                         .rejectionReason(RejectionReason.AGENT_NOT_ACTIVE)
                         .build());
         policyServer.verify(exactly(0), postRequestedFor(urlPathEqualTo(RESERVE_PATH)));
-        settlementServer.verify(exactly(0), postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)));
+        settlementServer.verify(
+                exactly(0),
+                postRequestedFor(urlPathEqualTo(TRANSFERS_PATH)).withRequestBody(containing(paymentId.toString())));
     }
 
     @Test

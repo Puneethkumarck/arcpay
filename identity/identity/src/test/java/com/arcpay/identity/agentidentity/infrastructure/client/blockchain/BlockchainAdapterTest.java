@@ -38,6 +38,7 @@ import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthGasPrice;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.FastRawTransactionManager;
@@ -59,6 +60,8 @@ class BlockchainAdapterTest {
     private static final long GAS_USED = 73219L;
     private static final BigInteger GAS_PRICE = BigInteger.valueOf(1_000_000_000L);
     private static final BigInteger GAS_LIMIT = BigInteger.valueOf(300_000L);
+    private static final BigInteger NETWORK_GAS_PRICE = BigInteger.valueOf(20_000_000_000L);
+    private static final BigInteger RESOLVED_GAS_PRICE = BigInteger.valueOf(40_000_000_000L);
 
     @Mock
     private Web3j web3j;
@@ -76,10 +79,14 @@ class BlockchainAdapterTest {
     @SuppressWarnings("rawtypes")
     private Request ethCallRequest;
 
+    @Mock
+    @SuppressWarnings("rawtypes")
+    private Request gasPriceRequest;
+
     @Captor
     private ArgumentCaptor<GasUsage> gasUsageCaptor;
 
-    private final AgentRegistryProperties properties = new AgentRegistryProperties(CONTRACT_ADDRESS, null, null);
+    private final AgentRegistryProperties properties = new AgentRegistryProperties(CONTRACT_ADDRESS, null, null, null);
 
     private BlockchainAdapter adapter() {
         return new BlockchainAdapter(web3j, transactionManager, receiptProcessor, gasUsageRepository, properties);
@@ -94,6 +101,28 @@ class BlockchainAdapterTest {
         var result = adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_WALLET, SOME_METADATA_HASH);
 
         // then
+        assertThat(result).usingRecursiveComparison().isEqualTo(new RegistrationResult(TX_HASH, BLOCK_NUMBER));
+    }
+
+    @Test
+    void shouldFallBackToConfiguredFloorWhenNetworkQuoteBelowFloor() throws Exception {
+        // given a network quote so low that even after the safety multiplier it stays below the floor
+        givenNetworkGasPrice(BigInteger.valueOf(100L));
+        var accepted = new EthSendTransaction();
+        accepted.setResult(TX_HASH);
+        given(transactionManager.sendTransaction(
+                        GAS_PRICE,
+                        GAS_LIMIT,
+                        CONTRACT_ADDRESS,
+                        FunctionEncoder.encode(registerFunction()),
+                        BigInteger.ZERO))
+                .willReturn(accepted);
+        given(receiptProcessor.waitForTransactionReceipt(TX_HASH)).willReturn(receipt());
+
+        // when
+        var result = adapter().registerAgent(SOME_AGENT_ID, SOME_OWNER_ID, SOME_WALLET, SOME_METADATA_HASH);
+
+        // then the configured floor price is used (the stub matches only GAS_PRICE)
         assertThat(result).usingRecursiveComparison().isEqualTo(new RegistrationResult(TX_HASH, BLOCK_NUMBER));
     }
 
@@ -124,10 +153,11 @@ class BlockchainAdapterTest {
     @Test
     void shouldThrowBlockchainRegistrationExceptionWhenSubmissionReturnsError() throws Exception {
         // given
+        givenNetworkGasPrice(NETWORK_GAS_PRICE);
         var errored = new EthSendTransaction();
         errored.setError(new Response.Error(-32000, "execution reverted: not registrar"));
         given(transactionManager.sendTransaction(
-                        GAS_PRICE,
+                        RESOLVED_GAS_PRICE,
                         GAS_LIMIT,
                         CONTRACT_ADDRESS,
                         FunctionEncoder.encode(registerFunction()),
@@ -145,10 +175,11 @@ class BlockchainAdapterTest {
     @Test
     void shouldWrapReceiptWaitFailureAndResetNonce() throws Exception {
         // given
+        givenNetworkGasPrice(NETWORK_GAS_PRICE);
         var accepted = new EthSendTransaction();
         accepted.setResult(TX_HASH);
         given(transactionManager.sendTransaction(
-                        GAS_PRICE,
+                        RESOLVED_GAS_PRICE,
                         GAS_LIMIT,
                         CONTRACT_ADDRESS,
                         FunctionEncoder.encode(registerFunction()),
@@ -270,12 +301,25 @@ class BlockchainAdapterTest {
     }
 
     private void givenSubmitSucceeds(Function function) throws Exception {
+        givenNetworkGasPrice(NETWORK_GAS_PRICE);
         var accepted = new EthSendTransaction();
         accepted.setResult(TX_HASH);
         given(transactionManager.sendTransaction(
-                        GAS_PRICE, GAS_LIMIT, CONTRACT_ADDRESS, FunctionEncoder.encode(function), BigInteger.ZERO))
+                        RESOLVED_GAS_PRICE,
+                        GAS_LIMIT,
+                        CONTRACT_ADDRESS,
+                        FunctionEncoder.encode(function),
+                        BigInteger.ZERO))
                 .willReturn(accepted);
         given(receiptProcessor.waitForTransactionReceipt(TX_HASH)).willReturn(receipt());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void givenNetworkGasPrice(BigInteger price) throws Exception {
+        var response = new EthGasPrice();
+        response.setResult(Numeric.encodeQuantity(price));
+        given(web3j.ethGasPrice()).willReturn(gasPriceRequest);
+        given(gasPriceRequest.send()).willReturn(response);
     }
 
     private TransactionReceipt receipt() {

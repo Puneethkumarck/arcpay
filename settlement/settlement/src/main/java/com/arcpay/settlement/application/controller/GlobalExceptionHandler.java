@@ -37,6 +37,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CircleNotificationException.class)
     public ResponseEntity<ApiError> handleInvalidNotification(CircleNotificationException ex) {
+        log.warn("Rejected malformed Circle notification: {}", ex.getMessage());
         return toError(ex.getMessage(), ErrorCodes.INVALID_REQUEST, BAD_REQUEST);
     }
 

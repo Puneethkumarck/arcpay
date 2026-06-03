@@ -6,6 +6,7 @@ import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.SOME_TX_HASH;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.failedNotificationBody;
 import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.notificationBody;
+import static com.arcpay.settlement.fixtures.SettlementTransactionFixtures.verificationPingBody;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -26,7 +27,7 @@ class CircleNotificationParserTest {
         var body = notificationBody(SOME_CIRCLE_TX_ID, "COMPLETE");
 
         // when
-        var notification = parser.parse(body);
+        var notification = parser.parse(body).orElseThrow();
 
         // then
         assertThat(notification)
@@ -47,7 +48,7 @@ class CircleNotificationParserTest {
         var body = failedNotificationBody(SOME_CIRCLE_TX_ID, "FAILED");
 
         // when
-        var notification = parser.parse(body);
+        var notification = parser.parse(body).orElseThrow();
 
         // then
         assertThat(notification)
@@ -57,6 +58,15 @@ class CircleNotificationParserTest {
                         .state(TransferState.FAILED)
                         .errorReason(SOME_ERROR_REASON)
                         .build());
+    }
+
+    @Test
+    void shouldReturnEmptyForNonTransactionNotification() {
+        // given
+        var body = verificationPingBody();
+
+        // when / then
+        assertThat(parser.parse(body)).isEmpty();
     }
 
     @Test

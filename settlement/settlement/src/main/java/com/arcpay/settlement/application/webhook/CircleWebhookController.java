@@ -1,5 +1,7 @@
 package com.arcpay.settlement.application.webhook;
 
+import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
+
 import com.arcpay.settlement.domain.TransferNotificationHandler;
 import com.arcpay.settlement.domain.port.WebhookSignatureVerifier;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,11 @@ public class CircleWebhookController {
     private final CircleNotificationParser notificationParser;
     private final TransferNotificationHandler notificationHandler;
 
+    @RequestMapping(method = HEAD)
+    public ResponseEntity<Void> acknowledgeEndpointVerificationProbe() {
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping
     public ResponseEntity<Void> receive(
             @RequestBody String body,
@@ -33,9 +40,17 @@ public class CircleWebhookController {
             @RequestHeader(name = SIGNATURE_HEADER, required = false) String signature) {
 
         signatureVerifier.verify(body, keyId, signature);
-        var notification = notificationParser.parse(body);
-        log.info("Circle webhook accepted circleTxId={} state={}", notification.circleTxId(), notification.state());
-        notificationHandler.handle(notification);
+        notificationParser
+                .parse(body)
+                .ifPresentOrElse(
+                        notification -> {
+                            log.info(
+                                    "Circle webhook accepted circleTxId={} state={}",
+                                    notification.circleTxId(),
+                                    notification.state());
+                            notificationHandler.handle(notification);
+                        },
+                        () -> log.info("Circle webhook acknowledged (non-transaction notification)"));
         return ResponseEntity.ok().build();
     }
 }

@@ -53,9 +53,7 @@ class BlockchainAdapter implements BlockchainService {
     private final GasUsageRepository gasUsageRepository;
     private final AgentRegistryProperties properties;
 
-    // Serializes state-changing submissions: the shared FastRawTransactionManager tracks the
-    // gas-wallet nonce in memory, so concurrent provisioning activities must not race on it.
-    private final ReentrantLock writeLock = new ReentrantLock(true);
+    private final ReentrantLock nonceSerializationLock = new ReentrantLock(true);
 
     @Override
     public RegistrationResult registerAgent(UUID agentId, UUID ownerId, String walletAddress, String metadataHash) {
@@ -165,15 +163,11 @@ class BlockchainAdapter implements BlockchainService {
     }
 
     private TransactionReceipt submit(Function function, UUID agentId) {
-        writeLock.lock();
+        nonceSerializationLock.lock();
         try {
             var data = FunctionEncoder.encode(function);
             var response = transactionManager.sendTransaction(
-                    properties.gasPrice(),
-                    properties.gasLimit(),
-                    properties.agentRegistryAddress(),
-                    data,
-                    BigInteger.ZERO);
+                    resolveGasPrice(), properties.gasLimit(), properties.agentRegistryAddress(), data, BigInteger.ZERO);
             if (response.hasError()) {
                 throw new BlockchainRegistrationException("AgentRegistry." + function.getName()
                         + " rejected for agentId=" + agentId + ": "
@@ -201,7 +195,7 @@ class BlockchainAdapter implements BlockchainService {
             throw new BlockchainRegistrationException(
                     "AgentRegistry." + function.getName() + " failed for agentId=" + agentId, e);
         } finally {
-            writeLock.unlock();
+            nonceSerializationLock.unlock();
         }
     }
 
@@ -228,6 +222,22 @@ class BlockchainAdapter implements BlockchainService {
         } catch (Exception e) {
             throw new BlockchainRegistrationException(
                     "AgentRegistry." + function.getName() + " view call failed for " + context, e);
+        }
+    }
+
+    private BigInteger resolveGasPrice() {
+        try {
+            var networkGasPrice = web3j.ethGasPrice().send().getGasPrice();
+            var bumpedNetworkPrice = networkGasPrice
+                    .multiply(BigInteger.valueOf(properties.gasPriceMultiplierPercent()))
+                    .divide(BigInteger.valueOf(100L));
+            return bumpedNetworkPrice.max(properties.gasPrice());
+        } catch (Exception e) {
+            log.warn(
+                    "Failed to fetch network gas price, falling back to configured floor {} wei: {}",
+                    properties.gasPrice(),
+                    e.getMessage());
+            return properties.gasPrice();
         }
     }
 

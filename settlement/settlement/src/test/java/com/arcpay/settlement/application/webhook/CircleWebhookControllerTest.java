@@ -16,6 +16,7 @@ import com.arcpay.settlement.domain.WebhookSignatureException;
 import com.arcpay.settlement.domain.model.TransferNotification;
 import com.arcpay.settlement.domain.model.TransferState;
 import com.arcpay.settlement.domain.port.WebhookSignatureVerifier;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,7 +57,7 @@ class CircleWebhookControllerTest {
                 .circleTxId(SOME_CIRCLE_TX_ID)
                 .state(TransferState.COMPLETED)
                 .build();
-        given(notificationParser.parse(BODY)).willReturn(notification);
+        given(notificationParser.parse(BODY)).willReturn(Optional.of(notification));
 
         // when
         mockMvc.perform(post("/api/v1/webhooks/circle")
@@ -68,6 +69,23 @@ class CircleWebhookControllerTest {
                 .andExpect(status().isOk());
         then(signatureVerifier).should().verify(BODY, SOME_KEY_ID, VALID_SIGNATURE);
         then(notificationHandler).should().handle(notification);
+    }
+
+    @Test
+    void shouldAcknowledgeNonTransactionNotificationWithoutHandling() throws Exception {
+        // given
+        given(notificationParser.parse(BODY)).willReturn(Optional.empty());
+
+        // when
+        mockMvc.perform(post("/api/v1/webhooks/circle")
+                        .header("X-Circle-Key-Id", SOME_KEY_ID)
+                        .header("X-Circle-Signature", VALID_SIGNATURE)
+                        .contentType(APPLICATION_JSON)
+                        .content(BODY))
+                // then
+                .andExpect(status().isOk());
+        then(signatureVerifier).should().verify(BODY, SOME_KEY_ID, VALID_SIGNATURE);
+        then(notificationHandler).shouldHaveNoInteractions();
     }
 
     @Test
