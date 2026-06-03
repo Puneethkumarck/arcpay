@@ -14,6 +14,10 @@ x-common-env: &common-env
   KAFKA_BOOTSTRAP_SERVERS: kafka:9092
   TEMPORAL_ADDRESS: temporal:7233
   SPRING_TEMPORAL_NAMESPACE: default
+  # Shared secret for service-to-service calls (X-Service-Auth). Must be identical across all
+  # services or inbound ServiceAuthFilter never grants ROLE_SERVICE and internal endpoints 403.
+  # LOCAL DEV PLACEHOLDER — override via .env in any real environment.
+  SERVICE_AUTH_TOKEN: "${SERVICE_AUTH_TOKEN:-local-dev-service-token}"
 
 x-service-deps: &service-deps
   postgres:
@@ -26,6 +30,10 @@ x-service-deps: &service-deps
 services:
   postgres:
     image: postgres:16-alpine
+    # Default max_connections=100 is too low for this stack: 5 services (Hikari pools)
+    # + Temporal's pools against temporal/temporal_visibility exhaust it, and a losing
+    # service dies on startup with "FATAL: sorry, too many clients already".
+    command: ["postgres", "-c", "max_connections=300"]
     environment:
       POSTGRES_USER: arcpay
       POSTGRES_PASSWORD: arcpay
@@ -107,6 +115,7 @@ services:
       PLATFORM_WALLET_PRIVATE_KEY: "${PLATFORM_WALLET_PRIVATE_KEY:-0x0000000000000000000000000000000000000000000000000000000000000001}"
       CIRCLE_API_KEY: "${CIRCLE_API_KEY:-local-dev}"
       CIRCLE_WALLET_SET_ID: "${CIRCLE_WALLET_SET_ID:-local-dev}"
+      CIRCLE_ENTITY_SECRET: "${CIRCLE_ENTITY_SECRET:-}"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
       interval: 15s
@@ -204,6 +213,10 @@ services:
       CIRCLE_WALLET_SET_ID: "${CIRCLE_WALLET_SET_ID:-local-dev}"
       CIRCLE_ENTITY_SECRET: "${CIRCLE_ENTITY_SECRET:-local-dev}"
       CIRCLE_USDC_TOKEN_ADDRESS: "${CIRCLE_USDC_TOKEN_ADDRESS:-0x0000000000000000000000000000000000000000}"
+      # Public URL Circle posts transfer notifications to. When set, CircleSubscriptionBootstrap
+      # registers a transactions.* webhook subscription; without it the saga can't learn a
+      # transfer completed and stalls in EXECUTING. Local dev: a tunnel (cloudflared/ngrok) to :8084.
+      CIRCLE_API_WEBHOOK_SUBSCRIPTION_ENDPOINT: "${CIRCLE_API_WEBHOOK_SUBSCRIPTION_ENDPOINT:-}"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8084/actuator/health || exit 1"]
       interval: 15s

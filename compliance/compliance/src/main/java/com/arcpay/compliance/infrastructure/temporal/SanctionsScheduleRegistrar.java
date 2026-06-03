@@ -6,8 +6,8 @@ import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowOptions;
 import io.temporal.client.schedules.Schedule;
 import io.temporal.client.schedules.ScheduleActionStartWorkflow;
+import io.temporal.client.schedules.ScheduleAlreadyRunningException;
 import io.temporal.client.schedules.ScheduleClient;
-import io.temporal.client.schedules.ScheduleException;
 import io.temporal.client.schedules.ScheduleOptions;
 import io.temporal.client.schedules.SchedulePolicy;
 import io.temporal.client.schedules.ScheduleSpec;
@@ -35,7 +35,7 @@ class SanctionsScheduleRegistrar implements InitializingBean {
             scheduleClient.createSchedule(
                     SCHEDULE_ID, buildSchedule(), ScheduleOptions.newBuilder().build());
             log.info("Created sanctions ingestion schedule {} with cron {}", SCHEDULE_ID, properties.refreshCron());
-        } catch (ScheduleException e) {
+        } catch (ScheduleAlreadyRunningException e) {
             log.info("Sanctions ingestion schedule {} already registered; skipping creation", SCHEDULE_ID);
         }
     }
