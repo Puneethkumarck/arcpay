@@ -34,10 +34,18 @@ over Kafka (transactional outbox) and Temporal sagas — not a monolith.
 
 ## 🏛️ Architecture
 
-Hexagonal (ports & adapters) per service — `application → domain ← infrastructure`,
-with the domain holding zero infrastructure dependencies. Services own their data
-(a Postgres database each) and communicate **only** via Kafka events and
-internal REST.
+Five independently-deployable services, each owning its own Postgres database and
+coordinating over Kafka events + internal REST (no service touches another's data):
+
+- **identity** provisions an agent — persists it, creates its custodial Circle USDC
+  wallet, and registers it on-chain in the `AgentRegistry`.
+- **policy-engine** holds each agent's spending policy and runs atomic
+  reserve → commit/release accounting so a payment can't exceed its owner's limits.
+- **compliance** screens the recipient (watchlist + on-chain interaction checks) and
+  manages holds that need human review.
+- **payment-execution** orchestrates a payment end-to-end as a Temporal saga:
+  precondition → reserve → screen → settle → commit/release.
+- **settlement** moves the USDC via Circle and writes an on-chain payment receipt.
 
 ```
                               ┌──────────────────────────┐
