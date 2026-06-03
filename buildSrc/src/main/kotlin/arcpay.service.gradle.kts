@@ -18,6 +18,7 @@ val uuidCreatorVersion: String by project
 val archunitVersion: String by project
 val testcontainersVersion: String by project
 val wiremockVersion: String by project
+val springdocVersion: String by project
 
 // ---------------------------------------------------------------------------
 // BOM imports
@@ -84,6 +85,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // OpenAPI / Swagger UI
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion")
 
     // Kafka
     implementation("org.springframework.boot:spring-boot-starter-kafka")
