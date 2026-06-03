@@ -14,7 +14,7 @@
 ![Architecture](https://img.shields.io/badge/architecture-hexagonal-informational)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
-[Why](#-why-does-this-exist) · [Architecture](#️-architecture) · [Services](#-the-services) · [Payment flow](#-the-payment-flow) · [On-chain](#-on-chain) · [Run locally](#-run-the-stack-locally) · [Config](#️-configuration)
+[Why](#-why-does-this-exist) · [Architecture](#️-architecture) · [Services](#-the-services) · [Payment flow](#-the-payment-flow) · [On-chain](#-on-chain) · [Key custody](#-key-custody) · [Run locally](#-run-the-stack-locally) · [Config](#️-configuration)
 
 </div>
 
@@ -215,6 +215,28 @@ PostgreSQL is the source of truth; the chain is a **verifiable projection**.
 - **`PaymentReceipts.sol`** (`settlement/`) — on-chain receipt of each settled payment.
 
 Both are hand-encoded via web3j (`FunctionEncoder`) — no generated wrappers.
+
+## 🔐 Key custody
+
+An agent's **USDC wallet is custodial via Circle Developer-Controlled Wallets** —
+Circle generates and holds the wallet's private key in its own infrastructure.
+ArcPay never sees or stores it; the agent record keeps only `walletId` + `walletAddress`.
+
+ArcPay's authority to operate those wallets is its **entity secret** (a 32-byte
+secret): `EntitySecretCiphertextProvider` fetches Circle's public key and sends an
+RSA-encrypted ciphertext of the entity secret with every request, alongside the API
+key. That entity secret is the crown jewel — it must live in a secret manager, never
+committed (see [#200]; the compose `.env` value is a dev placeholder).
+
+Separately, ArcPay holds two raw EVM keys used only to sign on-chain transactions and
+pay gas — **not** for agent USDC custody.
+
+| Key | Holder | Purpose |
+|-----|--------|---------|
+| Agent wallet key | **Circle** (custodial) | Holds & spends the agent's USDC |
+| Entity secret | **ArcPay** (secret-managed) | Authorizes ArcPay to operate Circle wallets |
+| `PLATFORM_WALLET_PRIVATE_KEY` | **ArcPay** | Registrar/gas key signing `AgentRegistry` txs |
+| `GAS_WALLET_PRIVATE_KEY` | **ArcPay** | Signs `PaymentReceipts` txs |
 
 ## 🚀 Run the stack locally
 
