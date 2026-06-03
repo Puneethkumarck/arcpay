@@ -464,7 +464,8 @@ Gradle (Kotlin DSL) · palantir-java-format (Spotless).
 
 ## 📜 License
 
-Apache-2.0 (see SPDX headers in the Solidity sources).
+Apache-2.0 — see [`LICENSE`](LICENSE). Each Solidity source also carries an
+`SPDX-License-Identifier: Apache-2.0` header.
 
 ---
 
