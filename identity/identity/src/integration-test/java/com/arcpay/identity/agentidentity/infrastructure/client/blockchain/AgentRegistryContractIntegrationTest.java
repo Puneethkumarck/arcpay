@@ -36,7 +36,6 @@ class AgentRegistryContractIntegrationTest {
     private static final BigInteger DEPLOY_GAS_LIMIT = BigInteger.valueOf(6_000_000L);
     private static final BigInteger CALL_GAS_LIMIT = BigInteger.valueOf(300_000L);
 
-    // ganache deterministic accounts (mnemonic seeded by --wallet.deterministic)
     private static final String REGISTRAR_KEY = "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d";
     private static final String OUTSIDER_KEY = "0x6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1";
 
@@ -115,7 +114,6 @@ class AgentRegistryContractIntegrationTest {
         assertThat(adapter.getAgentByWallet(OTHER_WALLET)).isEmpty();
         assertThat(adapter.isWalletActive(AGENT_WALLET)).isTrue();
 
-        // and deactivation flips the wallet's active status
         adapter.deactivateAgent(agentId);
         assertThat(adapter.isWalletActive(AGENT_WALLET)).isFalse();
     }
@@ -181,7 +179,7 @@ class AgentRegistryContractIntegrationTest {
     }
 
     private BlockchainAdapter adapterFor(String privateKey, String address) {
-        var properties = new AgentRegistryProperties(address, null, GAS_PRICE);
+        var properties = new AgentRegistryProperties(address, null, GAS_PRICE, null);
         return new BlockchainAdapter(
                 web3j, managerFor(privateKey), receiptProcessor, mock(GasUsageRepository.class), properties);
     }

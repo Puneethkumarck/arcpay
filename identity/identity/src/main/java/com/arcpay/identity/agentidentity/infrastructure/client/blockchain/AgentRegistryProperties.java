@@ -4,7 +4,8 @@ import java.math.BigInteger;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "arcpay.contract")
-record AgentRegistryProperties(String agentRegistryAddress, BigInteger gasLimit, BigInteger gasPrice) {
+record AgentRegistryProperties(
+        String agentRegistryAddress, BigInteger gasLimit, BigInteger gasPrice, Long gasPriceMultiplierPercent) {
 
     AgentRegistryProperties {
         if (gasLimit == null) {
@@ -12,6 +13,9 @@ record AgentRegistryProperties(String agentRegistryAddress, BigInteger gasLimit,
         }
         if (gasPrice == null) {
             gasPrice = BigInteger.valueOf(1_000_000_000L);
+        }
+        if (gasPriceMultiplierPercent == null) {
+            gasPriceMultiplierPercent = 200L;
         }
     }
 }
