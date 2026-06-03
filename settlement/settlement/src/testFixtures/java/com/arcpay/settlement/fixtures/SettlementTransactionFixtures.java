@@ -79,6 +79,16 @@ public final class SettlementTransactionFixtures {
                 """.formatted(circleTxId, state, SOME_ERROR_REASON);
     }
 
+    public static String verificationPingBody() {
+        return """
+                {
+                  "subscriptionId": "00000000-0000-0000-0000-000000000000",
+                  "notificationType": "webhooks.test",
+                  "notification": {"hello": "world"}
+                }
+                """;
+    }
+
     public static TransferCommand someTransferCommand() {
         return TransferCommand.builder()
                 .paymentId(SOME_PAYMENT_ID)
