@@ -2,7 +2,7 @@ spring:
   application:
     name: settlement-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/arcpay_settlement
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/arcpay_settlement}
     username: ${DB_USERNAME:arcpay}
     password: ${DB_PASSWORD:arcpay}
   jpa:

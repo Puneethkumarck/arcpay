@@ -8,7 +8,7 @@ spring:
         alphanumeric-ids:
           enabled: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/arcpay_compliance
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/arcpay_compliance}
     username: ${DB_USERNAME:arcpay}
     password: ${DB_PASSWORD:arcpay}
   jpa:
@@ -29,7 +29,8 @@ spring:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.json.trusted.packages: com.arcpay.compliance.domain.event
   temporal:
-    service-address: ${TEMPORAL_ADDRESS:localhost:7233}
+    connection:
+      target: ${TEMPORAL_ADDRESS:localhost:7233}
     namespace: arcpay
     workers-auto-discovery:
       packages: com.arcpay.compliance

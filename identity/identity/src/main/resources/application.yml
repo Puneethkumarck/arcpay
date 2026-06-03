@@ -2,7 +2,7 @@ spring:
   application:
     name: agent-identity-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/arcpay_identity
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/arcpay_identity}
     username: ${DB_USERNAME:arcpay}
     password: ${DB_PASSWORD:arcpay}
   jpa:
@@ -21,7 +21,8 @@ spring:
       properties:
         spring.json.trusted.packages: com.arcpay.identity.agentidentity.domain.event
   temporal:
-    service-address: ${TEMPORAL_ADDRESS:localhost:7233}
+    connection:
+      target: ${TEMPORAL_ADDRESS:localhost:7233}
     namespace: arcpay
     workers-auto-discovery:
       packages: com.arcpay.identity.agentidentity
