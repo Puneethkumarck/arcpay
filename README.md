@@ -14,7 +14,7 @@
 ![Architecture](https://img.shields.io/badge/architecture-hexagonal-informational)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
-[Why](#-why-does-this-exist) · [Architecture](#️-architecture) · [Services](#-the-services) · [Payment flow](#-the-payment-flow) · [On-chain](#-on-chain) · [Run locally](#-run-the-stack-locally) · [Config](#️-configuration) · [Design decisions](#-design-decisions)
+[Why](#-why-does-this-exist) · [Architecture](#️-architecture) · [Services](#-the-services) · [Payment flow](#-the-payment-flow) · [On-chain](#-on-chain) · [Run locally](#-run-the-stack-locally) · [Config](#️-configuration)
 
 </div>
 
@@ -177,17 +177,6 @@ env-overridable. **Never commit secrets.**
 Tests: AssertJ + BDD Mockito, `usingRecursiveComparison`, Testcontainers (including a
 ganache EVM node for the on-chain registry round-trip). Five ArchUnit rules enforce
 the hexagonal boundaries.
-
-## 🧠 Design decisions
-
-| Decision | Why |
-|----------|-----|
-| **Domain models are Java records** (`@Builder(toBuilder=true)`, immutable) | State transitions return new instances; no shared mutable state |
-| **Repository adapters are package-private**, exposed only via domain ports | Keeps infrastructure out of the domain's public surface |
-| **Transactional outbox → Kafka** (namastack) | At-least-once events committed atomically with state; `X-Event-Id` for dedup |
-| **Temporal sagas** for provisioning & payment | Durable, retryable multi-step coordination across services |
-| **PostgreSQL is source of truth; chain is a projection** | On-chain `AgentRegistry` is verifiable, not authoritative |
-| **Per-service database** | Service ownership of data; independent migrations (Flyway) |
 
 ## 📦 Tech stack
 
