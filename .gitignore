@@ -33,3 +33,6 @@ Thumbs.db
 # Environment
 .env
 *.env.local
+
+# Circle entity-secret material (recovery file, raw secret) — never commit
+.circle/
