@@ -1,0 +1,215 @@
+# Local ArcPay stack: Postgres (5 service DBs) + Kafka (KRaft) + Temporal + the 5 services.
+#   docker compose up --build
+# All services expose actuator health on their port (8080-8084). See README "Run the stack locally".
+#
+# Secret/blockchain values below are LOCAL DEV PLACEHOLDERS — never use these outside local dev.
+
+x-service-build: &service-build
+  context: .
+  dockerfile: Dockerfile
+
+x-common-env: &common-env
+  DB_USERNAME: arcpay
+  DB_PASSWORD: arcpay
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  TEMPORAL_ADDRESS: temporal:7233
+  SPRING_TEMPORAL_NAMESPACE: default
+
+x-service-deps: &service-deps
+  postgres:
+    condition: service_healthy
+  kafka:
+    condition: service_healthy
+  temporal:
+    condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: arcpay
+      POSTGRES_PASSWORD: arcpay
+      POSTGRES_DB: arcpay
+    volumes:
+      - ./deploy/local/postgres-init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arcpay -d arcpay"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:3.8.1
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  temporal:
+    image: temporalio/auto-setup:1.25.2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: arcpay
+      POSTGRES_PWD: arcpay
+      POSTGRES_SEEDS: postgres
+      DBNAME: temporal
+      VISIBILITY_DBNAME: temporal_visibility
+      SKIP_DB_CREATE: "true"
+    ports:
+      - "7233:7233"
+    healthcheck:
+      test: ["CMD-SHELL", "tctl --address $(hostname -i):7233 cluster health 2>/dev/null | grep -q SERVING"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 30s
+
+  identity:
+    image: arcpay/identity:local
+    build:
+      <<: *service-build
+      args:
+        SERVICE: identity/identity
+        PORT: "8080"
+    depends_on: *service-deps
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *common-env
+      SERVER_PORT: "8080"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/arcpay_identity
+      AGENT_REGISTRY_ADDRESS: "${AGENT_REGISTRY_ADDRESS:-0x8A3A6E9825A2b7A6fAe65ebcC8cD95C33327f3Ba}"
+      ARC_TESTNET_RPC_URL: "${ARC_TESTNET_RPC_URL:-https://rpc.testnet.arc.network}"
+      PLATFORM_WALLET_PRIVATE_KEY: "${PLATFORM_WALLET_PRIVATE_KEY:-0x0000000000000000000000000000000000000000000000000000000000000001}"
+      CIRCLE_API_KEY: "${CIRCLE_API_KEY:-local-dev}"
+      CIRCLE_WALLET_SET_ID: "${CIRCLE_WALLET_SET_ID:-local-dev}"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 90s
+
+  policy-engine:
+    image: arcpay/policy-engine:local
+    build:
+      <<: *service-build
+      args:
+        SERVICE: policy-engine/policy-engine
+        PORT: "8081"
+    depends_on: *service-deps
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *common-env
+      SERVER_PORT: "8081"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/arcpay_policy
+      IDENTITY_SERVICE_URL: http://identity:8080
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 90s
+
+  compliance:
+    image: arcpay/compliance:local
+    build:
+      <<: *service-build
+      args:
+        SERVICE: compliance/compliance
+        PORT: "8082"
+    depends_on: *service-deps
+    ports:
+      - "8082:8082"
+    environment:
+      <<: *common-env
+      SERVER_PORT: "8082"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/arcpay_compliance
+      IDENTITY_SERVICE_URL: http://identity:8080
+      ARC_USDC_ADDRESS: "${ARC_USDC_ADDRESS:-0x0000000000000000000000000000000000000000}"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 90s
+
+  payment-execution:
+    image: arcpay/payment-execution:local
+    build:
+      <<: *service-build
+      args:
+        SERVICE: payment-execution/payment-execution
+        PORT: "8083"
+    depends_on: *service-deps
+    ports:
+      - "8083:8083"
+    environment:
+      <<: *common-env
+      SERVER_PORT: "8083"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/arcpay_payment
+      IDENTITY_SERVICE_URL: http://identity:8080
+      POLICY_SERVICE_URL: http://policy-engine:8081
+      SETTLEMENT_SERVICE_URL: http://settlement:8084
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 90s
+
+  settlement:
+    image: arcpay/settlement:local
+    build:
+      <<: *service-build
+      args:
+        SERVICE: settlement/settlement
+        PORT: "8084"
+    depends_on: *service-deps
+    ports:
+      - "8084:8084"
+    environment:
+      <<: *common-env
+      SERVER_PORT: "8084"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/arcpay_settlement
+      ARC_TESTNET_RPC_URL: "${ARC_TESTNET_RPC_URL:-https://rpc.testnet.arc.network}"
+      GAS_WALLET_PRIVATE_KEY: "${GAS_WALLET_PRIVATE_KEY:-0x0000000000000000000000000000000000000000000000000000000000000001}"
+      PAYMENT_RECEIPTS_ADDRESS: "${PAYMENT_RECEIPTS_ADDRESS:-0x0000000000000000000000000000000000000000}"
+      CIRCLE_API_KEY: "${CIRCLE_API_KEY:-local-dev}"
+      CIRCLE_WALLET_SET_ID: "${CIRCLE_WALLET_SET_ID:-local-dev}"
+      CIRCLE_ENTITY_SECRET: "${CIRCLE_ENTITY_SECRET:-local-dev}"
+      CIRCLE_USDC_TOKEN_ADDRESS: "${CIRCLE_USDC_TOKEN_ADDRESS:-0x0000000000000000000000000000000000000000}"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8084/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 90s
+
+volumes:
+  pgdata:

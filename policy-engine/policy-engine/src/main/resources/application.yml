@@ -11,7 +11,7 @@ spring:
         alphanumeric-ids:
           enabled: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/arcpay_policy
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/arcpay_policy}
     username: ${DB_USERNAME:arcpay}
     password: ${DB_PASSWORD:arcpay}
   jpa:
@@ -49,7 +49,7 @@ resilience4j:
 
 arcpay:
   identity-service:
-    url: http://localhost:8080
+    url: ${IDENTITY_SERVICE_URL:http://localhost:8080}
   security:
     service-token: ${SERVICE_AUTH_TOKEN:}
   policy:

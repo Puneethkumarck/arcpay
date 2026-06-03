@@ -1,0 +1,12 @@
+.git
+.github
+**/build
+.gradle
+**/.gradle
+.idea
+*.iml
+.env
+*.env.local
+.claude
+docs
+**/*.md
