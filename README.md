@@ -47,16 +47,24 @@
 
 ## 🤔 Why does this exist?
 
-An AI agent that can spend money needs two things that pull in opposite directions:
-**autonomy** (act without a human in the loop) and **control** (never exceed the
-limits its owner set). ArcPay is the backend that reconciles them — an agent gets a
-custodial USDC wallet on Arc, and **every payment it initiates is automatically
-checked against the owner's policy, screened for compliance, settled on-chain, and
-recorded as a tamper-evident identity projection.**
+An AI agent that can spend money needs two things that **pull in opposite directions**:
 
-The agent *feels* autonomous; the owner stays in control. It's built as **five
-independently-deployable Spring Boot services** coordinating over Kafka (transactional
-outbox) and Temporal sagas — not a monolith.
+| 🤖 Autonomy | 🛡️ Control |
+|:---|:---|
+| Act without a human in the loop | Never exceed the limits its owner set |
+
+ArcPay is the backend that **reconciles them**. Each agent gets a custodial USDC wallet
+on Arc, and every payment it initiates automatically runs a gauntlet:
+
+- ✅ **Checked** against the owner's spending policy
+- 🛡️ **Screened** for compliance — recipient watchlist + on-chain history
+- 🔗 **Settled** on-chain via Circle
+- 🧾 **Recorded** as a tamper-evident identity projection
+
+> [!NOTE]
+> The agent *feels* autonomous; the owner stays in control. It's built as **five
+> independently-deployable Spring Boot services** — coordinating over Kafka
+> (transactional outbox) and Temporal sagas, **not a monolith**.
 
 ## ⏱️ The 60-second tour
 
@@ -91,7 +99,8 @@ If you learn these four, the codebase reads easily:
 | **Policy** | The owner's spending rules for an agent | A list of typed rules — `PER_TX_LIMIT`, `DAILY_LIMIT`, `RECIPIENT_ALLOWLIST`, `VELOCITY`, time windows… Enforced as money (reserve/commit), not advice. |
 | **Payment** | One USDC transfer the agent requests | Walks the saga and ends `COMPLETED`, `REJECTED`, or `FAILED`. Idempotent on its `idempotencyKey`. |
 
-> 💡 **The single most-confused point:** the owner's wallet, the agent's Circle wallet,
+> [!TIP]
+> **The single most-confused point:** the owner's wallet, the agent's Circle wallet,
 > and ArcPay's platform wallet are **three different wallets**. See
 > [Key custody](#-key-custody--the-critical-secrets).
 
@@ -257,11 +266,11 @@ internal transfer request ─▶ Circle (USDC transfer) ─▶ on-chain PaymentR
 
 Also serves wallet-balance and transfer-status reads.
 
-> **Heads-up for local runs:** the `transfer.confirmed` step depends on Circle being
-> able to reach settlement's `/api/v1/webhooks/circle` endpoint. On a laptop that
-> means exposing it via a tunnel (e.g. `cloudflared`) and setting
-> `CIRCLE_API_WEBHOOK_SUBSCRIPTION_ENDPOINT`. Without it, a real payment parks in
-> `EXECUTING` (the transfer still happens on Circle's side).
+> [!IMPORTANT]
+> **Local runs:** the `transfer.confirmed` step depends on Circle reaching settlement's
+> `/api/v1/webhooks/circle` endpoint. On a laptop, expose it via a tunnel
+> (e.g. `cloudflared`) and set `CIRCLE_API_WEBHOOK_SUBSCRIPTION_ENDPOINT`. Without it, a
+> real payment parks in `EXECUTING` (the transfer still happens on Circle's side).
 
 ## 📜 The payment flow (sequence)
 
@@ -331,6 +340,7 @@ the part worth slowing down for.
 | **Agent's Circle wallet** (e.g. `0x6a83…63fe`) | the agent | The **custodial USDC wallet the agent spends FROM** | **Circle** (ArcPay authorizes ops via the entity secret) |
 | **Platform wallet** (`PLATFORM_WALLET_PRIVATE_KEY`) | ArcPay | **Signs on-chain registry txs + pays gas**; never holds agent funds | **ArcPay** |
 
+> [!NOTE]
 > The owner's wallet is **not** where the agent spends from. The agent gets its own
 > brand-new Circle custodial wallet; the owner's address is just the owner's identity.
 > On-chain, `registerAgent` records `agentId`, `ownerId`, the **agent's** wallet
@@ -348,11 +358,12 @@ the part worth slowing down for.
 | `PLATFORM_WALLET_PRIVATE_KEY` | Arc | Private key of ArcPay's EOA "registrar" | **Signs** every `AgentRegistry` tx and **pays gas** — no signature, no on-chain write | 🔒 |
 | `GAS_WALLET_PRIVATE_KEY` | Arc | settlement's signer for `PaymentReceipts.sol` | Same idea, for writing payment receipts | 🔒 |
 
-**The crown jewel is `CIRCLE_ENTITY_SECRET`** — compromise ≈ ability to move all agent
-funds. It must live in a secret manager, never committed (the compose `.env` value is a
-dev placeholder; `.circle/` is gitignored). The two EVM private keys are next-most
-sensitive (forge the registry / drain gas). Everything else (set ID, registry address,
-RPC) is non-secret configuration.
+> [!CAUTION]
+> **The crown jewel is `CIRCLE_ENTITY_SECRET`** — compromise ≈ ability to move all agent
+> funds. It must live in a secret manager, never committed (the compose `.env` value is a
+> dev placeholder; `.circle/` is gitignored). The two EVM private keys are next-most
+> sensitive (forge the registry / drain gas). Everything else (set ID, registry address,
+> RPC) is non-secret configuration.
 
 ## 🚀 Run the stack locally
 
