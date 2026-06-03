@@ -16,6 +16,8 @@
 
 [Why](#-why-does-this-exist) · [Architecture](#️-architecture) · [Services](#-the-services) · [Payment flow](#-the-payment-flow) · [On-chain](#-on-chain) · [Key custody](#-key-custody) · [Run locally](#-run-the-stack-locally) · [Config](#️-configuration)
 
+<img src="assets/platform-architecture.png" alt="ArcPay platform architecture — services, saga flow, event backbone, on-chain, and key custody" width="920">
+
 </div>
 
 ---
@@ -47,26 +49,6 @@ coordinating over Kafka events + internal REST (no service touches another's dat
   precondition → reserve → screen → settle → commit/release.
 - **settlement** moves the USDC via Circle and writes an on-chain payment receipt.
 
-```
-                              ┌──────────────────────────┐
-   client / agent  ───────▶   │   payment-execution      │  :8083
-                              │   (Temporal saga)         │
-                              └───┬─────────┬─────────┬───┘
-              reserve/commit ─────┘         │         └───── transfer
-                    ▼                       ▼                  ▼
-            ┌───────────────┐      ┌────────────────┐   ┌──────────────┐
-            │ policy-engine │:8081 │  compliance    │   │  settlement  │:8084
-            │ (reservations)│      │  (screening)   │   │ (Circle + on │
-            └───────────────┘      └────────────────┘   │  -chain rcpt)│
-                    ▲                       ▲            └──────────────┘
-                    └───────── agent identity ──────────────────┘
-                              ┌──────────────────────────┐
-                              │   identity               │  :8080
-                              │   (AgentRegistry on Arc)  │
-                              └──────────────────────────┘
-
-   Postgres (db-per-service) · Kafka (outbox events) · Temporal (sagas)
-```
 
 ## 🧱 The services
 
